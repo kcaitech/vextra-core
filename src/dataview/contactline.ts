@@ -39,7 +39,7 @@ export class ContactLineView extends PathShapeView {
     updateAtLast() {
         this.updateApex();
         this.cache.clearCacheByKeys(['m_path', 'm_pathstr']);
-        this.updateFrames();
+        this.layoutProxy.updateFrames();
     }
 
     /* ===private=== */
@@ -51,7 +51,7 @@ export class ContactLineView extends PathShapeView {
         this.updateApex();
         this.cache.clearCacheByKeys(['m_path', 'm_pathstr']);
         this.m_ctx.setDirty(this);
-        this.updateFrames();
+        this.layoutProxy.updateFrames();
     }
 
     /* 监听端点view以及其所处环境 */

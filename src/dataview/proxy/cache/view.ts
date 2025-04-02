@@ -135,7 +135,7 @@ export class ViewCache {
 
     private _onRadiusMaskChange() {
         this.view.m_ctx.setDirty(this.view);
-        this.view.onDataChange('radiusMask');
+        this.view.onUpdate('radiusMask');
         this.view.notify('radiusMask');
     }
 

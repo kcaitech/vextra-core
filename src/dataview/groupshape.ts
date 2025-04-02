@@ -43,19 +43,20 @@ export class GroupShapeView extends ShapeView {
     // 更新遮罩层关系
     updateMaskMap() {
         const map = this.maskMap;
-
-        map.clear();
-
+        const __map = new Map<string, ShapeView>();
+        const needUpdate: ShapeView[] = [];
         const children = this.childs;
         let mask: ShapeView | undefined = undefined;
         for (const child of children) {
             if (child.mask && child.isVisible) {
                 mask = child;
-            } else {
-                mask && map.set(child.id, mask);
+            } else if (mask) {
+                __map.set(child.id, mask);
             }
+            if (map.has(child.id) !== __map.has(child.id)) needUpdate.push(child);
         }
-
+        needUpdate.forEach((child) => child.m_ctx.setDirty(child));
+        this.maskMap = __map;
         this.notify('mask-env-change');
     }
 

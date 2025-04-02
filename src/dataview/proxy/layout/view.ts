@@ -38,14 +38,14 @@ export class ViewLayout {
         const shape = view.data;
         const transform = shape.transform.clone();
         if (view.parent && view.parent.autoLayout) {
-            transform.translateX = view.m_transform.translateX;
-            transform.translateY = view.m_transform.translateY;
+            transform.translateX = view.transform.translateX;
+            transform.translateY = view.transform.translateY;
         }
 
         // case 1 不需要变形
         if (!scale || isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
             let frame = view.frame;
-            if (view.hasSize()) frame = view.data.frame;
+            if (view.hasSize) frame = view.data.frame;
             this.updateLayoutArgs(transform, frame);
             this.layoutChilds(view.frame);
             this.updateFrames();
@@ -66,7 +66,7 @@ export class ViewLayout {
         const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
         // 当前对象如果没有frame,需要childs layout完成后才有
         // 但如果有constrain,则需要提前计算出frame?当前是直接不需要constrain
-        if (!view.hasSize() && (resizingConstraint === 0 || !parentFrame)) {
+        if (!view.hasSize && (resizingConstraint === 0 || !parentFrame)) {
             let frame = view.frame; // 不需要更新
             const t0 = transform.clone();
             t0.scale(scale.x, scale.y);
@@ -104,8 +104,8 @@ export class ViewLayout {
             const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
 
             if (view.parent && view.parent.autoLayout) {
-                transform.translateX = view.m_transform.translateX;
-                transform.translateY = view.m_transform.translateY;
+                transform.translateX = view.transform.translateX;
+                transform.translateY = view.transform.translateY;
             }
 
             layoutSize.width = frame.width
@@ -122,8 +122,8 @@ export class ViewLayout {
             view.cache.clearCacheByKeys(['m_pathstr', 'm_path'])
         }
 
-        if (!view.m_transform.equals(trans)) {
-            view.m_transform.reset(trans);
+        if (!view.transform.equals(trans)) {
+            view.transform.reset(trans);
             view.cache.clearCacheByKeys(['m_pathstr', 'm_path'])
         }
     }

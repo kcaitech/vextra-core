@@ -22,8 +22,8 @@ export class TextLayoutMgr extends ViewLayout {
         const shape = view.data;
         const transform = shape.transform.clone();
         if (view.parent && (view.parent as ArtboardView).autoLayout) {
-            transform.translateX = view.m_transform.translateX;
-            transform.translateY = view.m_transform.translateY;
+            transform.translateX = view.transform.translateX;
+            transform.translateY = view.transform.translateY;
         }
         if (!view.isVirtualShape && view.getText() === view.data.text) {
             this.updateLayoutArgs(transform, view.data.frame)
@@ -39,8 +39,8 @@ export class TextLayoutMgr extends ViewLayout {
                 transform = transform.clone().trans(dx, dy)
             }
             if (s.parent && (s.parent as ArtboardView).autoLayout) {
-                transform.translateX = s.m_transform.translateX;
-                transform.translateY = s.m_transform.translateY;
+                transform.translateX = s.transform.translateX;
+                transform.translateY = s.transform.translateY;
             }
             return transform;
         }

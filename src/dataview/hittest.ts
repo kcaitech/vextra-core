@@ -19,7 +19,7 @@ function _hitTest(shape: ShapeView, x: number, y: number, type: '_p_frame' | '_p
     for (let i = 0, len = shape.m_children.length; i < len; ++i) {
         const child = shape.m_children[i] as ShapeView;
         if (frameContains(child.frameProxy[type], x, y)) {
-            const xy = child.m_transform.inverseCoord(x, y);
+            const xy = child.transform.inverseCoord(x, y);
             ret.push({ shape: child, x: xy.x, y: xy.y })
             if (depth > 1) _hitTest(child, xy.x, xy.y, type, depth - 1, ret)
         }

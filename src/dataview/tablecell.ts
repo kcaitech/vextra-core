@@ -31,8 +31,8 @@ export class TableCellView extends ShapeView {
         this.m_imgPH = imgPH;
 
         const frame = props.frame;
-        this.m_transform.m02 = frame.x;
-        this.m_transform.m12 = frame.y;
+        this.transform.m02 = frame.x;
+        this.transform.m12 = frame.y;
         // this.m_frame.x = frame.x;
         // this.m_frame.y = frame.y;
         this.frame.width = frame.width;

@@ -192,7 +192,7 @@ export class DataView extends EventEL {
     private _data_watcher(...args: any[]) {
         this.m_ctx.setReLayout(this);
         this.m_ctx.setDirty(this);
-        this.onDataChange(...args);
+        this.onUpdate(...args);
         this.notify(...args);
     }
 
@@ -203,7 +203,7 @@ export class DataView extends EventEL {
         return this.m_is_destroyed;
     }
 
-    onDataChange(...args: any[]) {
+    onUpdate(...args: any[]) {
     }
 
     layout(args: any) {

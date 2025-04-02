@@ -1,21 +1,20 @@
 import { ShapeView } from "../../shape";
-import { ArtboardView } from "../../artboard";
 
 export function updateAutoLayout(view: ShapeView) {
-    let p = view.parent as ArtboardView;
+    let p = view.parent;
     while (p && p.autoLayout) {
         p.m_ctx.setReLayout(p);
-        p = p.parent as ArtboardView;
+        p = p.parent;
     }
 }
 
 export function updateAutoLayoutByBorder(view: ShapeView) {
-    let p = view.parent as ArtboardView;
+    let p = view.parent;
     while (p && p.autoLayout) {
         if (p.autoLayout?.bordersTakeSpace) {
             p.m_ctx.setReLayout(p);
         }
-        p = p.parent as ArtboardView;
+        p = p.parent;
     }
 }
 

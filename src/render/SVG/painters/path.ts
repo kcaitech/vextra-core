@@ -11,8 +11,9 @@ export class PathSVGRenderer extends ViewSVGRenderer {
     }
 
     render(): number {
-        const view = this.view as PathShapeView;
         if (!this.checkAndResetDirty()) return this.m_render_version;
+
+        const view = this.view as PathShapeView;
 
         const masked = view.masked;
         if (masked) {

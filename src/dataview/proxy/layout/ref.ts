@@ -30,8 +30,8 @@ export class RefLayout extends ViewLayout {
                 hidden += 1;
             }
             cc.m_ctx.setDirty(cc);
-            cc.updateLayoutArgs(newTransform, cc.frame);
-            cc.updateFrames();
+            cc.layoutProxy.updateLayoutArgs(newTransform, cc.frame);
+            cc.layoutProxy.updateFrames();
         }
         const selfframe = new ShapeFrame(0, 0, layoutSize.width, layoutSize.height);
         this.updateLayoutArgs(view.transform, selfframe);
@@ -108,8 +108,8 @@ export class RefLayout extends ViewLayout {
         const shape = view.data as SymbolRefShape;
         const transform = shape.transform.clone();
         if ((view.parent as ArtboardView)?.autoLayout) {
-            transform.translateX = view.m_transform.translateX;
-            transform.translateY = view.m_transform.translateY;
+            transform.translateX = view.transform.translateX;
+            transform.translateY = view.transform.translateY;
         }
         if (!view.m_sym) {
             this.updateLayoutArgs(transform, shape.frame);
@@ -185,8 +185,8 @@ export class RefLayout extends ViewLayout {
             if (!view.m_isVirtual) transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
 
             if (view.parent && (view.parent as ArtboardView).autoLayout) {
-                transform.translateX = view.m_transform.translateX;
-                transform.translateY = view.m_transform.translateY;
+                transform.translateX = view.transform.translateX;
+                transform.translateY = view.transform.translateY;
             }
 
             selfframe.width = size.width * __decompose_scale.x

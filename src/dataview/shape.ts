@@ -40,7 +40,6 @@ import {
     VariableType
 } from "../data";
 import { findOverrideAndVar } from "./basic";
-import { EL } from "./el";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
@@ -311,8 +310,6 @@ export function matrix2parent(t: Transform, matrix?: Transform) {
 }
 
 export class ShapeView extends DataView {
-    m_transform: Transform;
-
     frameProxy: FrameProxy;
     cache: ViewCache;
     effect: ViewModifyEffect;
@@ -321,7 +318,7 @@ export class ShapeView extends DataView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         const t = props.data.transform;
-        this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
+        this.transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
 
         this.frameProxy = new FrameProxy(this);
         this.cache = new ViewCache(this);
@@ -329,12 +326,25 @@ export class ShapeView extends DataView {
         this.layoutProxy = new ViewLayout(this);
     }
 
-    hasSize() {
-        return this.m_data.hasSize();
-    }
-
     onMounted() {
         this.layoutProxy._layout(this.m_props.layoutSize, this.m_props.scale);
+    }
+
+    layout(props?: PropsType) {
+        this.layoutProxy.layout(props);
+    }
+
+    render(): number {
+        return this.m_renderer.render();
+    }
+
+    onUpdate(...args: any[]) {
+        this.effect.emit(args);
+        this.effect.clearCache(args);
+    }
+
+    asyncRender(): number {
+        return this.m_renderer.asyncRender();
     }
 
     get parent(): ShapeView | undefined {
@@ -363,8 +373,8 @@ export class ShapeView extends DataView {
         return this.m_children as ShapeView[];
     }
 
-    get transform() {
-        return this.m_transform
+    get hasSize() {
+        return this.m_data.hasSize();
     }
 
     get size(): ShapeSize {
@@ -404,26 +414,6 @@ export class ShapeView extends DataView {
         return this.frameProxy._p_outerFrame;
     }
 
-    get rotation(): number {
-        return (this.transform).decomposeRotate() * 180 / Math.PI;
-    }
-
-    get fixedRadius() {
-        return undefined;
-    }
-
-    get resizingConstraint() {
-        return this.data.resizingConstraint;
-    }
-
-    get constrainerProportions() {
-        return this.data.constrainerProportions;
-    }
-
-    get isClosed() {
-        return this.m_data.isClosed;
-    }
-
     get x(): number {
         return this.transform.m02
     }
@@ -444,6 +434,51 @@ export class ShapeView extends DataView {
         return this.frameProxy.boundingBox();
     }
 
+    transform: Transform;
+
+    isNoTransform() {
+        const { m00, m01, m10, m11 } = this.transform;
+        return Math.abs(m00 - 1) < float_accuracy && Math.abs(m01) < float_accuracy && Math.abs(m10) < float_accuracy && Math.abs(m11 - 1) < float_accuracy;
+    }
+
+    matrix2Parent(matrix?: Transform) {
+        const m = matrix2parent(this.transform, matrix);
+        if (this.parent?.uniformScale) m.scale(this.parent.uniformScale);
+        return m;
+    }
+
+    matrix2Root() {
+        const m = this.transform.clone()
+        const p = this.parent;
+        if (p) {
+            const offset = (p as any).innerTransform;
+            offset && m.multiAtLeft(offset)
+            p.uniformScale && m.scale(p.uniformScale);
+            m.multiAtLeft(p.matrix2Root())
+        }
+        return m;
+    }
+
+    get rotation(): number {
+        return (this.transform).decomposeRotate() * 180 / Math.PI;
+    }
+
+    get fixedRadius() {
+        return undefined;
+    }
+
+    get resizingConstraint() {
+        return this.data.resizingConstraint;
+    }
+
+    get constrainerProportions() {
+        return this.data.constrainerProportions;
+    }
+
+    get isClosed() {
+        return this.m_data.isClosed;
+    }
+
     maskMap: Map<string, ShapeView> = new Map;
 
     updateMaskMap() {
@@ -457,9 +492,8 @@ export class ShapeView extends DataView {
         return this.parent?.maskMap?.get(this.data.id);
     }
 
-    onDataChange(...args: any[]): void {
-        this.effect.emit(args);
-        this.effect.clearCache(args);
+    get varbinds() {
+        return this.m_data.varbinds;
     }
 
     _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
@@ -475,18 +509,6 @@ export class ShapeView extends DataView {
         return findOverrideAll(this.m_data.id, ot, this.varsContainer);
     }
 
-    matrix2Root() {
-        const m = this.transform.clone()
-        const p = this.parent;
-        if (p) {
-            const offset = (p as any).innerTransform;
-            offset && m.multiAtLeft(offset)
-            p.uniformScale && m.scale(p.uniformScale);
-            m.multiAtLeft(p.matrix2Root())
-        }
-        return m;
-    }
-
     get name(): string {
         const v = this._findOV(OverrideType.Name, VariableType.Name);
         return v ? v.value : this.m_data.name;
@@ -498,21 +520,6 @@ export class ShapeView extends DataView {
             p = p.m_parent as ShapeView;
         }
         return p.type === ShapeType.Page ? p : undefined;
-    }
-
-    get varbinds() {
-        return this.m_data.varbinds;
-    }
-
-    isNoTransform() {
-        const { m00, m01, m10, m11 } = this.transform;
-        return Math.abs(m00 - 1) < float_accuracy && Math.abs(m01) < float_accuracy && Math.abs(m10) < float_accuracy && Math.abs(m11 - 1) < float_accuracy;
-    }
-
-    matrix2Parent(matrix?: Transform) {
-        const m = matrix2parent(this.transform, matrix);
-        if (this.parent?.uniformScale) m.scale(this.parent.uniformScale);
-        return m;
     }
 
     get fillsMask(): string | undefined {
@@ -598,26 +605,6 @@ export class ShapeView extends DataView {
 
     indexOfChild(view: ShapeView) {
         return this.childs.indexOf(view)
-    }
-
-    updateLayoutArgs(trans: Transform, size: ShapeFrame) {
-        this.layoutProxy.updateLayoutArgs(trans, size);
-    }
-
-    updateFrames() {
-        return this.layoutProxy.updateFrames();
-    }
-
-    layout(props?: PropsType) {
-        this.layoutProxy.layout(props);
-    }
-
-    asyncRender(): number {
-        return this.m_renderer.asyncRender();
-    }
-
-    render(): number {
-        return this.m_renderer.render();
     }
 
     get isContainer() {

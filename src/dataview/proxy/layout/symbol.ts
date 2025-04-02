@@ -23,8 +23,8 @@ export class SymbolLayout extends GroupLayout {
                 hidden += 1;
             }
             cc.m_ctx.setDirty(cc);
-            cc.updateLayoutArgs(newTransform, cc.frame);
-            cc.updateFrames();
+            cc.layoutProxy.updateLayoutArgs(newTransform, cc.frame);
+            cc.layoutProxy.updateFrames();
         }
         const selfframe = new ShapeFrame(0, 0, layoutSize.width, layoutSize.height);
         this.updateLayoutArgs(view.transform, selfframe);

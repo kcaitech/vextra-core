@@ -106,7 +106,7 @@ export class SymbolRefView extends ShapeView {
     symwatcher(...args: any[]) {
         // todo
         this.m_ctx.setReLayout(this);
-        super.onDataChange(...args);
+        super.onUpdate(...args);
     }
 
     findOverride(refId: string, type: OverrideType): Variable[] | undefined {

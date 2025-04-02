@@ -1,6 +1,5 @@
 import { ViewModifyEffect } from "./view";
 import { GroupShapeView } from "../../groupshape";
-import { ArtboardView } from "../../artboard";
 
 function updateByChild(view: GroupShapeView) {
     view.updateMaskMap();
@@ -13,10 +12,10 @@ function updateAutoLayout(view: GroupShapeView) {
             c.m_ctx.setReLayout(c);
         });
     }
-    let p = view.parent as ArtboardView;
+    let p = view.parent;
     while (p && p.autoLayout) {
         p.m_ctx.setReLayout(p);
-        p = p.parent as ArtboardView;
+        p = p.parent;
     }
 }
 

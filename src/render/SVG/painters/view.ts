@@ -105,10 +105,10 @@ export class ViewSVGRenderer extends IRenderer {
             const __s = group[i];
             if (!__s.isVisible) continue;
             const dom = (__s.m_renderer as ViewSVGRenderer).DOM;
-            if (!(dom.elattr as any)['style']) {
-                (dom.elattr as any)['style'] = {};
+            if (!dom.elattr['style']) {
+                dom.elattr['style'] = {};
             }
-            (dom.elattr as any)['style']['transform'] = (__s.transform.clone().multi(inverse)).toString();
+            (dom.elattr as any)['style']['transform'] = __s.transform.clone().multi(inverse).toString();
             els.push(dom);
         }
 
