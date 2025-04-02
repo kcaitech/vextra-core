@@ -347,6 +347,10 @@ export class ShapeView extends DataView {
         return this.m_renderer.asyncRender();
     }
 
+    staticRender() {
+        // todo
+    }
+
     get parent(): ShapeView | undefined {
         return this.m_parent as ShapeView;
     }
