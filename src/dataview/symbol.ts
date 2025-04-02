@@ -64,6 +64,6 @@ export class SymbolView extends GroupShapeView {
     }
 
     render(): number {
-        return this.m_renderer.render(this.type);
+        return this.m_renderer.render();
     }
 }

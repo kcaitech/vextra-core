@@ -26,7 +26,7 @@ export class PathShapeView extends ShapeView {
     }
 
     render(): number {
-        return this.m_renderer.render(ShapeType.Path);
+        return this.m_renderer.render();
     }
 
     get segments() {

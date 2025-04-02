@@ -198,7 +198,7 @@ export class SymbolRefView extends ShapeView {
     }
 
     render(): number {
-        return this.m_renderer.render(this.type);
+        return this.m_renderer.render();
     }
 
     get startMarkerType(): MarkerType | undefined {

@@ -182,7 +182,7 @@ export class TextShapeView extends ShapeView {
         return this.render();
     }
     render(): number {
-        return this.m_renderer.render(this.type);
+        return this.m_renderer.render();
     }
 
     __origin_frame: ShapeSize = new ShapeSize();

@@ -189,7 +189,7 @@ export class BoolShapeView extends GroupShapeView {
     }
 
     render() {
-        return this.m_renderer.render(this.type);
+        return this.m_renderer.render();
     }
 }
 
