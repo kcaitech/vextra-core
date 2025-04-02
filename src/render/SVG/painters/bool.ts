@@ -13,8 +13,20 @@ export class BoolSVGRenderer extends ViewSVGRenderer {
         const view = this.view
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
+        const masked = view.masked;
+        if (masked) {
+            view.reset("g");
+            masked.render();
+            return ++this.m_render_version;
+        }
+
         if (!view.isVisible) {
             view.reset("g");
+            return ++this.m_render_version;
+        }
+
+        if (view.mask) {
+            this.maskGroupRender();
             return ++this.m_render_version;
         }
 

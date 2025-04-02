@@ -6,15 +6,19 @@ export class SymbolModifyEffect extends GroupModifyEffect {
         super(view);
     }
 
-    protected cacheMap: {
+    protected static cacheMap: {
         [key: string]: string[];
     } = {
-        variables: ['m_fills', 'm_border'],
-        fills: ['m_fills'],
-        borders: ['m_border'],
-        fillsMask: ['m_fills'],
-        bordersMask: ['m_border'],
-        cornerRadius: ['m_path', 'm_pathstr'],
-        radiusMask: ['m_path', 'm_pathstr'],
+        ...GroupModifyEffect.cacheMap,
+        cornerRadius: ['m_path', 'm_pathstr']
+    }
+
+    clearCache(taskIds: string[]) {
+        const task: Set<string> = new Set();
+        taskIds.forEach((id: string) => {
+            const target = SymbolModifyEffect.cacheMap[id];
+            target && target.forEach(t => task.add(t));
+        });
+        this.view.cache.clearCacheByKeys(Array.from(task));
     }
 }

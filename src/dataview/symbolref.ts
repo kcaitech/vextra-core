@@ -51,7 +51,7 @@ export class SymbolRefView extends ShapeView {
             super.onMounted();
             return;
         }
-        this.layoutProxy._layout(this.m_props.layoutSize, this.m_props.scale);
+        this.layoutProxy.measure(this.m_props.layoutSize, this.m_props.scale);
     }
 
     getDataChilds(): Shape[] {

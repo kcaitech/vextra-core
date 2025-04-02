@@ -18,10 +18,8 @@ import { GroupFrameProxy } from "./proxy/frame/group";
 export class GroupShapeView extends ShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
-
         this._bubble_watcher = this._bubble_watcher.bind(this);
         this.m_data.bubblewatch(this._bubble_watcher);
-        this.updateMaskMap();
         this.frameProxy = new GroupFrameProxy(this);
         this.layoutProxy = new GroupLayout(this);
         this.effect = new GroupModifyEffect(this);

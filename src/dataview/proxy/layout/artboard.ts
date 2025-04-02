@@ -29,17 +29,17 @@ export class ArtboardLayout extends GroupLayout {
         this.updateFrames();
     }
 
-    _layout(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined,) {
+    measure(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined,) {
         const view = this.view;
         if (view.autoLayout) {
-            super._layout(parentFrame, scale);
+            super.measure(parentFrame, scale);
             const childs = view.childs.filter(c => c.isVisible);
             if (childs.length) {
                 const size = new ShapeSize(view.frame.width, view.frame.height);
                 this._autoLayout(view.autoLayout, size);
             }
         } else {
-            super._layout(parentFrame, scale);
+            super.measure(parentFrame, scale);
         }
     }
 }

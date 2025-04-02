@@ -19,23 +19,25 @@ function updateAutoLayout(view: GroupShapeView) {
     }
 }
 
-export function updateMask(view: GroupShapeView) {
-    view.parent?.updateMaskMap();
-}
-
 export class GroupModifyEffect extends ViewModifyEffect {
     constructor(protected view: GroupShapeView) {
         super(view);
     }
 
-    protected effectMap: {
+    protected static effectMap: {
         [key: string]: Function[];
     } = {
-        transform: [updateAutoLayout],
-        size: [updateAutoLayout],
-        isVisible: [updateMask, updateAutoLayout],
+        ...ViewModifyEffect.effectMap,
         autoLayout: [updateAutoLayout],
-        mask: [updateMask],
         childs: [updateByChild]
+    }
+
+    emit(taskIds: string[]) {
+        const task: Set<Function> = new Set();
+        taskIds.forEach((id: string) => {
+            const target = GroupModifyEffect.effectMap[id];
+            target && target.forEach(t => task.add(t))
+        });
+        Array.from(task).forEach(t => t(this.view));
     }
 }

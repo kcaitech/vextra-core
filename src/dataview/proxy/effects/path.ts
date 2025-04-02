@@ -6,9 +6,10 @@ export class PathShapeViewModifyEffect extends ViewModifyEffect {
         super(view);
     }
 
-    protected cacheMap: {
+    protected static cacheMap: {
         [key: string]: string[];
     } = {
+        ...ViewModifyEffect.cacheMap,
         pathsegs: ['m_path', 'm_pathstr'],
         radiusMask: ['m_path', 'm_pathstr'],
         variables: ['m_path', 'm_pathstr', 'm_fills', 'm_border', 'm_is_border_shape'],
@@ -16,5 +17,14 @@ export class PathShapeViewModifyEffect extends ViewModifyEffect {
         borders: ['m_border', 'm_is_border_shape', 'm_border_path', 'm_border_path_box'],
         fillsMask: ['m_fills', 'm_is_border_shape', 'm_border_path', 'm_border_path_box'],
         bordersMask: ['m_border', 'm_border_path', 'm_border_path_box', 'm_is_border_shape'],
+    }
+
+    clearCache(taskIds: string[]) {
+        const task: Set<string> = new Set();
+        taskIds.forEach((id: string) => {
+            const target = PathShapeViewModifyEffect.cacheMap[id];
+            target && target.forEach(t => task.add(t));
+        });
+        this.view.cache.clearCacheByKeys(Array.from(task));
     }
 }

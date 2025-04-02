@@ -10,11 +10,11 @@ export class GroupLayout extends ViewLayout {
         super(view);
     }
 
-    _layout(
+    measure(
         parentFrame: ShapeSize | undefined,
         scale: { x: number, y: number } | undefined,
     ): void {
-        super._layout(parentFrame, scale);
+        super.measure(parentFrame, scale);
         const view = this.view;
         if (view.m_need_update_childs) {
             view.notify("childs"); // notify childs change

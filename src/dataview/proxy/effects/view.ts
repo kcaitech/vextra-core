@@ -26,7 +26,7 @@ export class ViewModifyEffect {
     constructor(protected view: ShapeView) {
     }
 
-    protected cacheMap: {
+    protected static cacheMap: {
         [key: string]: string[];
     } = {
         variables: ['m_fills', 'm_border'],
@@ -34,15 +34,16 @@ export class ViewModifyEffect {
         borders: ['m_border'],
         fillsMask: ['m_fills'],
         bordersMask: ['m_border'],
+        radiusMask: ['m_path', 'm_pathstr']
     }
 
-    protected effectMap: {
+    protected static effectMap: {
         [key: string]: Function[];
     } = {
+        variables: [updateMask],
         transform: [updateAutoLayout],
         size: [updateAutoLayout],
         isVisible: [updateMask, updateAutoLayout],
-        autoLayout: [updateAutoLayout],
         borders: [updateAutoLayoutByBorder],
         mask: [updateMask],
     }
@@ -50,7 +51,7 @@ export class ViewModifyEffect {
     clearCache(taskIds: string[]) {
         const task: Set<string> = new Set();
         taskIds.forEach((id: string) => {
-            const target = this.cacheMap[id];
+            const target = ViewModifyEffect.cacheMap[id];
             target && target.forEach(t => task.add(t));
         });
         this.view.cache.clearCacheByKeys(Array.from(task));
@@ -59,7 +60,7 @@ export class ViewModifyEffect {
     emit(taskIds: string[]) {
         const task: Set<Function> = new Set();
         taskIds.forEach((id: string) => {
-            const target = this.effectMap[id];
+            const target = ViewModifyEffect.effectMap[id];
             target && target.forEach(t => task.add(t))
         });
         Array.from(task).forEach(t => t(this.view));

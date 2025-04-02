@@ -1,4 +1,4 @@
-import { updateAutoLayout, updateAutoLayoutByBorder, updateMask, ViewModifyEffect } from "./view";
+import { updateAutoLayout, updateMask, ViewModifyEffect } from "./view";
 import { SymbolRefView } from "../../symbolref";
 
 export class RefViewModifyEffect extends ViewModifyEffect {
@@ -6,15 +6,11 @@ export class RefViewModifyEffect extends ViewModifyEffect {
         super(view);
     }
 
-    protected effectMap: {
+    protected static effectMap: {
         [key: string]: Function[];
     } = {
-        transform: [updateAutoLayout],
-        size: [updateAutoLayout],
-        isVisible: [updateMask, updateAutoLayout],
+        ...ViewModifyEffect.effectMap,
         autoLayout: [updateAutoLayout],
-        borders: [updateAutoLayoutByBorder],
-        mask: [updateMask],
         childs: [updateMask],
     }
 

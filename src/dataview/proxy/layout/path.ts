@@ -7,11 +7,11 @@ export class PathLayout extends ViewLayout {
         super(view);
     }
 
-     _layout(
+     measure(
         parentFrame: ShapeSize | undefined,
         scale: { x: number, y: number } | undefined,
     ): void {
-        super._layout(parentFrame, scale);
+        super.measure(parentFrame, scale);
         this.view.m_pathsegs = undefined;
     }
 }

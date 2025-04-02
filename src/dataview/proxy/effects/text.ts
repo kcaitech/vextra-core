@@ -6,9 +6,10 @@ export class TextModifyEffect extends ViewModifyEffect {
         super(view);
     }
 
-    protected cacheMap: {
+    protected static cacheMap: {
         [key: string]: string[];
     } = {
+        ...ViewModifyEffect.cacheMap,
         childs: ['m_path', 'm_pathstr'],
         points: ['m_path', 'm_pathstr'],
         pathsegs: ['m_path', 'm_pathstr'],
@@ -17,7 +18,6 @@ export class TextModifyEffect extends ViewModifyEffect {
         radiusMask: ['m_path', 'm_pathstr'],
         fixedRadius: ['m_path', 'm_pathstr'],
         variables: ['m_path', 'm_pathstr', 'm_fills', 'm_border', 'm_border_path', 'm_border_path_box'],
-        mask: ['m_fills', 'm_border'],
         fills: ['m_fills', 'm_is_border_shape', 'm_border_path', 'm_border_path_box'],
         borders: ['m_border', 'm_is_border_shape'],
         fillsMask: ['m_fills', 'm_is_border_shape'],
@@ -25,25 +25,30 @@ export class TextModifyEffect extends ViewModifyEffect {
         text: ['__str'],
     }
 
-    protected effectMap: {
+   protected static effectMap: {
         [key: string]: Function[];
     } = {
-        transform: [updateAutoLayout],
-        size: [updateAutoLayout],
-        isVisible: [updateMask, updateAutoLayout],
-        autoLayout: [updateAutoLayout],
-        borders: [updateAutoLayoutByBorder],
-        mask: [updateMask],
+        ...ViewModifyEffect.effectMap,
         text: [updateAutoLayout]
     }
 
     clearCache(taskIds: string[]) {
         const task: Set<string> = new Set();
         taskIds.forEach((id: string) => {
-            const target = this.cacheMap[id];
+            const target = TextModifyEffect.cacheMap[id];
             target && target.forEach(t => task.add(t));
         });
         task.add('m_textpath');
         this.view.cache.clearCacheByKeys(Array.from(task));
+    }
+
+
+    emit(taskIds: string[]) {
+        const task: Set<Function> = new Set();
+        taskIds.forEach((id: string) => {
+            const target = TextModifyEffect.effectMap[id];
+            target && target.forEach(t => task.add(t))
+        });
+        Array.from(task).forEach(t => t(this.view));
     }
 }

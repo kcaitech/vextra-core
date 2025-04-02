@@ -33,7 +33,7 @@ export class ViewLayout {
         return true;
     }
 
-    _layout(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined) {
+    measure(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined) {
         const view = this.view;
         const shape = view.data;
         const transform = shape.transform.clone();
@@ -143,7 +143,7 @@ export class ViewLayout {
         const needLayout = view.m_ctx.removeReLayout(view); // remove from changeset
         if (props && !this.updateLayoutProps(props, needLayout)) return;
         view.m_ctx.setDirty(view);
-        this._layout(view.m_props.layoutSize, view.m_props.scale);
+        this.measure(view.m_props.layoutSize, view.m_props.scale);
         view.m_ctx.addNotifyLayout(view);
     }
 }

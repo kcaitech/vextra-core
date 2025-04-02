@@ -17,7 +17,7 @@ export class TextLayoutMgr extends ViewLayout {
         view.getLayout();
     }
 
-     _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
+     measure(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
         const view = this.view;
         const shape = view.data;
         const transform = shape.transform.clone();

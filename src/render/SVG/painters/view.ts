@@ -191,6 +191,7 @@ export class ViewSVGRenderer extends IRenderer {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 
         const view = this.view;
+
         const masked = view.masked;
         if (masked) {
             view.reset("g");

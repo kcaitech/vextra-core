@@ -114,6 +114,10 @@ export class PageView extends GroupShapeView implements RootView {
         return this.m_renderer.render();
     }
 
+    updateMaskMap() {
+        this.maskMap.clear();
+    }
+
     dbgCheckPath() {
         checkPath(this);
     }

@@ -1,21 +1,43 @@
-import { elh, ShapeView, TextShapeView } from "../../../dataview";
+import { EL, elh, ShapeView, TextShapeView } from "../../../dataview";
 import { innerShadowId } from "../effects";
 import { objectId } from "../../../basic/objectid";
 import { BlurType } from "../../../data";
 import { ViewSVGRenderer } from "./view";
 import { renderTextLayout } from "../effects/text";
+import { stroke } from "../../stroke";
 
 export class TextSVGRenderer extends ViewSVGRenderer {
     constructor(view: ShapeView) {
         super(view);
+    }
+    protected createBoard(): EL[] {
+        const view = this.view as TextShapeView;
+        const path = view.getTextPath().clone();
+        const border = view.getBorder();
+        if (border.strokePaints.length) path.addPath(stroke(view));
+        const layout = view.getLayout();
+        return renderTextLayout(elh, layout, view.frame, view.blur);
     }
 
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
         const view = this.view as TextShapeView;
 
+
+        const masked = view.masked;
+        if (masked) {
+            view.reset("g");
+            masked.render();
+            return ++this.m_render_version;
+        }
+
         if (!view.isVisible) {
             view.reset("g");
+            return ++this.m_render_version;
+        }
+
+        if (view.mask) {
+            this.maskGroupRender();
             return ++this.m_render_version;
         }
 

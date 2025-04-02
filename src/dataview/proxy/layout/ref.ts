@@ -103,7 +103,7 @@ export class RefLayout extends ViewLayout {
         if (changed) view.notify("childs");
     }
 
-    _layout(parentFrame: ShapeSize | undefined, _scale: { x: number; y: number; } | undefined) {
+    measure(parentFrame: ShapeSize | undefined, _scale: { x: number; y: number; } | undefined) {
         const view = this.view;
         const shape = view.data as SymbolRefShape;
         const transform = shape.transform.clone();
@@ -219,6 +219,6 @@ export class RefLayout extends ViewLayout {
         view.m_ctx.setDirty(view);
         view.m_ctx.addNotifyLayout(view);
 
-        this._layout(view.m_props.layoutSize, view.m_props.scale)
+        this.measure(view.m_props.layoutSize, view.m_props.scale)
     }
 }
