@@ -38,7 +38,7 @@ export class PathSVGRenderer extends ViewSVGRenderer {
         }
 
         if (view.mask) {
-            this.maskGroupRender();
+            this.renderMaskGroup();
             return ++this.m_render_version;
         }
 

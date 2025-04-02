@@ -59,7 +59,7 @@ export class TextSVGRenderer extends ViewSVGRenderer {
         }
 
         if (view.mask) {
-            this.maskGroupRender();
+            this.renderMaskGroup();
             return ++this.m_render_version;
         }
 

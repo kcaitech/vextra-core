@@ -128,25 +128,6 @@ export class ViewSVGRenderer extends IRenderer {
             .multi(this.m_mask_transform.inverse)
             .toString();
     }
-
-    maskGroupRender() {
-        const props = this.getProps();
-        const transform = this.getMaskTransform();
-        if (transform) {
-            Object.assign(props.style, { transform: transform.toString() });
-            const id = `mask-base-${objectId(this)}`;
-            const __body_transform = this.transformStrFromMaskSpace;
-            let content = this.createBoard();
-            const __body = elh("g", { style: { transform: __body_transform } }, content);
-            this.bleach(__body);
-            content = [__body];
-            const mask = elh('mask', { id }, content);
-            const rely = elh('g', { mask: `url(#${id})` }, this.renderMaskContents());
-            content = [mask, rely];
-            this.view.reset("g", props, content);
-        }
-    }
-
     getProps(): { [key: string]: string } & { style: any } {
         const props: any = {};
         const style: any = {};
@@ -165,6 +146,24 @@ export class ViewSVGRenderer extends IRenderer {
         props.style = style;
 
         return props;
+    }
+
+    renderMaskGroup() {
+        const props = this.getProps();
+        const transform = this.getMaskTransform();
+        if (transform) {
+            Object.assign(props.style, { transform: transform.toString() });
+            const id = `mask-base-${objectId(this)}`;
+            const __body_transform = this.transformStrFromMaskSpace;
+            let content = this.createBoard();
+            const __body = elh("g", { style: { transform: __body_transform } }, content);
+            this.bleach(__body);
+            content = [__body];
+            const mask = elh('mask', { id }, content);
+            const rely = elh('g', { mask: `url(#${id})` }, this.renderMaskContents());
+            content = [mask, rely];
+            this.view.reset("g", props, content);
+        }
     }
 
     renderFills(): EL[] {
@@ -211,7 +210,7 @@ export class ViewSVGRenderer extends IRenderer {
         }
 
         if (view.mask) {
-            this.maskGroupRender();
+            this.renderMaskGroup();
             return ++this.m_render_version;
         }
 
