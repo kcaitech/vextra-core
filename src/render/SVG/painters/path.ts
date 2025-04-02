@@ -10,6 +10,16 @@ export class PathSVGRenderer extends ViewSVGRenderer {
         super(view);
     }
 
+    bleach(el: EL) {
+        if (el.elattr.fill && el.elattr.fill !== 'none' && !(el.elattr.fill as string).startsWith('url(#gradient')) {
+            el.elattr.fill = '#FFF';
+        }
+        if (el.elattr.stroke && el.elattr.stroke !== 'none' && !(el.elattr.stroke as string).startsWith('url(#gradient')) {
+            el.elattr.stroke = '#FFF';
+        }
+        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
+    }
+
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
 

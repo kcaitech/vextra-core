@@ -18,7 +18,29 @@ export class TextSVGRenderer extends ViewSVGRenderer {
         const layout = view.getLayout();
         return renderTextLayout(elh, layout, view.frame, view.blur);
     }
+    bleach(el: EL) {
+        if (el.elattr.fill) el.elattr.fill = '#FFF';
+        if (el.elattr.stroke) el.elattr.stroke = '#FFF';
 
+        // 漂白字体
+        if (el.eltag === 'text') {
+            if ((el.elattr?.style as any).fill) {
+                (el.elattr?.style as any).fill = '#FFF'
+            }
+        }
+
+        // 漂白阴影
+        if (el.eltag === 'feColorMatrix' && el.elattr.result) {
+            let values: any = el.elattr.values;
+            if (values) values = values.split(' ');
+            if (values[3]) values[3] = 1;
+            if (values[8]) values[8] = 1;
+            if (values[13]) values[13] = 1;
+            el.elattr.values = values.join(' ');
+        }
+
+        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
+    }
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;
         const view = this.view as TextShapeView;
