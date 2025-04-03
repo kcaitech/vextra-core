@@ -38,7 +38,7 @@ import {
     SideType,
     StarShape,
     Stop,
-    Style, StyleMangerMember,
+    Style,
     SymbolRefShape,
     SymbolShape,
     SymbolUnionShape,
@@ -50,16 +50,12 @@ import {
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
 import {
-    newArrowShape,
     newArtboard,
     newAutoLayoutArtboard,
     newBoolShape,
     newGroupShape,
     newImageFillShape,
-    newLineShape,
-    newOvalShape,
     newPathShape,
-    newRectShape,
     newSolidColorFill,
     newSymbolRefShape,
     newSymbolShape
@@ -71,7 +67,7 @@ import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { IImportContext, importArtboard, importAutoLayout, importBlur, importBorder, importCornerRadius, importFill, importGradient, importMarkerType, importOverlayBackgroundAppearance, importOverlayPosition, importPrototypeInterAction, importPrototypeStartingPoint, importShadow, importStop, importStyle, importSymbolShape, importText, importTransform } from "../data/baseimport";
 import { TableEditor } from "./table";
-import { exportGradient, exportStop, exportSymbolShape } from "../data/baseexport";
+import { exportGradient, exportSymbolShape } from "../data/baseexport";
 import { after_remove, clear_binds_effect, find_state_space, fixTextShapeFrameByLayout, get_symbol_by_layer, init_state, make_union, modify_frame_after_inset_state, modify_index } from "./utils/other";
 import { v4 } from "uuid";
 import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind, _ov, shape4Autolayout } from "./symbol";
@@ -86,7 +82,7 @@ import {
     adapt2Shape,
     ArtboardView,
     BoolShapeView, ContactLineView,
-    CutoutShapeView,
+    CutoutShapeView, FrameCpt,
     GroupShapeView,
     PageView,
     PathShapeView,
@@ -116,12 +112,6 @@ export interface PositionAdjust { // 涉及属性：frame.x、frame.y
     transY: number
 }
 
-export interface FrameAdjust { // frame.width、frame.height
-    target: Shape
-    widthExtend: number
-    heightExtend: number
-}
-
 export interface BatchAction { // target,index,value
     target: ShapeView
     index: number
@@ -131,17 +121,6 @@ export interface BatchAction { // target,index,value
 export interface BatchAction2 { // targer、value
     target: ShapeView
     value: any
-}
-
-export interface BatchAction3 { // targer、index
-    target: ShapeView
-    index: number
-}
-
-export interface BatchAction4 { // targer、value、type
-    target: ShapeView
-    index: number
-    type: 'fills' | 'borders'
 }
 
 export interface BatchAction5 { // targer、value、type
@@ -339,34 +318,33 @@ export class PageEditor {
         }
     }
 
-    dissolution_artboard(shapes: ArtboardView[]): false | Shape[] {
-        const childrens: Shape[] = [];
-        const api = this.__repo.start("dissolution_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = childrens.map(c => c.id);
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
+    dissolution_artboard(shapes: ArtboardView[]): Shape[] {
         try {
+            const children: Shape[] = [];
+            const api = this.__repo.start("dissolution_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = children.map(c => c.id);
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
                 if (!shape.parent) continue;
                 const childs = ungroup(this.__document, this.page, adapt2Shape(shape) as Artboard, api);
-                childrens.push(...childs);
+                children.push(...childs);
             }
             this.__repo.commit();
-            return childrens.length > 0 ? childrens : false;
+            return children;
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
-        return false;
     }
 
-    create_autolayout_artboard(shapes: ShapeView[], artboardname: string): false | Artboard {
-        if (shapes.length === 0) return false;
-        if (shapes.find((v) => !v.parent)) return false;
+    create_autolayout_artboard(shapes: ShapeView[], artboardname: string): Artboard | void {
+        if (shapes.length === 0) return;
+        if (shapes.find((v) => !v.parent)) return;
         const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
         const shapes_rows = layoutShapesOrder2(shapes, false);
@@ -401,10 +379,9 @@ export class PageEditor {
             this.__repo.commit();
             return artboard;
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
-        return false;
     }
 
     modifyShapesContextSettingOpacity(shapes: ShapeView[], value: number) {
@@ -426,7 +403,6 @@ export class PageEditor {
     }
 
     modifyShapesContextSettingBlendMode(shapes: Shape[], blendMode: types.BlendMode) {
-        if (!shapes.length) return console.log('invalid data');
         try {
             const api = this.__repo.start("modifyShapesContextSettingBlendMode");
             for (let i = 0, l = shapes.length; i < l; i++) {
@@ -436,9 +412,8 @@ export class PageEditor {
             this.__repo.commit();
             return true;
         } catch (e) {
-            console.log(e);
             this.__repo.rollback();
-            return false;
+            throw e;
         }
     }
 
@@ -549,7 +524,8 @@ export class PageEditor {
             if (!shapes.length) return;
 
             const shape0 = shapes[0];
-            const frame = shape0.frame;
+            const __f = FrameCpt.frame2Parent(shape0);
+            const frame = new ShapeFrame(__f.x, __f.y, __f.width, __f.height);
 
             const replace = shapes.length === 1
                 && ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) || shape0 instanceof Artboard);
@@ -2027,19 +2003,6 @@ export class PageEditor {
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
                 api.shapeModifyConstrainerProportions(this.page, adapt2Shape(target), value);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
-    setShapesFrame(actions: FrameAdjust[]) {
-        const api = this.__repo.start('setShapesFrame');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, widthExtend, heightExtend } = actions[i];
-                expand(api, this.__document, this.page, target, widthExtend, heightExtend);
             }
             this.__repo.commit();
         } catch (error) {
