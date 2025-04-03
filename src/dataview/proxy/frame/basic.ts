@@ -1,6 +1,6 @@
 import { ShapeView } from "../../shape";
 import { XYsBounding } from "../../../io/cilpboard";
-import { ShapeFrame } from "../../../data";
+import { Shape, ShapeFrame } from "../../../data";
 export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
     if (frame.x !== x || frame.y !== y || frame.width !== w || frame.height !== h) {
         frame.x = x;
@@ -13,7 +13,7 @@ export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, 
 }
 
 export class FrameCpt {
-    static frame2Root(view: ShapeView) {
+    static frame2Root(view: ShapeView | Shape) {
         const m = view.matrix2Root();
         const frame = view.frame;
         const points = [
@@ -26,7 +26,7 @@ export class FrameCpt {
         return { x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top };
     }
 
-    static frame2Parent(view: ShapeView) {
+    static frame2Parent(view: ShapeView | Shape) {
         const m = view.matrix2Parent();
         const frame = view.frame;
         const points = [
