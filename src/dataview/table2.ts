@@ -37,7 +37,7 @@ import { layoutTable } from "../data/tablelayout";
 import { getTableCells, getTableVisibleCells } from "../data/tableread";
 import { BasicArray } from "../data/basic";
 import { BorderPosition, CornerType, FillType, Point2D, SideType } from "../data/typesdefine";
-import { render as renderLine } from "../render/line_borders";
+import { render as renderLine } from "../render/SVG/effects/line_borders";
 import { ArtboardView } from "./artboard";
 import { v4 as uuid } from "uuid";
 
@@ -79,23 +79,23 @@ export class TableView2 extends ShapeView {
     private m_savewidth: number = 0;
     private m_saveheight: number = 0;
 
-    onDataChange(...args: any[]): void {
-        super.onDataChange(...args);
-        if (args.includes('rowHeights') || args.includes('colWidths') || args.includes('variables')) this.m_layout = undefined;
-    }
+    // onDataChange(...args: any[]): void {
+    //     super.onDataChange(...args);
+    //     if (args.includes('rowHeights') || args.includes('colWidths') || args.includes('variables')) this.m_layout = undefined;
+    // }
 
     // 单元格不展示
     get naviChilds(): ShapeView[] | undefined {
         return undefined;
     }
 
-    protected _layout(
-        parentFrame: ShapeFrame | undefined,
-        scale: { x: number, y: number } | undefined,
-    ): void {
-        super._layout(parentFrame, scale);
-        this.updateChildren();
-    }
+    // protected _layout(
+    //     parentFrame: ShapeFrame | undefined,
+    //     scale: { x: number, y: number } | undefined,
+    // ): void {
+    //     super._layout(parentFrame, scale);
+    //     this.updateChildren();
+    // }
 
     _getCellAttr(rowIdx: number, colIdx: number): TableCellAttr | undefined {
         if (rowIdx < 0 || colIdx < 0 || rowIdx >= this.rowCount || colIdx >= this.colCount) {
@@ -216,12 +216,12 @@ export class TableView2 extends ShapeView {
         if (this.m_children.length > idx) {
             this.removeChilds(idx, this.m_children.length - idx).forEach((c) => {
                 this.m_cells.delete(c.id);
-                c.destory();
+                c.destroy();
             });
         }
     }
 
-    protected renderBorders(): EL[] {
+    protected renderBorder(): EL[] {
         const shape = this.m_data as TableShape2;
         const layout = this.getLayout();
 

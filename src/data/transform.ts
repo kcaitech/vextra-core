@@ -268,7 +268,8 @@ export class Transform extends classes.Transform {
     toString() {
         return 'matrix(' + this.toArray().join(',') + ')';
     }
-    toArray() {
+
+    toArray(): [number, number, number, number, number, number] {
         return [this.m00, this.m10, this.m01, this.m11, this.m02, this.m12]
     }
 

@@ -8,21 +8,19 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { BoolOp, BoolShape, BorderPosition, ShapeFrame, parsePath, FillType, GradientType, ShapeType, Fill } from "../data/classes";
-import { ShapeView, updateFrame } from "./shape";
+import { BoolOp, BoolShape, ShapeFrame, parsePath } from "../data";
+import { ShapeView } from "./shape";
 import { TextShapeView } from "./textshape";
 import { GroupShapeView } from "./groupshape";
-import { EL, elh } from "./el";
-import { renderBorders, renderFills } from "../render";
 import { FrameGrid } from "../basic/framegrid";
 import { Path } from "@kcdesign/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
 import { OpType } from "@kcdesign/path";
-import { gPal } from "../basic/pal";
 import { PathShapeView } from "./pathshape";
-import { importFill } from "../data/baseimport";
-import { exportFill } from "../data/baseexport";
-import { border2path } from "./border2path";
+import { stroke } from "../render/stroke";
+import { DViewCtx, PropsType } from "./viewctx";
+import { BoolModifyEffect } from "./proxy/effects/bool";
+import { BoolShapeViewCache } from "./proxy/cache/bool";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
@@ -62,7 +60,7 @@ function hasFill(shape: ShapeView) {
 function boundsFrame(shape: ShapeView): ShapeFrame {
     let minx = 0, maxx = 0, miny = 0, maxy = 0;
     shape.childs.forEach((c, i) => {
-        const cf = c._p_frame;
+        const cf = c.relativeFrame;
         if (i === 0) {
             minx = cf.x;
             maxx = cf.x + cf.width;
@@ -105,9 +103,8 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
 
     if (child0.isNoTransform()) {
         path0.translate(child0.transform.translateX, child0.transform.translateY);
-        // frame0 = new ShapeFrame(child0.transform.translateX, child0.transform.translateY, child0.frame.width, child0.frame.height);
         // 上面个计算方式对于group类shape不对
-        frame0 = child0._p_frame
+        frame0 = child0.relativeFrame
     } else {
         path0.transform(child0.matrix2Parent());
         const bounds = path0.bbox();
@@ -128,8 +125,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
         if (!path1) continue;
         if (child1.isNoTransform()) {
             path1.translate(child1.transform.translateX, child1.transform.translateY);
-            // frame1 = new ShapeFrame(child1.transform.translateX, child1.transform.translateY, child1.frame.width, child1.frame.height);
-            frame1 = child1._p_frame
+            frame1 = child1.relativeFrame;
         } else {
             path1.transform(child1.matrix2Parent());
             const bounds = path1.bbox();
@@ -164,12 +160,14 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
     return resultpath;
 }
 
-
 export class BoolShapeView extends GroupShapeView {
-
+    constructor(ctx: DViewCtx, props: PropsType) {
+        super(ctx, props);
+        this.effect = new BoolModifyEffect(this);
+        this.cache = new BoolShapeViewCache(this);
+    }
     onMounted() {
         super.onMounted();
-        this.createBorderPath();
     }
 
     get data(): BoolShape {
@@ -180,162 +178,18 @@ export class BoolShapeView extends GroupShapeView {
         return this.data.getBoolOp();
     }
 
-    protected _bubblewatcher(...args: any[]) {
-        super._bubblewatcher(...args);
-        this.m_path = undefined;
-        this.m_pathstr = undefined;
+    protected _bubble_watcher(...args: any[]) {
+        super._bubble_watcher(...args);
+        this.cache.clearCacheByKeys(['m_path', 'm_pathstr']);
         this.m_ctx.setDirty(this);
-    }
-
-    onDataChange(...args: any[]): void {
-        super.onDataChange(...args);
-
-        if (args.includes('variables') || args.includes('childs')) {
-            this.m_path = undefined;
-            this.m_pathstr = undefined;
-        }
-
-        if (args.includes('variables')) {
-            this.m_fills = undefined;
-            this.m_borders = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
-        }
-        else if (args.includes('fills')) {
-            this.m_fills = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
-        }
-        else if (args.includes('borders')) {
-            this.m_borders = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.createBorderPath();
-        }
-    }
-
-    protected renderFills(): EL[] {
-        let fills = this.getFills() as Fill[];
-        if (this.mask) {
-            fills = fills.map(f => {
-                if (f.fillType === FillType.Gradient && f.gradient?.gradientType === GradientType.Angular) {
-                    const nf = importFill(exportFill(f));
-                    nf.fillType = FillType.SolidColor;
-                    return nf;
-                } else return f;
-            })
-        }
-        return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
-    }
-
-    protected renderBorders(): EL[] {
-        return renderBorders(elh, this.getBorders(), this.frame, this.getPathStr(), this.data, this.radius);
-    }
-
-    getPath() {
-        if (this.m_path) return this.m_path;
-        this.m_path = render2path(this);
-        this.m_path.freeze();
-        return this.m_path;
-    }
-
-    // childs
-    protected renderContents(): EL[] {
-        return [];
     }
 
     asyncRender() {
         return this.render();
     }
 
-    updateFrames(): boolean {
-        const border = this.getBorders();
-        let maxtopborder = 0;
-        let maxleftborder = 0;
-        let maxrightborder = 0;
-        let maxbottomborder = 0;
-        if (border) {
-            const isEnabled = border.strokePaints.some(p => p.isEnabled);
-            if (isEnabled) {
-                const outer = border.position === BorderPosition.Outer;
-                maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
-                maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
-                maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
-                maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
-            }
-
-        }
-
-        let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
-            this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
-        const bounds = this.getPath().bbox();
-        if (updateFrame(this.m_frame, bounds.x, bounds.y, bounds.w, bounds.h)) {
-            this._save_frame.x = this.m_frame.x;
-            this._save_frame.y = this.m_frame.y;
-            this._save_frame.width = this.m_frame.width;
-            this._save_frame.height = this.m_frame.height;
-            changed = true;
-        }
-        // update visible
-        if (updateFrame(this.m_visibleFrame, this.frame.x - maxleftborder, this.frame.y - maxtopborder, this.frame.width + maxleftborder + maxrightborder, this.frame.height + maxtopborder + maxbottomborder)) changed = true;
-
-        const childouterbounds = this.m_children.map(c => (c as ShapeView)._p_outerFrame);
-        const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
-            if (i === 0) {
-                p.minx = c.x;
-                p.maxx = c.x + c.width;
-                p.miny = c.y;
-                p.maxy = c.y + c.height;
-            } else {
-                p.minx = Math.min(p.minx, c.x);
-                p.maxx = Math.max(p.maxx, c.x + c.width);
-                p.miny = Math.min(p.miny, c.y);
-                p.maxy = Math.max(p.maxy, c.y + c.height);
-            }
-            return p;
-        }
-        const outerbounds = childouterbounds.reduce(reducer, { minx: 0, miny: 0, maxx: 0, maxy: 0 });
-        // update outer
-        if (updateFrame(this.m_outerFrame, outerbounds.minx, outerbounds.miny, outerbounds.maxx - outerbounds.minx, outerbounds.maxy - outerbounds.miny)) changed = true;
-
-        const mapframe = (i: ShapeFrame, out: ShapeFrame) => {
-            const transform = this.transform;
-            if (this.isNoTransform()) {
-                return updateFrame(out, i.x + transform.translateX, i.y + transform.translateY, i.width, i.height);
-            }
-            const frame = i;
-            const m = transform;
-            const corners = [
-                { x: frame.x, y: frame.y },
-                { x: frame.x + frame.width, y: frame.y },
-                { x: frame.x + frame.width, y: frame.y + frame.height },
-                { x: frame.x, y: frame.y + frame.height }]
-                .map((p) => m.computeCoord(p));
-            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-            return updateFrame(out, minx, miny, maxx - minx, maxy - miny);
-        }
-        if (mapframe(this.m_frame, this._p_frame)) changed = true;
-        if (mapframe(this.m_visibleFrame, this._p_visibleFrame)) changed = true;
-        if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
-        if (changed) {
-            this.m_client_x = this.m_client_y = undefined;
-        }
-        return changed;
-    }
-
-    createBorderPath() {
-        const borders = this.getBorders();
-        const fills = this.getFills();
-        if (!fills.length && borders) {
-            this.m_border_path = border2path(this, borders);
-            const bbox = this.m_border_path.bbox();
-            this.m_border_path_box = new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
-        }
+    render() {
+        return this.m_renderer.render();
     }
 }
 
@@ -346,10 +200,10 @@ const getPath = (shape: ShapeView) => {
     } else if (shape instanceof TextShapeView) {
         return shape.getTextPath().clone();
     } else if (shape instanceof PathShapeView && (!shape.data.isClosed || !hasFill(shape))) {
-        const border = shape.getBorders();
+        const border = shape.getBorder();
         const isEnabled = border.strokePaints.some(p => p.isEnabled);
         if (isEnabled) {
-            return border2path(shape, border);
+            return stroke(shape);
         }
         return new Path();
     } else {

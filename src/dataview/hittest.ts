@@ -18,8 +18,8 @@ function frameContains(frame: ShapeFrame, x: number, y: number) {
 function _hitTest(shape: ShapeView, x: number, y: number, type: '_p_frame' | '_p_visibleFrame' | '_p_outerFrame', depth: number, ret: { shape: ShapeView, x: number, y: number }[]) {
     for (let i = 0, len = shape.m_children.length; i < len; ++i) {
         const child = shape.m_children[i] as ShapeView;
-        if (frameContains(child[type], x, y)) {
-            const xy = child.m_transform.inverseCoord(x, y);
+        if (frameContains(child.frameProxy[type], x, y)) {
+            const xy = child.transform.inverseCoord(x, y);
             ret.push({ shape: child, x: xy.x, y: xy.y })
             if (depth > 1) _hitTest(child, xy.x, xy.y, type, depth - 1, ret)
         }
@@ -27,9 +27,8 @@ function _hitTest(shape: ShapeView, x: number, y: number, type: '_p_frame' | '_p
 }
 
 function hitTest(shape: ShapeView, x: number, y: number, type: { m: 'm_frame', p: '_p_frame' } | { m: 'm_visibleFrame', p: '_p_visibleFrame' } | { m: 'm_outerFrame', p: '_p_outerFrame' }, depth: number, ret: { shape: ShapeView, x: number, y: number }[]) {
-    if (depth > 0 && frameContains(shape[type.m], x, y)) _hitTest(shape, x, y, type.p, depth, ret);
+    if (depth > 0 && frameContains(shape.frameProxy[type.m], x, y)) _hitTest(shape, x, y, type.p, depth, ret);
 }
-
 
 export function hitContent(shape: ShapeView, x: number, y: number, depth: number): { shape: ShapeView; x: number; y: number; }[] {
     const ret: { shape: ShapeView, x: number, y: number }[] = [];
