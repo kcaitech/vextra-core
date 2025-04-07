@@ -23,7 +23,7 @@ const handler: { [key: string]: (h: Function, fill: Fill, path: string, frame: S
 handler[FillType.SolidColor] = function (h: Function, fill: Fill, path: string): EL {
     const color = fill.color;
     return h("path", {
-        class: randomId(),
+        class: 'fill-' + randomId(),
         d: path,
         fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
         "fill-opacity": color.alpha,
