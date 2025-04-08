@@ -253,7 +253,7 @@ export class TableCellView extends ShapeView {
         //
         // const filterId = `${objectId(this)}`;
         // const shadows = this.renderShadows(filterId);
-        // const blurId = `blur_${objectId(this)}`;
+        // const blurId = `blur-${objectId(this)}`;
         // const blur = this.renderBlur(blurId);
         //
         // let props = this.renderProps();
@@ -263,7 +263,7 @@ export class TableCellView extends ShapeView {
         // if (shadows.length) {
         //     let filter: string = '';
         //     const inner_url = innerShadowId(filterId, this.getShadows());
-        //     filter = `url(#pd_outer-${filterId}) `;
+        //     filter = `url(#shadow-outer-${filterId}) `;
         //     if (inner_url.length) filter += inner_url.join(' ');
         //     children = [...shadows, elh("g", { filter }, children)];
         // }

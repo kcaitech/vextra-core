@@ -53,12 +53,12 @@ export class SymbolSVGRenderer extends ViewSVGRenderer {
         if (shadows.length) {
             let filter: string = '';
             const inner_url = innerShadowId(filterId, view.getShadows());
-            filter = `url(#pd_outer-${filterId}) `;
+            filter = `url(#shadow-outer-${filterId}) `;
             if (inner_url.length) filter += inner_url.join(' ');
             children = [...shadows, elh("g", {filter}, children)];
         }
 
-        const blurId = `blur_${objectId(view)}`;
+        const blurId = `blur-${objectId(view)}`;
         const blur = this.renderBlur(blurId);
         if (blur.length) {
             if (view.blur!.type === BlurType.Gaussian) {

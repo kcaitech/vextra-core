@@ -81,7 +81,7 @@ export class ArtboardSVGRenderer extends ViewSVGRenderer {
         if (shadows.length) {
             let filter: string = '';
             const inner_url = innerShadowId(filterId, view.getShadows());
-            filter = `url(#pd_outer-${filterId}) `;
+            filter = `url(#shadow-outer-${filterId}) `;
             if (inner_url.length) filter += inner_url.join(' ');
             props.filter = filter;
             children = [...shadows, ...children];
@@ -89,7 +89,7 @@ export class ArtboardSVGRenderer extends ViewSVGRenderer {
 
         const blur = view.blur;
         if (blur) {
-            const blurId = `blur_${objectId(view)}`;
+            const blurId = `blur-${objectId(view)}`;
             const blurEl = this.renderBlur(blurId);
             children = [...blurEl, ...children];
             if (blur.type === BlurType.Background) {

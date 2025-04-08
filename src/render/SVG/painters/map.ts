@@ -33,5 +33,6 @@ export const SVGConstructorMap = new Map<ShapeType, RendererType>([
     [ShapeType.Star, PathSVGRenderer],
     [ShapeType.Polygon, PathSVGRenderer],
     [ShapeType.SymbolUnion, ViewSVGRenderer],
-    [ShapeType.Group, ViewSVGRenderer]
+    [ShapeType.Group, ViewSVGRenderer],
+    [ShapeType.Line, PathSVGRenderer]
 ]);

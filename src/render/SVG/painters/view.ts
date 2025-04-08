@@ -66,7 +66,7 @@ export class ViewSVGRenderer extends IRenderer {
 
         const filterId = `${objectId(this)}`;
         const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
+        const blurId = `blur-${objectId(this)}`;
         const blur = this.renderBlur(blurId);
 
         const contextSettings = this.view.style.contextSettings;
@@ -86,7 +86,7 @@ export class ViewSVGRenderer extends IRenderer {
             if (this.view.type === ShapeType.Rectangle || this.view.type === ShapeType.Oval) {
                 if (inner_url.length) filter = `${inner_url.join(' ')}`
             } else {
-                filter = `url(#pd_outer-${filterId}) `;
+                filter = `url(#shadow-outer-${filterId}) `;
                 if (inner_url.length) filter += inner_url.join(' ');
             }
             children = [...shadows, elh("g", { filter }, children)];
@@ -227,12 +227,12 @@ export class ViewSVGRenderer extends IRenderer {
         if (shadows.length) {
             let filter: string = '';
             const inner_url = innerShadowId(filterId, view.getShadows());
-            filter = `url(#pd_outer-${filterId}) `;
+            filter = `url(#shadow-outer-${filterId}) `;
             if (inner_url.length) filter += inner_url.join(' ');
             children = [...shadows, elh("g", { filter }, children)];
         }
 
-        const blurId = `blur_${objectId(view)}`;
+        const blurId = `blur-${objectId(view)}`;
         const blur = this.renderBlur(blurId);
         if (blur.length) {
             if (view.blur!.type === BlurType.Gaussian) {
