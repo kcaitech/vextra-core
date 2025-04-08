@@ -438,6 +438,7 @@ export function newDefaultTextShape(name: string, styleMgr: ResourceMgr<StyleMan
     }
     textshape.style = newFlatStyle(styleMgr);
     textshape.text = newText(attr);
+    textshape.text.setStylesMgr(styleMgr)
     addCommonAttr(textshape);
     return textshape;
 }

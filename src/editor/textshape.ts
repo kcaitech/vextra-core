@@ -92,15 +92,15 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public fixFrameByLayout(api: Operator) {
-        if (this.shape.isVirtualShape) return; // api = basicapi;
-        if (this.view instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, this.view);
-        else if (this.view instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, this.view, this.view.parent as TableView);
+        // if (this.shape.isVirtualShape) return; // api = basicapi;
+        // if (this.view instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, this.view);
+        // else if (this.view instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, this.view, this.view.parent as TableView);
     }
     public fixFrameByLayout2(api: Operator, shape: TextShapeView | TableCellView | Variable) {
-        if (shape instanceof Variable) return;
-        if (shape.isVirtualShape) return; // api = basicapi;
-        if (shape instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, shape);
-        else if (shape instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, shape, this.view.parent as TableView);
+        // if (shape instanceof Variable) return;
+        // if (shape.isVirtualShape) return; // api = basicapi;
+        // if (shape instanceof TextShapeView) fixTextShapeFrameByLayout(api, this.__page, shape);
+        // else if (shape instanceof TableCellView) fixTableShapeFrameByLayout(api, this.__page, shape, this.view.parent as TableView);
     }
 
     private overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Operator, view?: ShapeView) {
@@ -1229,22 +1229,21 @@ export class TextShapeEditor extends ShapeEditor {
     }
 
     public setTextTransform(transform: TextTransformType | undefined, index: number, len: number) {
-        if (len === 0 && transform !== TextTransformType.UppercaseFirst) {
-            this.cacheAttr.transform = transform;
-            return;
-        }
-        const api = this.__repo.start("setTextTransform");
         try {
+            if (len === 0 && transform !== TextTransformType.UppercaseFirst) {
+                this.cacheAttr.transform = transform;
+                return;
+            }
+            const api = this.__repo.start("setTextTransform");
             const shape = this.shape4edit(api);
             api.textModifyTransform(this.__page, shape, transform, index, len);
             this.fixFrameByLayout(api);
             this.__repo.commit();
             return true;
         } catch (error) {
-            console.log(error)
             this.__repo.rollback();
+            throw error;
         }
-        return false;
     }
 
     public setTextTransformMulti(shapes: (TextShapeView | TableCellView)[], type: TextTransformType | undefined) {

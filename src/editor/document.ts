@@ -29,7 +29,7 @@ import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
 import { FillMask, ShadowMask, StyleMangerMember, BlurMask, BorderMask, RadiusMask, Blur, TextMask } from "../data/style";
 import { adapt2Shape, PageView, ShapeView } from "../dataview";
-import { Fill, Shadow, BlurType } from "../data/classes";
+import { Fill, Shadow, BlurType, UnderlineType,StrikethroughType,TextTransformType } from "../data/classes";
 import { BasicArray, Point2D, ResourceMgr } from "../data";
 
 export function createDocument(documentName: string, repo: TransactDataGuard): Document {
@@ -337,6 +337,103 @@ export class DocEditor {
         return true;
     }
 
+    modifyTextMaskFontName(sheetid: string, maskid: string, value: string) {
+        const api = this.__repo.start('modifyTextMaskFontName');
+        try {
+            api.modifyTextMaskFontName(this.__document, sheetid, maskid, value)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyTextMaskFontkWeight(sheetid: string, maskid: string, weight: number, italic: boolean) {
+        const api = this.__repo.start('modifyTextMaskFontkWeight');
+        try {
+            api.modifyTextMaskWeight(this.__document, sheetid, maskid, weight)
+            api.modifyTextMaskItalic(this.__document, sheetid, maskid, italic)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyTextMaskFontSize(sheetid: string, maskid: string, size: number) {
+        const api = this.__repo.start('modifyTextMaskFontSize');
+        try {
+            api.modifyTextMaskFontSize(this.__document, sheetid, maskid, size)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyTextMaskLineheight(sheetid: string, maskid: string, lineHeight: number | undefined, isAuto: boolean) {
+        const api = this.__repo.start('modifyTextMaskLineheight');
+        try {
+            api.modifyTextMaskAutoHeight(this.__document, sheetid, maskid, isAuto)
+            api.modifyTextMaskMinHeight(this.__document, sheetid, maskid, lineHeight)
+            api.modifyTextMaskMaxHeight(this.__document, sheetid, maskid, lineHeight)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+
+    }
+
+    modifyTextMaskKerning(sheetid: string, maskid: string, kerning: number) {
+        const api = this.__repo.start('modifyTextMaskKerning');
+        try {
+            api.modifyTextMaskKerning(this.__document, sheetid, maskid, kerning)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+        return true;
+    }
+
+    modifyTextMaskUnderline(sheetid: string, maskid: string, underline: UnderlineType | undefined) {
+        const api = this.__repo.start('modifyTextMaskUnderline');
+        try {
+            api.modifyTextMaskUnderline(this.__document, sheetid, maskid, underline)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    modifyTextMaskStrikethrough(sheetid: string, maskid: string, strikethrough: StrikethroughType | undefined) {
+        const api = this.__repo.start('modifyTextMaskStrikethrough');
+        try {
+            api.modifyTextMaskStrikethrough(this.__document, sheetid, maskid, strikethrough)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
+    modifyTextMaskTransform(sheetid: string, maskid: string, transform: TextTransformType | undefined) {
+        const api = this.__repo.start('modifyTextMaskTransform');
+        try {
+            api.modifyTextMaskTransform(this.__document, sheetid, maskid, transform)
+            this.__repo.commit();
+        } catch (error) {
+            console.log(error)
+            this.__repo.rollback();
+        }
+    }
+
     modifyStyleName(sheetid: string, maskid: string, name: string) {
         const api = this.__repo.start('modifyStyleName');
         try {
@@ -360,4 +457,5 @@ export class DocEditor {
         }
         return true;
     }
+
 }
