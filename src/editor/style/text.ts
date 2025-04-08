@@ -99,7 +99,6 @@ export class TextModifier extends Modifier {
         }
     }
 
-
     unbindShapesTextMask(pageView: PageView, views: TextShapeView[], idx: number, len: number) {
         try {
             const api = this.getApi('unbindShapesTextMask');
@@ -122,29 +121,19 @@ export class TextModifier extends Modifier {
                   
                     _text.paras.forEach((p) => {
                         const para = new Para(p.text, new BasicArray())
-                        
+                       
                       
                         p.spans.forEach((s) => {
-                            const span = new Span(p.length);
+                            const span = new Span(s.length);
                             if (s.textMask) {
                                 const mask = shape.text.getStylesMgr()?.getSync(s.textMask) as TextMask;
                                 const _text = importTextAttr(mask.text)
-                                mergeParaAttr(para, _text);
-                                mergeSpanAttr(span, _text);
-                                // api.deleteText(page, shape, index, Infinity);
-                                // api.insertComplexText(page, shape, index, text1)
-                                // api.textModifyFontName(page, shape, index, s.length, mask.text.fontName??'');
-                                // api.textModifyWeight(page, shape, mask.text.weight??400, index, s.length)
-                                // api.textModifyItalic(page,shape, mask.text.italic??false, index, s.length)
-                                // api.textModifyFontSize(page, shape, index, s.length, mask.text.fontSize??14,)
-                                // api.textModifyKerning(page, shape, mask.text.kerning??0, index, s.length)
-                                // api.textModifyUnderline(page, shape, mask.text.underline??UnderlineType.None, index, s.length)
-                                // api.textModifyStrikethrough(page, shape, mask.text.strikethrough??StrikethroughType.None, index, s.length)
-                                // api.textModifyTransform(page, shape, mask.text.transform??TextTransformType.None, index, s.length)
+                                mergeParaAttr(p, _text);
+                                mergeSpanAttr(s, _text);
                             }
-                            para.spans.push(span)
+                            para.spans.push(s)
                         })
-                        text1.paras.push(para)
+                        text1.paras.push(p)
                     })
                     api.deleteText(page, shape, index, Infinity);
                     api.insertComplexText(page, shape, index, text1)
