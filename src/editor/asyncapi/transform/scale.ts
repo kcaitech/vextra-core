@@ -578,6 +578,8 @@ export function uniformScale(
     const transformRecorder: TransformRecorder = _transformRecorder ?? new Map();
     const valueRecorder: Map<string, number> = _valueRecorder ?? new Map();
     const container4modifyStyle: ShapeView[] = [];
+    const absRatio = Math.abs(ratio);
+
     for (const unit of units) {
         const { transform, shape: view, size, decomposeScale } = unit;
         const shape = adapt2Shape(view);
@@ -587,7 +589,7 @@ export function uniformScale(
 
         if (shape instanceof SymbolRefShape) {
             const scale = getScale(view);
-            api.modifyShapeScale(page, shape, scale * ratio);
+            api.modifyShapeScale(page, shape, scale * absRatio);
             continue;
         }
 
@@ -606,31 +608,32 @@ export function uniformScale(
         const thicknessRight = getBaseValue(bId, 'thicknessRight', borders.sideSetting.thicknessRight);
         const setting = new BorderSideSetting(
             SideType.Normal,
-            thicknessTop * ratio,
-            thicknessLeft * ratio,
-            thicknessBottom * ratio,
-            thicknessRight * ratio
+            thicknessTop * absRatio,
+            thicknessLeft * absRatio,
+            thicknessBottom * absRatio,
+            thicknessRight * absRatio
         );
+
         api.setBorderSide(shape.getBorders(), setting);
         const shadows = shape.getShadows();
         shadows.forEach(s => {
             const sId = s.id + shape.id;
             const blurRadius = getBaseValue(sId, 'blurRadius', s.blurRadius);
-            api.setShadowBlur(s, blurRadius * ratio);
+            api.setShadowBlur(s, blurRadius * absRatio);
             const offsetX = getBaseValue(sId, 'offsetX', s.offsetX);
-            api.setShadowOffsetX(s, offsetX * ratio);
+            api.setShadowOffsetX(s, offsetX * absRatio);
             const offsetY = getBaseValue(sId, 'offsetY', s.offsetY);
-            api.setShadowOffsetY(s, offsetY * ratio);
+            api.setShadowOffsetY(s, offsetY * absRatio);
             const spread = getBaseValue(sId, 'spread', s.spread);
-            api.setShadowSpread(s, spread * ratio)
+            api.setShadowSpread(s, spread * absRatio)
         });
         const blur = view.blur;
-        if (blur?.saturation) api.shapeModifyBlurSaturation(blur, blur.saturation * ratio);
+        if (blur?.saturation) api.shapeModifyBlurSaturation(blur, blur.saturation * absRatio);
 
         if (view instanceof TextShapeView) textSet.push(view);
         if (view instanceof SymbolRefView) {
             const scale = getScale(view);
-            api.modifyShapeScale(page, shape, scale * ratio);
+            api.modifyShapeScale(page, shape, scale * absRatio);
         }
         if (view instanceof PathShapeView) {
             const segments = view.segments;
@@ -639,7 +642,7 @@ export function uniformScale(
                 segment.points.forEach((point, j) => {
                     const pid = sid + '-point-' + j;
                     const corner = getBaseValue(pid, 'radius', point.radius ?? 0);
-                    corner && api.modifyPointCornerRadius(page, shape as PathShape, j, corner * ratio, i);
+                    corner && api.modifyPointCornerRadius(page, shape as PathShape, j, corner * absRatio, i);
                 });
             });
         }
@@ -649,7 +652,7 @@ export function uniformScale(
             const rt = getBaseValue(cornerId, 'rt', view.cornerRadius.rt);
             const rb = getBaseValue(cornerId, 'rb', view.cornerRadius.rb);
             const lb = getBaseValue(cornerId, 'lb', view.cornerRadius.lb);
-            if (lt || rt || rb || lb) api.shapeModifyRadius2(page, shape as Artboard, lt * ratio, rt * ratio, rb * ratio, lb * ratio);
+            if (lt || rt || rb || lb) api.shapeModifyRadius2(page, shape as Artboard, lt * absRatio, rt * absRatio, rb * absRatio, lb * absRatio);
         }
     }
     for (const textLike of textSet) scale4text(textLike);
@@ -657,15 +660,15 @@ export function uniformScale(
     function scale4text(text: TextShapeLike) {
         const paraSpacing = getBaseValue(text.id, 'paraSpacing', text.text.attr?.paraSpacing || 0);
         if (paraSpacing) {
-            api.textModifyParaSpacing(page, text, paraSpacing * ratio, 0, text.text.length);
+            api.textModifyParaSpacing(page, text, paraSpacing * absRatio, 0, text.text.length);
         }
         const paddingLeft = getBaseValue(text.id, 'paddingLeft', text.text.attr?.padding?.left || 0);
         const paddingRight = getBaseValue(text.id, 'paddingRight', text.text.attr?.padding?.right || 0);
 
         if (paddingLeft || paddingRight) {
             api.textModifyPaddingHor(page, text, {
-                left: (paddingLeft || 0) * ratio,
-                right: (paddingRight || 0) * ratio
+                left: (paddingLeft || 0) * absRatio,
+                right: (paddingRight || 0) * absRatio
             }, 0, text.text.length);
         }
         let index = 0;
@@ -674,11 +677,11 @@ export function uniformScale(
             const pId = text.id + j;
             const minimumLineHeight = getBaseValue(pId, 'minimumLineHeight', para.attr?.minimumLineHeight || 121);
             if (minimumLineHeight) {
-                api.textModifyMinLineHeight(page, text, minimumLineHeight * ratio, index, para.length);
+                api.textModifyMinLineHeight(page, text, minimumLineHeight * absRatio, index, para.length);
             }
             const maximumLineHeight = getBaseValue(pId, 'maximumLineHeight', para.attr?.maximumLineHeight || 121);
             if (maximumLineHeight) {
-                api.textModifyMaxLineHeight(page, text, maximumLineHeight * ratio, index, para.length);
+                api.textModifyMaxLineHeight(page, text, maximumLineHeight * absRatio, index, para.length);
             }
             let __index = index;
             const spans = para.spans;
@@ -687,11 +690,11 @@ export function uniformScale(
                 const sId = text.id + i + j;
                 const spanFontSize = getBaseValue(sId, 'spanFontSize', span.fontSize || 0);
                 if (spanFontSize) {
-                    api.textModifyFontSize(page, text, __index, span.length, spanFontSize * ratio);
+                    api.textModifyFontSize(page, text, __index, span.length, spanFontSize * absRatio);
                 }
                 const spanKerning = getBaseValue(sId, 'spanKerning', span.kerning || 0);
                 if (spanKerning) {
-                    api.textModifyKerning(page, text, __index, span.length, spanKerning * ratio);
+                    api.textModifyKerning(page, text, __index, span.length, spanKerning * absRatio);
                 }
                 __index += span.length;
             }
