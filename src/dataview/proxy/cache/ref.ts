@@ -24,9 +24,7 @@ export class RefViewCache extends ViewCache {
         const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
         let radius = this.radius;
         if (this.view.uniformScale) {
-            radius = radius.map(i => {
-                return i * this.view.uniformScale!
-            });
+            radius = radius.map(i => i * this.view.uniformScale!);
         }
         p1.radius = radius[0];
         p2.radius = radius[1] ?? radius[0];
