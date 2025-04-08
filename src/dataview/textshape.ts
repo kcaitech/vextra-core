@@ -32,12 +32,14 @@ import { renderBorder } from "../render/SVG/effects";
 import { DViewCtx, PropsType } from "./viewctx";
 import { TextModifyEffect } from "./proxy/effects/text";
 import { TextLayoutMgr } from "./proxy/layout/text";
+import { TextViewCache } from "./proxy/cache/text";
 
 export class TextShapeView extends ShapeView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         this.effect = new TextModifyEffect(this);
         this.layoutProxy = new TextLayoutMgr(this);
+        this.cache = new TextViewCache(this);
     }
     __str: string | Text | undefined;
     __strText: Text | undefined;
