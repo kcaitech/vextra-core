@@ -11,13 +11,16 @@ import {
     TextTransformType,
     UnderlineType,
     Variable,
-    VariableType
+    VariableType,
+    Text,
+    Para,
+    Span
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView, TextShapeView } from "../../dataview";
 import { Api } from "../../coop";
 import { _ov } from "../symbol";
 import { importTextAttr } from "../../data/baseimport";
-import { mergeTextAttr, newText } from "../../data/text/textutils";
+import { mergeParaAttr, mergeSpanAttr, mergeTextAttr, newText } from "../../data/text/textutils";
 import { Editor } from "..";
 import { fixTextShapeFrameByLayout } from "../utils/other";
 
@@ -115,26 +118,36 @@ export class TextModifier extends Modifier {
                 let index = 0;
                 for (const shape of shapes) {
                     const _text = shape.text
+                    const text1 = new Text(new BasicArray());
+                  
                     _text.paras.forEach((p) => {
+                        const para = new Para(p.text, new BasicArray())
+                        
+                      
                         p.spans.forEach((s) => {
+                            const span = new Span(p.length);
                             if (s.textMask) {
-                              
                                 const mask = shape.text.getStylesMgr()?.getSync(s.textMask) as TextMask;
-                                const _text=importTextAttr(mask.text)
-                                console.log(_text, 'mask1');
-                                
-                                api.textModifyFontName(page, shape, index, s.length, mask.text.fontName??'');
-                                api.textModifyWeight(page, shape, mask.text.weight??400, index, s.length)
-                                api.textModifyItalic(page,shape, mask.text.italic??false, index, s.length)
-                                api.textModifyFontSize(page, shape, index, s.length, mask.text.fontSize??14,)
-                                api.textModifyKerning(page, shape, mask.text.kerning??0, index, s.length)
-                                api.textModifyUnderline(page, shape, mask.text.underline??UnderlineType.None, index, s.length)
-                                api.textModifyStrikethrough(page, shape, mask.text.strikethrough??StrikethroughType.None, index, s.length)
-                                api.textModifyTransform(page, shape, mask.text.transform??TextTransformType.None, index, s.length)
+                                const _text = importTextAttr(mask.text)
+                                mergeParaAttr(para, _text);
+                                mergeSpanAttr(span, _text);
+                                // api.deleteText(page, shape, index, Infinity);
+                                // api.insertComplexText(page, shape, index, text1)
+                                // api.textModifyFontName(page, shape, index, s.length, mask.text.fontName??'');
+                                // api.textModifyWeight(page, shape, mask.text.weight??400, index, s.length)
+                                // api.textModifyItalic(page,shape, mask.text.italic??false, index, s.length)
+                                // api.textModifyFontSize(page, shape, index, s.length, mask.text.fontSize??14,)
+                                // api.textModifyKerning(page, shape, mask.text.kerning??0, index, s.length)
+                                // api.textModifyUnderline(page, shape, mask.text.underline??UnderlineType.None, index, s.length)
+                                // api.textModifyStrikethrough(page, shape, mask.text.strikethrough??StrikethroughType.None, index, s.length)
+                                // api.textModifyTransform(page, shape, mask.text.transform??TextTransformType.None, index, s.length)
                             }
+                            para.spans.push(span)
                         })
-
+                        text1.paras.push(para)
                     })
+                    api.deleteText(page, shape, index, Infinity);
+                    api.insertComplexText(page, shape, index, text1)
                     api.textModifyTextMask(page, shape, idx, len, undefined);
                     api.textModifParaTextMask(page, shape, idx, len, undefined);
                     if (shape instanceof TextShapeView) fixTextShapeFrameByLayout(api, page, shape);
