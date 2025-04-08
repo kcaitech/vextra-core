@@ -6,7 +6,7 @@ import {
     Fill,
     FillMask,
     OverrideType, parsePath,
-    RadiusMask, RadiusType,
+    RadiusMask,
     Shadow, ShadowMask,
     VariableType
 } from "../../../data";
