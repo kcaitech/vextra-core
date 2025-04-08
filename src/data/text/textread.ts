@@ -46,6 +46,7 @@ const _NullColor = new Color(1, 0, 0, 0);
 const _NullMask = ''
 
 function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAttr | undefined, textAttr: TextAttr | undefined) {
+  
     const color = attr.color ?? (paraAttr?.color) ?? (textAttr?.color) ?? _NullColor;
     if (attrGetter.color === undefined) {
         attrGetter.color = color;
@@ -82,6 +83,10 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
     if (attrGetter.fontSize === undefined) {
         attrGetter.fontSize = fontSize;
     }
+    else if(fontSize === undefined || attrGetter.fontSize !== fontSize){
+        attrGetter.fontSizeIsMulti=true
+    }
+
     const textMask = attr.textMask ?? (paraAttr?.textMask) ?? (textAttr?.textMask) ?? _NullMask;
     if (attrGetter.textMask === undefined) {
         attrGetter.textMask = textMask;
@@ -410,7 +415,8 @@ export function getTextFormat(shapetext: Text, index: number, length: number, ca
     // merge
     _mergeSpanFormat(spanfmt, parafmt);
     _mergeParaAttr(parafmt, textfmt);
-
+   
+    
     if (textfmt.color === _NullColor) {
         textfmt.color = undefined;
     }
@@ -423,7 +429,7 @@ export function getTextFormat(shapetext: Text, index: number, length: number, ca
     if (cachedAttr) {
         coverFormat(textfmt, cachedAttr);
     }
-
+    
     return textfmt;
 }
 

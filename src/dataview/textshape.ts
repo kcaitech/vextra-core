@@ -26,7 +26,11 @@ import {
     Shape,
     SymbolRefShape,
     TextVerAlign,
-    TextHorAlign
+    TextHorAlign,
+    TextMask,
+    Span,
+    Para,
+    ParaAttr
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -38,15 +42,28 @@ import {
 import { objectId } from "../basic/objectid";
 import { Path } from "@kcdesign/path";
 import { renderBorders } from "../render";
-import { importBorder, importFill } from "../data/baseimport";
-import { exportBorder, exportFill } from "../data/baseexport";
+import { importFill } from "../data/baseimport";
+import { exportFill } from "../data/baseexport";
 import { ArtboardView } from "./artboard";
 
 export class TextShapeView extends ShapeView {
     __str: string | Text | undefined;
     __strText: Text | undefined;
 
+    private _onTextMaskChange() {
+        this.getText().dropAllLayout();
+        this.m_ctx.setReLayout(this);           
+        this.m_ctx.setDirty(this);
+        this.notify('style', 'text', 'mask');
+    }
+
+    private onTextMaskChange = this._onTextMaskChange.bind(this);
+
+    textMaskSet: Set<TextMask> = new Set();
+
     getText(): Text {
+        const __textMaskSet: Set<TextMask> = new Set();
+
         const v = this._findOV(OverrideType.Text, VariableType.Text);
         if (v) {
             if (this.__str) {
@@ -96,6 +113,80 @@ export class TextShapeView extends ShapeView {
 
         const text = (this.m_data as TextShape).text;
         if (typeof text === 'string') throw new Error("");
+
+        // 检查并应用textMask样式
+        const stylesMgr = text.getStylesMgr();
+        if (stylesMgr) {
+            // 创建一个Proxy来包装text对象
+            let maskid: {
+                lineheight: number | undefined
+                id: string
+            }[] = [];
+            text.paras.forEach(p => {
+                p.spans.forEach(span => {
+                    // span
+                    const mask = (span.textMask && stylesMgr.getSync(span.textMask)) as TextMask | undefined;
+                    if (!mask?.text) {
+                        (span as any).__getter = undefined
+                        return
+                    }
+
+                    __textMaskSet.add(mask);
+                    maskid.push({ lineheight: mask.text.maximumLineHeight, id: mask.id });
+                    (span as any).__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
+                        const val = Reflect.get(mask.text, propertyKey)
+                        if (val !== undefined) return val
+                        return Reflect.get(target, propertyKey, receiver)
+                    }
+                })
+                // para
+                const _mask = maskid.reduce((max, current) => {
+                    return (current.lineheight ?? 0) > (max.lineheight ?? 0) ? current : max;
+                }, { lineheight: undefined, id: '' });
+
+                const mask = (_mask.id && stylesMgr.getSync(_mask.id)) as TextMask | undefined;
+                if (!mask?.text) {
+                    (p as any).attr.__getter = undefined
+                    return
+                }
+                __textMaskSet.add(mask);
+                (p.attr as any).__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
+                    const val = Reflect.get(mask.text, propertyKey)
+                    // if (val !== undefined) return val
+                    const key = propertyKey as string;
+                    switch (key) {
+                        case 'alignment':
+                            if (val !== undefined) return val
+                        case 'paraSpacing':
+                            if (val !== undefined) return val
+                        case 'autoLineHeight':
+                            if (val !== undefined) return val
+                        case 'minimumLineHeight':
+                            if (val !== undefined) return val
+                        case 'maximumLineHeight':
+                            if (val !== undefined) return val
+                        case 'indent':
+                            if (val !== undefined) return val
+                        case 'textMask': //没有此属性 读不到的~
+                            if (val !== undefined) return ''
+                        default:
+                            break;
+                    }
+
+                    return Reflect.get(target, propertyKey, receiver)
+
+                }
+            })
+        }
+
+        this.textMaskSet.forEach(mask => {
+            if (!__textMaskSet.has(mask)) mask.unwatch(this.onTextMaskChange);
+        });
+        __textMaskSet.forEach(mask => {
+            if (!this.textMaskSet.has(mask)) mask.watch(this.onTextMaskChange);
+        });
+        this.textMaskSet = __textMaskSet;
+        
         return text;
     }
 
@@ -121,11 +212,13 @@ export class TextShapeView extends ShapeView {
     getLayout() {
         const text = this.getText();
 
-        if (this.__preText && this.__layoutToken && objectId(this.__preText) !== objectId(text)) {
+        if (this.__preText && this.__layoutToken && objectId(this.__preText) !== objectId(text)) {            
             this.__preText.dropLayout(this.__layoutToken, this.id);
         }
+       
         const frame = this.__origin_frame;
         const layout = text.getLayout3(frame, this.id, this.__layoutToken);
+       
         this.__layoutToken = layout.token;
         if (this.m_layout !== layout.layout) {
             this.m_textpath = undefined;
@@ -194,7 +287,7 @@ export class TextShapeView extends ShapeView {
         return this.render();
     }
 
-    renderContents(): EL[] {
+    renderContents(): EL[] {        
         const layout = this.getLayout();
         return renderTextLayout(elh, layout, this.frame, this.blur);
     }
@@ -267,18 +360,18 @@ export class TextShapeView extends ShapeView {
         if (this.__layoutToken && this.__preText) this.__preText.dropLayout(this.__layoutToken, this.id);
     }
 
-    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {
+    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number; y: number; } | undefined): void {        
         const shape = this.data;
         const transform = shape.transform.clone();
         if (this.parent && (this.parent as ArtboardView).autoLayout) {
             transform.translateX = this.m_transform.translateX;
             transform.translateY = this.m_transform.translateY;
         }
-        if (!this.isVirtualShape && this.getText() === this.data.text) {
-            this.updateLayoutArgs(transform, this.data.frame, undefined)
-            this.updateFrames();
-            return
-        }
+        // if (!this.isVirtualShape && this.getText() === this.data.text) {
+        //     this.updateLayoutArgs(transform, this.data.frame, undefined)
+        //     this.updateFrames();
+        //     return
+        // }
 
         function fixTransform(offsetX: number, offsetY: number, transform: Transform, s: ShapeView) {
             const targetXY = transform.computeCoord(offsetX, offsetY)

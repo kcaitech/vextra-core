@@ -250,7 +250,10 @@ export class Text extends Basic implements classes.Text {
     // layout与显示窗口大小有关
     // 尽量复用, layout缓存排版信息，进行update
     private __layouts: Map<string, LayoutItem> = new Map();
-
+    dropAllLayout(){
+        this.__layouts.clear();
+    }
+    
     dropLayout(token: string, owner: string) {
         let o = this.__layouts.get(token);
         if (o) {
@@ -263,7 +266,6 @@ export class Text extends Basic implements classes.Text {
     }
 
     getLayout3(frame: ShapeSize, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
-
         const width = frame.width;
         const height = frame.height;
         const cur = [width, height].join(',');
@@ -285,7 +287,7 @@ export class Text extends Basic implements classes.Text {
             }
         }
 
-        let o = this.__layouts.get(cur);
+        let o = this.__layouts.get(cur);        
         if (o) {
             if (o.owners.indexOf(owner) < 0) o.owners.push(owner);
         } else {

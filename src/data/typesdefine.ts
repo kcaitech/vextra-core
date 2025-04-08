@@ -56,6 +56,7 @@ export enum BulletNumbersBehavior {
 /* bullet & item number types */
 export enum BulletNumbersType {
     None = "none",
+    Mixed = "mixed",
     Ordered1Ai = "ordered-1ai",
     Disorded = "disorded",
 }

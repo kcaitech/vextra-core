@@ -141,7 +141,7 @@ export class DViewCtx extends EventEmitter {
         return this.is_document;
     }
 
-    setReLayout(v: DataView) {
+    setReLayout(v: DataView) {        
         this.relayoutset.set(objectId(v), v);
         this.continueLoop();
     }

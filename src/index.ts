@@ -82,6 +82,7 @@ export {
     CurvePoint,
     ContactForm,
     BulletNumbersType,
+    BulletNumbers,
     PageListItem,
     GuideAxis,
     BoolOp,

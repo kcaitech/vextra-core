@@ -20,7 +20,7 @@
     "schema": "tsx src/schema/script"
   },
   "dependencies": {
-    "@kcdesign/path": "file:../kcdesign-path",
+    "@kcdesign/path": "0.0.17",
     "fzstd": "^0.1.1",
     "kiwi-schema": "^0.5.0",
     "pako": "^2.1.0",

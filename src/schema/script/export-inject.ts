@@ -47,13 +47,13 @@ inject['Style']['after'] = `\
 inject['Span'] = {};
 inject['Span']['after'] = `\
     // inject code
-    if (ctx?.styles) ctx.styles.add(ret.textMask);
+    if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
 `
 
 inject['ParaAttr'] = {};
 inject['ParaAttr']['after'] = `\
     // inject code
-    if (ctx?.styles) ctx.styles.add(ret.textMask);
+    if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
 `
 
 inject['Fill'] = {};

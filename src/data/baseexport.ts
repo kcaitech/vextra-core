@@ -1039,7 +1039,7 @@ export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span
     const ret: types.Span = exportSpanAttr(source, ctx) as types.Span
     ret.length = source.length
         // inject code
-    if (ctx?.styles) ctx.styles.add(ret.textMask);
+    if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
 
     return ret
 }
@@ -1116,7 +1116,7 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
     if (source.autoLineHeight !== undefined) ret.autoLineHeight = source.autoLineHeight
     if (source.indent !== undefined) ret.indent = source.indent
         // inject code
-    if (ctx?.styles) ctx.styles.add(ret.textMask);
+    if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
 
     return ret
 }

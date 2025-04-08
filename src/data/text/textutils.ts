@@ -68,6 +68,9 @@ export function isDiffSpanAttr(span: SpanAttr, attr: SpanAttr): boolean {
     if (attr.fontSize !== span.fontSize) {
         return true;
     }
+    if (attr.textMask !== span.textMask) {
+        return true;
+    }
 
     if (attr.weight !== span.weight) {
         return true;
@@ -149,6 +152,13 @@ function _mergeSpanAttr(span: SpanAttr, attr: SpanAttr, isSetting?: boolean) {
     if (attr.fontSize) {
         if (!span.fontSize || attr.fontSize !== span.fontSize) {
             span.fontSize = attr.fontSize;
+            changed = true;
+        }
+    }
+
+    if (attr.textMask) {
+        if (!span.textMask || attr.textMask !== span.textMask) {
+            span.textMask = attr.textMask;
             changed = true;
         }
     }
