@@ -17,6 +17,10 @@ export class Modifier {
         this.__repo = repo;
     }
 
+    get repo() {
+        return this.__repo;
+    }
+
     private m_api: Api | undefined;
     protected getApi(desc: string): Api {
         return this.m_api ?? (this.m_api = this.__repo.start(desc));
