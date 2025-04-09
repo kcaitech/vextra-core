@@ -20,7 +20,7 @@ import {
     ShapeFrame,
     GradientType,
     FillType,
-    overrideTextText,
+    overrideText,
     SymbolShape,
     string2Text,
     TextVerAlign,
@@ -96,11 +96,11 @@ export class TextShapeView extends ShapeView {
                 }
                 
                 if (ovar && ovar !== v.value) {
-                    origin = overrideTextText(ovar, origin)
+                    origin = overrideText(ovar, origin)
                 }
             }
 
-            return this.__strText = overrideTextText(text, origin);
+            return this.__strText = overrideText(text, origin);
         }
 
         const text = (this.m_data as TextShape).text;

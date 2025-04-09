@@ -711,7 +711,7 @@ export class OverrideTextPara extends Basic implements classes.Para {
     }
 }
 
-export function overrideTextText(text: Text, origin: Text): Text {
+export function overrideText(text: Text, origin: Text): Text {
     let _paras: BasicArray<Para> | undefined
     let __layouts: Map<string, LayoutItem> = new Map();
     return new Proxy<Text>(text, {
