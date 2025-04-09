@@ -20,17 +20,12 @@ import {
     ShapeFrame,
     GradientType,
     FillType,
-    overrideTextText,
+    overrideText,
     SymbolShape,
     string2Text,
-    Shape,
-    SymbolRefShape,
     TextVerAlign,
     TextHorAlign,
-    TextMask,
-    Span,
-    Para,
-    ParaAttr
+    TextMask
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
@@ -99,18 +94,17 @@ export class TextShapeView extends ShapeView {
                     }
                     p = p.parent;
                 }
-               
                 
                 if (ovar && ovar !== v.value) {
-                    origin = overrideTextText(ovar, origin)
+                    origin = overrideText(ovar, origin)
                 }
             }
-            this.__strText = overrideTextText(text, origin);
 
-            return this.__strText;
+            return this.__strText = overrideText(text, origin);
         }
 
         const text = (this.m_data as TextShape).text;
+
         if (typeof text === 'string') throw new Error("");
 
         // 检查并应用textMask样式

@@ -608,12 +608,12 @@ export function string2Text(text: string): Text {
     return new Text(paras)
 }
 
-function overrideSpan(span: Span, length: number, origin?: Span): Span {
+function overrideSpan(span: Span, length: number, origin: Span): Span {
     return new Proxy<Span>(span, {
         get: (target: Span, p: string | symbol, receiver: any): any => {
             if (p.toString() === "length") return length;
             let val = Reflect.get(target, p, receiver);
-            if (val === undefined && origin) {
+            if (val === undefined) {
                 val = Reflect.get(origin, p, receiver);
             }
             return val;
@@ -711,7 +711,7 @@ export class OverrideTextPara extends Basic implements classes.Para {
     }
 }
 
-export function overrideTextText(text: Text, origin: Text): Text {
+export function overrideText(text: Text, origin: Text): Text {
     let _paras: BasicArray<Para> | undefined
     let __layouts: Map<string, LayoutItem> = new Map();
     return new Proxy<Text>(text, {
