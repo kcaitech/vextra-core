@@ -51,7 +51,6 @@ export class TextModifier extends Modifier {
             for (const view of views) {
                 const text = this.text4edit(document, pageView, view, api);
                 api.textModifyTextMask(page, text, idx, len, maskid);
-                if (text instanceof TextShapeView) fixTextShapeFrameByLayout(api, page, text);
             }
             this.commit();
             return true;
@@ -72,7 +71,6 @@ export class TextModifier extends Modifier {
                 const target = this.text4edit(document, pageView, view, api);
                 api.deleteText(page, target, idx, length);
                 api.insertComplexText(page, target, idx, textWithFormatButMask);
-                if (target instanceof TextShapeView) fixTextShapeFrameByLayout(api, page, target);
             }
             this.commit();
             return true;
