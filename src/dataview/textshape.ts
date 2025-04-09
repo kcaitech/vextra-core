@@ -23,14 +23,9 @@ import {
     overrideTextText,
     SymbolShape,
     string2Text,
-    Shape,
-    SymbolRefShape,
     TextVerAlign,
     TextHorAlign,
-    TextMask,
-    Span,
-    Para,
-    ParaAttr
+    TextMask
 } from "../data";
 import { EL, elh } from "./el";
 import { ShapeView } from "./shape";
