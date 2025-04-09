@@ -1,18 +1,7 @@
 import { Modifier } from "../basic/modifier";
-import {
-    Document,
-    OverrideType,
-    TextAttr,
-    TextMask,
-    Variable,
-    VariableType,
-    Text
-} from "../../data";
-import { PageView, ShapeView, TextShapeView } from "../../dataview";
-import { Api } from "../../coop";
-import { _ov } from "../symbol";
+import { Document, TextMask, Text } from "../../data";
+import { PageView, TextShapeView } from "../../dataview";
 import { importText, importTextAttr } from "../../data/baseimport";
-import { fixTextShapeFrameByLayout } from "../utils/other";
 import { TextShapeEditor } from "../textshape";
 import { Operator } from "../../coop/recordop";
 import { exportText } from "../../data/baseexport";
