@@ -103,11 +103,14 @@ export class TextShapeView extends ShapeView {
                     }
                     p = p.parent;
                 }
+               
+                
                 if (ovar && ovar !== v.value) {
                     origin = overrideTextText(ovar, origin)
                 }
             }
             this.__strText = overrideTextText(text, origin);
+
             return this.__strText;
         }
 
