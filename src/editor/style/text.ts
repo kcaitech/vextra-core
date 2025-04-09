@@ -33,7 +33,6 @@ export class TextModifier extends Modifier {
                 for (const view of views) {
                     const text = this.text4edit(document, pageView, view, api);
                     api.textModifyTextMask(page, text, idx, len, maskid);
-                    if (text instanceof TextShapeView) fixTextShapeFrameByLayout(api, page, text);
                 }
             }
             this.commit();
