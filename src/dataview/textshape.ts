@@ -99,8 +99,8 @@ export class TextShapeView extends ShapeView {
                     origin = overrideTextText(ovar, origin)
                 }
             }
-            this.__strText = overrideTextText(text, origin);
-            return this.__strText;
+
+            return this.__strText = overrideTextText(text, origin);
         }
 
         const text = (this.m_data as TextShape).text;
