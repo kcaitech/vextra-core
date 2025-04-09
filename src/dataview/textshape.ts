@@ -94,18 +94,17 @@ export class TextShapeView extends ShapeView {
                     }
                     p = p.parent;
                 }
-               
                 
                 if (ovar && ovar !== v.value) {
                     origin = overrideTextText(ovar, origin)
                 }
             }
             this.__strText = overrideTextText(text, origin);
-
             return this.__strText;
         }
 
         const text = (this.m_data as TextShape).text;
+
         if (typeof text === 'string') throw new Error("");
 
         // 检查并应用textMask样式
