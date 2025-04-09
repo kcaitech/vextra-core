@@ -6,7 +6,8 @@ import {
     TextMask,
     Variable,
     VariableType,
-    Text
+    Text,
+    StyleMangerMember
 } from "../../data";
 import { PageView, ShapeView, TextShapeView } from "../../dataview";
 import { Api } from "../../coop";
@@ -83,6 +84,17 @@ export class TextModifier extends Modifier {
                 para.spans.forEach(span => span.textMask = undefined);
             });
             return text;
+        }
+    }
+
+    disableMask(mask: StyleMangerMember) {
+        try {
+            const api = this.getApi('modifyMaskStatus');
+            api.disableMask(mask);
+            this.commit();
+        } catch (error) {
+            this.rollback();
+            throw error;
         }
     }
 }
