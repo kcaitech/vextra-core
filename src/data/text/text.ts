@@ -605,9 +605,7 @@ export function string2Text(text: string): Text {
         p.spans.push(new Span(s.length))
         paras.push(p)
     }
-    const text1 = new Text(paras)
-    // text1.isPureString = true;
-    return text1;
+    return new Text(paras)
 }
 
 function overrideSpan(span: Span, length: number, origin?: Span): Span {

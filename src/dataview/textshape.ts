@@ -80,14 +80,10 @@ export class TextShapeView extends ShapeView {
 
             this.__str = v.value;
 
-            let text: Text
-            if (v.value instanceof Text) {
-                text = v.value
-            } else {
-                text = string2Text(v.value)
-            }
+            const text: Text = v.value instanceof Text ? v.value : string2Text(v.value);
 
-            let origin = (this.m_data as TextShape).text;
+            let origin =  (this.m_data as TextShape).text;
+
             // 可能是var // 有个继承链条？
             if ((this.m_data as TextShape).varbinds?.has(OverrideType.Text)) {
                 let ovar: Text | undefined
@@ -122,6 +118,15 @@ export class TextShapeView extends ShapeView {
                 lineheight: number | undefined
                 id: string
             }[] = [];
+            const specialProperties = new Set([
+                'alignment',
+                'paraSpacing',
+                'autoLineHeight',
+                'minimumLineHeight',
+                'maximumLineHeight',
+                'indent',
+                'textMask'
+            ]);
             text.paras.forEach(p => {
                 p.spans.forEach(span => {
                     // span
@@ -144,37 +149,19 @@ export class TextShapeView extends ShapeView {
                     return (current.lineheight ?? 0) > (max.lineheight ?? 0) ? current : max;
                 }, { lineheight: undefined, id: '' });
 
-                const mask = (_mask.id && stylesMgr.getSync(_mask.id)) as TextMask | undefined;
+                const mask = (_mask.id && stylesMgr.getSync(_mask.id)) as TextMask;
                 if (!mask?.text) {
                     (p as any).attr.__getter = undefined
                     return
                 }
                 __textMaskSet.add(mask);
                 (p.attr as any).__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
-                    const val = Reflect.get(mask.text, propertyKey)
-                    // if (val !== undefined) return val
+                    const val = Reflect.get(mask.text, propertyKey);
                     const key = propertyKey as string;
-                    switch (key) {
-                        case 'alignment':
-                            if (val !== undefined) return val
-                        case 'paraSpacing':
-                            if (val !== undefined) return val
-                        case 'autoLineHeight':
-                            if (val !== undefined) return val
-                        case 'minimumLineHeight':
-                            if (val !== undefined) return val
-                        case 'maximumLineHeight':
-                            if (val !== undefined) return val
-                        case 'indent':
-                            if (val !== undefined) return val
-                        case 'textMask': //没有此属性 读不到的~
-                            if (val !== undefined) return ''
-                        default:
-                            break;
+                    if (specialProperties.has(key)) {
+                        return key === 'textMask' ? '' : val !== undefined ? val : Reflect.get(target, propertyKey, receiver);
                     }
-
-                    return Reflect.get(target, propertyKey, receiver)
-
+                    return Reflect.get(target, propertyKey, receiver);
                 }
             })
         }

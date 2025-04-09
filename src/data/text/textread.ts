@@ -415,8 +415,7 @@ export function getTextFormat(shapetext: Text, index: number, length: number, ca
     // merge
     _mergeSpanFormat(spanfmt, parafmt);
     _mergeParaAttr(parafmt, textfmt);
-   
-    
+
     if (textfmt.color === _NullColor) {
         textfmt.color = undefined;
     }
