@@ -24,38 +24,16 @@ export class TextModifier extends Modifier {
         return new TextShapeEditor(view, pageView, this.repo, document).shape4edit(api, view);
     }
 
-    getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.TextMask, OverrideType.TextMask, () => value, view, page, api);
-    }
-
-    getTextVariable(api: Api, page: PageView, view: TextShapeView) {
-        const valueFun = (_var: Variable | undefined) => {
-            const text = _var?.value ?? view.text.attr;
-            return text && importTextAttr(text) || new TextAttr();
-        };
-        return _ov(VariableType.Text, OverrideType.Text, valueFun, view, page, api)!;
-    }
-
     createTextMask(document: Document, mask: TextMask, pageView: PageView, idx: number, len: number, maskid: string, views?: TextShapeView[],) {
         try {
             const api = this.getApi('createTextMask');
+            const page = pageView.data;
             api.styleInsert(document, mask);
             if (views) {
-                const variables: Variable[] = [];
-                const shapes: TextShapeView[] = [];
                 for (const view of views) {
-                    const variable = this.getMaskVariable(api, pageView, view, mask.id);
-                    variable ? variables.push(variable) : shapes.push(view);
-                }
-                const page = pageView.data;
-                for (const variable of variables) {
-                    if (variable.value !== mask.id) api.shapeModifyVariable(page, variable, mask.id);
-                }
-
-                for (const shape of shapes) {
-                    api.textModifyTextMask(page, shape, idx, len, maskid);
-                    api.textModifParaTextMask(page, shape, idx, len, undefined);
-                    fixTextShapeFrameByLayout(api, page, shape);
+                    const text = this.text4edit(document, pageView, view, api);
+                    api.textModifyTextMask(page, text, idx, len, maskid);
+                    if (text instanceof TextShapeView) fixTextShapeFrameByLayout(api, page, text);
                 }
             }
             this.commit();
@@ -89,6 +67,8 @@ export class TextModifier extends Modifier {
             const page = pageView.data;
             for (const view of views) {
                 const textWithFormatButMask = importText(cleanMask(exportText(view.getText().getTextWithFormat(idx, len)) as Text));
+                console.log('textWithFormatButMask', textWithFormatButMask);
+                
                 const target = this.text4edit(document, pageView, view, api);
                 api.deleteText(page, target, idx, len);
                 api.insertComplexText(page, target, idx, textWithFormatButMask);
