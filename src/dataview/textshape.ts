@@ -169,14 +169,20 @@ export class TextShapeView extends ShapeView {
             })
         }
 
+        let maskEnvChanged = false;
         this.textMaskSet.forEach(mask => {
-            if (!__textMaskSet.has(mask)) mask.unwatch(this.onTextMaskChange);
+            if (__textMaskSet.has(mask)) return;
+            maskEnvChanged = true;
+            mask.unwatch(this.onTextMaskChange);
         });
         __textMaskSet.forEach(mask => {
-            if (!this.textMaskSet.has(mask)) mask.watch(this.onTextMaskChange);
+            if (this.textMaskSet.has(mask)) return;
+            maskEnvChanged = true;
+            mask.watch(this.onTextMaskChange);
         });
         this.textMaskSet = __textMaskSet;
-        
+        if (maskEnvChanged) this.getText().dropAllLayout();
+
         return text;
     }
 
