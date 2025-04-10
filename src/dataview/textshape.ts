@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ShapeSize, Text, TextShape } from "../data";
+import { Text, TextShape } from "../data";
 import { ShapeView } from "./shape";
 import {
     CursorLocate, TextLocate, locateCursor,
