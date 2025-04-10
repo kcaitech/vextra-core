@@ -22,7 +22,7 @@ import { BatchAction, BatchAction5, PageEditor } from "../page";
 import { importGradient, } from "../../data/baseimport";
 import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
-import { TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
+import { TidyUpAlign, tidyUpLayout } from "../utils/auto_layout";
 import { TextShapeEditor } from "../textshape";
 
 /**
@@ -362,7 +362,7 @@ export class LinearApi {
             const api = this.api!;
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders().strokePaints;
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorder().strokePaints;
                 if (!grad_type?.length) continue;
                 const gradient_container = grad_type[index];
                 if (!gradient_container || !gradient_container.gradient || gradient_container.fillType !== FillType.Gradient) continue;
@@ -375,7 +375,7 @@ export class LinearApi {
                     api.setFillGradient(fills[index], new_gradient);
                 } else {
                     const _tar = shape4border(api, this._page, target);
-                    const fills = _tar instanceof Variable ? _tar.value.strokePaints : target.getBorders().strokePaints;
+                    const fills = _tar instanceof Variable ? _tar.value.strokePaints : target.getBorder().strokePaints;
                     api.setFillGradient(fills[index], new_gradient);
                 }
             }
@@ -462,7 +462,7 @@ export class LinearApi {
 
     private getBorderVariable(api: Api, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-            const border = _var?.value ?? view.getBorders();
+            const border = _var?.value ?? view.getBorder();
             return border;
         }, api, view);
     }
@@ -475,7 +475,7 @@ export class LinearApi {
         this.execute('modify-shapes-border-Thickness', () => {
             const api = this.api!;
             for (const view of shapes) {
-                const border = view.getBorders();
+                const border = view.getBorder();
                 const linkedVariable = this.getBorderVariable(api, this._page, view);
                 const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
                 if (view.bordersMask) {
@@ -658,7 +658,7 @@ export class LinearApi {
      * @description 修改自动布局间距
      */
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlign) {
         this.execute('tidyup-shapes-layout', () => {
             const api = this.api!;
             const page = this.page;

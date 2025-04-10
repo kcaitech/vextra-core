@@ -36,7 +36,7 @@ export class GradientEditor {
 
     getBorderVariable(api: Api, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-            return importBorder(_var?.value ?? view.getBorders());
+            return importBorder(_var?.value ?? view.getBorder());
         }, api, view)!;
     }
 

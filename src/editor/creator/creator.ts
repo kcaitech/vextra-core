@@ -9,7 +9,7 @@
  */
 
 import { v4 as uuid } from "uuid";
-import { AutoLayout, Page, Artboard, Document, PageListItem, TableShape, StyleMangerMember } from "../data";
+import { AutoLayout, Page, Artboard, Document, PageListItem, StyleMangerMember, TableShape } from "../../data";
 import {
     GroupShape,
     LineShape,
@@ -28,20 +28,20 @@ import {
     ShapeSize,
     Transform,
     ContactShape
-} from "../data";
-import * as types from "../data/typesdefine"
+} from "../../data";
+import * as types from "../../data/typesdefine"
 import {
     importArtboard,
     importGroupShape,
     importPage,
     importText,
     importTextShape, importBoolShape
-} from "../data/baseimport";
-import template_group_shape from "./template/group-shape.json";
-import template_bool_shape from "./template/bool-shape.json";
-import template_page from "./template/page.json";
-import template_artboard from "./template/artboard.json"
-import template_text_shape from "./template/text-shape.json"
+} from "../../data/baseimport";
+import template_group_shape from "../template/group-shape.json";
+import template_bool_shape from "../template/bool-shape.json";
+import template_page from "../template/page.json";
+import template_artboard from "../template/artboard.json"
+import template_text_shape from "../template/text-shape.json"
 import {
     Border,
     Color,
@@ -61,13 +61,14 @@ import {
     BorderStyle,
     SymbolRefShape,
     TextAttr,
-} from "../data";
-import { BasicArray, BasicMap } from "../data";
-import { TransactDataGuard } from "../data";
-import { ResourceMgr } from "../data";
-import { TableShape2 } from "../data";
+} from "../../data";
+import { BasicArray, BasicMap } from "../../data";
+import { TransactDataGuard } from "../../data";
+import { Comment } from "../../data";
+import { ResourceMgr } from "../../data";
+import { TableShape2 } from "../../data";
 
-export { newText, newText2 } from "../data/text/textutils";
+export { newText, newText2 } from "../../data/text/textutils";
 import {
     BorderSideSetting,
     ContactForm,
@@ -78,14 +79,14 @@ import {
     ExportOptions,
     ExportVisibleScaleType,
     SideType
-} from "../data";
-import { ResizingConstraints2 } from "../data";
-import { SymbolMgr } from "../data/symbolmgr";
-import { newText } from "../data/text/textutils";
-import { getPolygonPoints, getPolygonVertices } from "./utils/path";
-import { is_mac } from "../data/utils";
+} from "../../data";
+import { ResizingConstraints2 } from "../../data";
+import { SymbolMgr } from "../../data/symbolmgr";
+import { newText } from "../../data/text/textutils";
+import { getPolygonPoints, getPolygonVertices } from "../utils/path";
+import { is_mac } from "../../data/utils";
 import { Path } from "@kcdesign/path";
-import { convertPath2CurvePoints } from "../data/pathconvert";
+import { convertPath2CurvePoints } from "../../data/pathconvert";
 
 function _checkNum(num: number) {
     if (Number.isNaN(num) || (!Number.isFinite(num))) throw new Error(String(num));

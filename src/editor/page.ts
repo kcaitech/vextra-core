@@ -38,7 +38,7 @@ import {
     SideType,
     StarShape,
     Stop,
-    Style, StyleMangerMember,
+    Style,
     SymbolRefShape,
     SymbolShape,
     SymbolUnionShape,
@@ -49,7 +49,17 @@ import {
 } from "../data";
 import { ShapeEditor } from "./shape";
 import * as types from "../data/typesdefine";
-import { newArtboard, newAutoLayoutArtboard, newBoolShape, newGroupShape, newImageFillShape, newPathShape, newSolidColorFill, newSymbolRefShape, newSymbolShape } from "./creator";
+import {
+    newArtboard,
+    newAutoLayoutArtboard,
+    newBoolShape,
+    newGroupShape,
+    newImageFillShape,
+    newPathShape,
+    newSolidColorFill,
+    newSymbolRefShape,
+    newSymbolShape
+} from "./creator/creator";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
 import { TextShapeEditor } from "./textshape";
@@ -57,7 +67,7 @@ import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
 import { IImportContext, importArtboard, importAutoLayout, importBlur, importBorder, importCornerRadius, importFill, importGradient, importMarkerType, importOverlayBackgroundAppearance, importOverlayPosition, importPrototypeInterAction, importPrototypeStartingPoint, importShadow, importStop, importStyle, importSymbolShape, importText, importTransform } from "../data/baseimport";
 import { TableEditor } from "./table";
-import { exportGradient, exportStop, exportSymbolShape } from "../data/baseexport";
+import { exportGradient, exportSymbolShape } from "../data/baseexport";
 import { after_remove, clear_binds_effect, find_state_space, fixTextShapeFrameByLayout, get_symbol_by_layer, init_state, make_union, modify_frame_after_inset_state, modify_index } from "./utils/other";
 import { v4 } from "uuid";
 import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind, _ov, shape4Autolayout } from "./symbol";
@@ -72,7 +82,7 @@ import {
     adapt2Shape,
     ArtboardView,
     BoolShapeView, ContactLineView,
-    CutoutShapeView,
+    CutoutShapeView, FrameCpt,
     GroupShapeView,
     PageView,
     PathShapeView,
@@ -86,26 +96,20 @@ import {
 } from "../dataview";
 import { FMT_VER_latest } from "../data/fmtver";
 import { ColVector3D } from "../basic/matrix2";
-import { TidyUpAlgin, tidyUpLayout } from "./utils/auto_layout";
+import { TidyUpAlign, tidyUpLayout } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
 import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit, assign } from "./asyncapi";
 import { Path } from "@kcdesign/path";
 import { prepareVar } from "./symbol_utils";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
-import { border2path } from "../dataview/border2path";
+import { stroke } from "../render/stroke";
 
 // 用于批量操作的单个操作类型
 export interface PositionAdjust { // 涉及属性：frame.x、frame.y
     target: Shape
     transX: number
     transY: number
-}
-
-export interface FrameAdjust { // frame.width、frame.height
-    target: Shape
-    widthExtend: number
-    heightExtend: number
 }
 
 export interface BatchAction { // target,index,value
@@ -117,17 +121,6 @@ export interface BatchAction { // target,index,value
 export interface BatchAction2 { // targer、value
     target: ShapeView
     value: any
-}
-
-export interface BatchAction3 { // targer、index
-    target: ShapeView
-    index: number
-}
-
-export interface BatchAction4 { // targer、value、type
-    target: ShapeView
-    index: number
-    type: 'fills' | 'borders'
 }
 
 export interface BatchAction5 { // targer、value、type
@@ -325,34 +318,33 @@ export class PageEditor {
         }
     }
 
-    dissolution_artboard(shapes: ArtboardView[]): false | Shape[] {
-        const childrens: Shape[] = [];
-        const api = this.__repo.start("dissolution_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
-            if (!isUndo) state.shapes = childrens.map(c => c.id);
-            else state.shapes = cmd.saveselection?.shapes || [];
-            selection.restore(state);
-        });
+    dissolution_artboard(shapes: ArtboardView[]): Shape[] {
         try {
+            const children: Shape[] = [];
+            const api = this.__repo.start("dissolution_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                const state = {} as SelectionState;
+                if (!isUndo) state.shapes = children.map(c => c.id);
+                else state.shapes = cmd.saveselection?.shapes || [];
+                selection.restore(state);
+            });
             for (let i = 0; i < shapes.length; i++) {
                 const shape = shapes[i];
                 if (shape.isVirtualShape) continue;
                 if (!shape.parent) continue;
                 const childs = ungroup(this.__document, this.page, adapt2Shape(shape) as Artboard, api);
-                childrens.push(...childs);
+                children.push(...childs);
             }
             this.__repo.commit();
-            return childrens.length > 0 ? childrens : false;
+            return children;
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
-        return false;
     }
 
-    create_autolayout_artboard(shapes: ShapeView[], artboardname: string): false | Artboard {
-        if (shapes.length === 0) return false;
-        if (shapes.find((v) => !v.parent)) return false;
+    create_autolayout_artboard(shapes: ShapeView[], artboardname: string): Artboard | void {
+        if (shapes.length === 0) return;
+        if (shapes.find((v) => !v.parent)) return;
         const fshape = adapt2Shape(shapes[0]);
         const savep = fshape.parent as GroupShape;
         const shapes_rows = layoutShapesOrder2(shapes, false);
@@ -387,10 +379,9 @@ export class PageEditor {
             this.__repo.commit();
             return artboard;
         } catch (e) {
-            console.log(e)
             this.__repo.rollback();
+            throw e;
         }
-        return false;
     }
 
     modifyShapesContextSettingOpacity(shapes: ShapeView[], value: number) {
@@ -412,7 +403,6 @@ export class PageEditor {
     }
 
     modifyShapesContextSettingBlendMode(shapes: Shape[], blendMode: types.BlendMode) {
-        if (!shapes.length) return console.log('invalid data');
         try {
             const api = this.__repo.start("modifyShapesContextSettingBlendMode");
             for (let i = 0, l = shapes.length; i < l; i++) {
@@ -422,9 +412,8 @@ export class PageEditor {
             this.__repo.commit();
             return true;
         } catch (e) {
-            console.log(e);
             this.__repo.rollback();
-            return false;
+            throw e;
         }
     }
 
@@ -535,7 +524,8 @@ export class PageEditor {
             if (!shapes.length) return;
 
             const shape0 = shapes[0];
-            const frame = shape0.frame2Parent();
+            const __f = FrameCpt.frame2Parent(shape0);
+            const frame = new ShapeFrame(__f.x, __f.y, __f.width, __f.height);
 
             const replace = shapes.length === 1
                 && ((shape0 instanceof GroupShape && !(shape0 instanceof BoolShape)) || shape0 instanceof Artboard);
@@ -2020,19 +2010,6 @@ export class PageEditor {
         }
     }
 
-    setShapesFrame(actions: FrameAdjust[]) {
-        const api = this.__repo.start('setShapesFrame');
-        try {
-            for (let i = 0; i < actions.length; i++) {
-                const { target, widthExtend, heightExtend } = actions[i];
-                expand(api, this.__document, this.page, target, widthExtend, heightExtend);
-            }
-            this.__repo.commit();
-        } catch (error) {
-            this.__repo.rollback();
-        }
-    }
-
     modifyShapesWidth(shapes: ShapeView[], val: number) {
         try {
             const api = this.__repo.start('modifyShapesWidth');
@@ -2180,7 +2157,7 @@ export class PageEditor {
             const api = this.__repo.start('deleteShapesGradientStop');
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
-                const grad_type = type === 'fills' ? target.getFills() : target.getBorders()?.strokePaints;
+                const grad_type = type === 'fills' ? target.getFills() : target.getBorder()?.strokePaints;
                 if (!grad_type?.length) {
                     continue;
                 }
@@ -3534,7 +3511,7 @@ export class PageEditor {
                     update_frame_by_points(api, page, pathShape);
                     ids.push(pathShape.id);
                 } else {
-                    const borders = view.getBorders();
+                    const borders = view.getBorder();
                     const shape = adapt2Shape(view);
                     if (!borders || !borders.strokePaints.length) {
                         if ((shape instanceof StarShape || shape instanceof PolygonShape) && !shape.haveEdit) {
@@ -3556,7 +3533,7 @@ export class PageEditor {
                             if (fill.fillType === FillType.Pattern) fill.fillType = FillType.SolidColor;
                             style.fills = new BasicArray<Fill>(fill);
                         }
-                        const path = border2path(view, border);
+                        const path = stroke(view);
                         let pathshape = newPathShape(view.name + suffix, view.frame, path, this.__document.stylesMgr, style);
                         pathshape.transform = shape.transform.clone();
                         pathshape.mask = shape.mask;
@@ -3786,7 +3763,7 @@ export class PageEditor {
         return new TableEditor(shape, this.view, this.__repo, this.__document);
     }
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlign) {
         const api = this.__repo.start('tidyUpShapesLayout');
         try {
             tidyUpLayout(this.page, api, shape_rows, hor, ver, dir, algin);

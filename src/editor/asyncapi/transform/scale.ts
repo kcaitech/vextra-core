@@ -35,16 +35,13 @@ import {
     PathShapeView,
     ShapeView,
     SymbolRefView,
-    TableCellView,
-    TableView,
     TextShapeView
 } from "../../../dataview";
 import { Operator, TextShapeLike } from "../../../coop/recordop";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
-import { Transform as Transform2 } from "../../../basic/transform";
 import { ColVector3D } from "../../../basic/matrix2";
 import { XYsBounding } from "../../../io/cilpboard";
-import { shape4Autolayout } from "../../../editor/symbol";
+import { shape4Autolayout } from "../../symbol";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,
@@ -583,17 +580,18 @@ export function uniformScale(
     const container4modifyStyle: ShapeView[] = [];
     for (const unit of units) {
         const { transform, shape: view, size, decomposeScale } = unit;
-        container4modifyStyle.push(view);
         const shape = adapt2Shape(view);
-        api.shapeModifyTransform(page, shape, (transform.clone()));
+
+        api.shapeModifyTransform(page, shape, transform.clone());
+        if (shape.hasSize()) api.shapeModifyWH(page, shape, size.width, size.height);
 
         if (shape instanceof SymbolRefShape) {
-            // if (!shape.isCustomSize) api.shapeModifyIsCustomSize(page, shape, true);
             const scale = getScale(view);
             api.modifyShapeScale(page, shape, scale * ratio);
+            continue;
         }
 
-        if (shape.hasSize()) api.shapeModifyWH(page, shape, size.width, size.height);
+        container4modifyStyle.push(view);
 
         if (view instanceof GroupShapeView) reLayoutByUniformScale(api, page, view, decomposeScale, container4modifyStyle, rangeRecorder, sizeRecorder, transformRecorder);
     }
@@ -615,7 +613,7 @@ export function uniformScale(
         );
         api.setBorderSide(shape.getBorders(), setting);
         const shadows = shape.getShadows();
-        shadows.forEach((s, i) => {
+        shadows.forEach(s => {
             const sId = s.id + shape.id;
             const blurRadius = getBaseValue(sId, 'blurRadius', s.blurRadius);
             api.setShadowBlur(s, blurRadius * ratio);
@@ -630,13 +628,6 @@ export function uniformScale(
         if (blur?.saturation) api.shapeModifyBlurSaturation(blur, blur.saturation * ratio);
 
         if (view instanceof TextShapeView) textSet.push(view);
-        if (view instanceof TableView) {
-            for (const child of view.childs) {
-                const cell = child as TableCellView;
-                if (cell.text.paras.length === 1 && cell.text.paras[0].text === '\n') continue;
-                textSet.push(cell);
-            }
-        }
         if (view instanceof SymbolRefView) {
             const scale = getScale(view);
             api.modifyShapeScale(page, shape, scale * ratio);
@@ -768,8 +759,8 @@ export class Scaler extends AsyncApiCaller {
                     const size = item.size;
                     api.shapeModifyWH(page, shape, size.width, size.height)
                 }
-                api.shapeModifyTransform(page, shape, (item.transform2.clone()));
-                if ((item.shape as ArtboardView).autoLayout) {
+                api.shapeModifyTransform(page, shape, item.transform2.clone());
+                if (item.shape.autoLayout) {
                     const _shape = shape4Autolayout(api, item.shape, this._page);
                     if (item.w_change) {
                         api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
@@ -789,7 +780,7 @@ export class Scaler extends AsyncApiCaller {
             }
             this.updateView();
         } catch (error) {
-            console.log('error:', error);
+            console.error(error);
             this.exception = true;
         }
     }
@@ -843,7 +834,7 @@ export class Scaler extends AsyncApiCaller {
             uniformScale(this.api, this.page, units, ratio, this.recorder, this.sizeRecorder, this.transformRecorder, this.valueRecorder);
             this.updateView();
         } catch (error) {
-            console.log('error:', error);
+            console.error(error);
             this.exception = true;
         }
     }

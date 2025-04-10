@@ -18,7 +18,7 @@ import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
 import { Api } from "../../../coop";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop";
-import { TidyUpAlgin, tidyUpLayout } from "../../utils/auto_layout";
+import { TidyUpAlign, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
 import { MossError } from "../../../basic/error";
@@ -303,7 +303,7 @@ export class Transporter extends AsyncApiCaller {
         try {
             const api = this.api;
             const page = this.page;
-            const frame = shape._p_frame;
+            const frame = shape.relativeFrame;
             translate(api, page, adapt2Shape(shape), x - frame.x, y - frame.y);
         } catch (e) {
             this.exception = true;
@@ -311,7 +311,7 @@ export class Transporter extends AsyncApiCaller {
         }
     }
 
-    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, align: TidyUpAlgin, startXY?: {
+    tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, align: TidyUpAlign, startXY?: {
         x: number,
         y: number
     }) {
@@ -342,7 +342,7 @@ export class Transporter extends AsyncApiCaller {
                 else return -1;
             });
 
-            const frame = placement ? placement._p_frame : { x: 0, y: 0 };
+            const frame = placement ? placement.relativeFrame : { x: 0, y: 0 };
 
             const api = this.api;
             const page = this.page;

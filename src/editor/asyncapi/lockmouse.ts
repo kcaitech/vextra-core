@@ -48,7 +48,7 @@ import {
     TransformRecorder,
 } from "./transform";
 import { fixTextShapeFrameByLayout } from "../utils/other";
-import { TidyUpAlgin, tidyUpLayout } from "../utils/auto_layout";
+import { TidyUpAlign, tidyUpLayout } from "../utils/auto_layout";
 import { modifyPathByArc } from "./arc";
 import { Api } from "../../coop";
 import { importBorder } from "../../data/baseimport";
@@ -416,7 +416,7 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
-    executeTidyup(shapes: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlgin) {
+    executeTidyup(shapes: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlign) {
         try {
             const api = this.api;
             const page = this.page;
@@ -530,7 +530,7 @@ export class LockMouseHandler extends AsyncApiCaller {
         try {
             const api = this.api;
             for (const view of shapes) {
-                const border = view.getBorders();
+                const border = view.getBorder();
                 const linkedVariable = this.getBorderVariable(api, this._page, view);
                 const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 if (view.bordersMask) {

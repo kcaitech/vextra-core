@@ -113,7 +113,7 @@ export class AutoLayoutModify extends AsyncApiCaller {
             const page = this.page;
             for (let index = 0; index < targets.length; index++) {
                 const target = targets[index];
-                const frame = target._p_frame;
+                const frame = target.relativeFrame;
                 translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
             }
             this.updateView();

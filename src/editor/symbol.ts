@@ -24,7 +24,7 @@ import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
 import { Operator } from "../coop/recordop";
-import { newArtboard } from "./creator";
+import { newArtboard, newText2 } from "./creator/creator";
 import {
     Artboard,
     AutoLayout,
@@ -381,7 +381,7 @@ export function modify_variable_with_api(api: Operator, page: PageView, shape: S
  */
 export function shape4border(api: Operator, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-        const borders = _var?.value ?? shape.getBorders();
+        const borders = _var?.value ?? shape.getBorder();
         return importBorder(borders);
     }, api, shape)
     return _var || shape.data;

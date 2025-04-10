@@ -22,7 +22,7 @@ import {
     newRectShape,
     newStellateShape,
     newTextShape
-} from "./creator";
+} from "./creator/creator";
 
 import { Page } from "../data/page";
 import { CoopRepository } from "../coop/cooprepo";

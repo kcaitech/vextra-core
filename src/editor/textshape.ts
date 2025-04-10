@@ -514,7 +514,7 @@ export class TextShapeEditor extends ShapeEditor {
             }
 
             this.__preInputText = savetext;
-            if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.forceUpdateOriginFrame();
+            if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.frameProxy.forceUpdateOriginFrame();
             this.fixFrameByLayout(api);
             this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
             return true;
@@ -530,7 +530,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__composingStarted = false;
         }, 50);
         if (text.length === 0 && this.__composingDel === 0) return true;
-        if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.forceUpdateOriginFrame(); // 需要更新，否则一会updateFrame时不对
+        if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.frameProxy.forceUpdateOriginFrame(); // 需要更新，否则一会updateFrame时不对
         return !!this.insertText2(text, this.__composingIndex, this.__composingDel, this.__composingAttr);
     }
 

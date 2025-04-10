@@ -47,7 +47,7 @@ export class BorderModifier extends Modifier {
 
     getBorderVariable(api: Api, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
-            return importBorder(_var?.value ?? view.style.borders);
+            return importBorder(_var?.value ?? view.getBorder());
         }, api, view)!;
     }
 
@@ -152,7 +152,7 @@ export class BorderModifier extends Modifier {
             const api = this.getApi('setBorderThickness');
             const page = adapt2Shape(pageView) as Page;
             for (const view of views) {
-                const border = view.getBorders();
+                const border = view.getBorder();
                 const linkedVariable = this.getBorderVariable(api, pageView, view);
                 const source = linkedVariable ? linkedVariable.value as Border : view.data.style.borders;
                 if (view.bordersMask) {
@@ -241,7 +241,7 @@ export class BorderModifier extends Modifier {
             const api = this.getApi('setBorderPosition');
             const page = adapt2Shape(pageView) as Page;
             for (const view of views) {
-                const border = view.getBorders();
+                const border = view.getBorder();
                 const linkedVariable = this.getBorderVariable(api, pageView, view);
                 const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
                 if (view.bordersMask) {
@@ -419,7 +419,7 @@ export class BorderModifier extends Modifier {
             if (!views.length) return;
 
             const api = this.getApi('unbindShapesFillMask');
-            const borderCopy = views[0].getBorders();
+            const borderCopy = views[0].getBorder();
 
             // 处理遮罩
             const fillMaskVariables: Variable[] = [];
@@ -457,7 +457,7 @@ export class BorderModifier extends Modifier {
 
             const api = this.getApi('unbindShapesBorderMask');
             const page = adapt2Shape(pageView) as Page;
-            const borderCopy = views[0].getBorders();
+            const borderCopy = views[0].getBorder();
             // 处理遮罩
             for (const view of views) {
                 const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, pageView, view, undefined);

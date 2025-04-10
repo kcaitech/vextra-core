@@ -11,7 +11,7 @@
 import * as chai from 'chai'
 import { DataGuard } from '../data/notransact';
 import { ShapeFrame } from '../data/shape';
-import { newPage, newRectShape } from './creator';
+import { newPage, newRectShape } from './creator/creator';
 // import { updateShapesFrame } from './coop/utils';
 import * as api from '../coop/basicop'
 import { Point2D } from '../data/typesdefine';

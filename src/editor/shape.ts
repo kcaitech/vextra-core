@@ -48,12 +48,11 @@ import {
     ExportFormatNameingScheme,
     ExportOptions,
     OverrideType,
-    StackAlign,
     StackMode,
     StackSizing,
     StackWrap
 } from "../data/typesdefine";
-import { Operator, PaddingDir } from "../coop/recordop";
+import { Operator } from "../coop/recordop";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
@@ -66,35 +65,13 @@ import {
 } from "./utils/other";
 import { _typing_modify, modify_points_xy, update_frame_by_points } from "./utils/path";
 import { adapt_for_artboard } from "./utils/common";
-import {
-    ShapeView,
-    SymbolRefView,
-    SymbolView,
-    adapt2Shape,
-    findOverride,
-    ArtboardView,
-    findVar,
-    GroupShapeView,
-    PageView
-} from "../dataview";
-import {
-    is_part_of_symbol,
-    is_symbol_or_union,
-    modify_variable,
-    modify_variable_with_api,
-    shape4Autolayout,
-    shape4border,
-    shape4contextSettings,
-    shape4exportOptions,
-    shape4fill,
-    shape4shadow
-} from "./symbol";
+import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboardView, findVar, GroupShapeView, PageView } from "../dataview";
+import { is_part_of_symbol, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
 import { exportCurvePoint } from "../data/baseexport";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 import { group, ungroup } from "./group";
-import { newArtboard, newArtboard2 } from "./creator";
-
+import { newArtboard } from "./creator/creator";
 
 export class ShapeEditor {
     protected __shape: ShapeView;
@@ -1393,18 +1370,18 @@ export class ShapeEditor {
                 layoutInfo.stackWrap = StackWrap.NoWrap;
                 layoutInfo.stackMode = StackMode.Horizontal;
                 layoutInfo.stackCounterSpacing = hor;
-                shape_height += Math.max(...rows.map(s => s._p_frame.height));
+                shape_height += Math.max(...rows.map(s => s.frameProxy._p_frame.height));
                 rows.forEach(s => {
-                    shape_width += s._p_frame.width + hor;
+                    shape_width += s.frameProxy._p_frame.width + hor;
                 })
                 shape_width -= hor;
             } else if (shapes_rows.every(s => s.length === 1)) {
                 layoutInfo.stackWrap = StackWrap.NoWrap;
                 layoutInfo.stackMode = StackMode.Vertical;
                 layoutInfo.stackSpacing = ver;
-                shape_width += Math.max(...rows.map(s => s._p_frame.width));
+                shape_width += Math.max(...rows.map(s => s.frameProxy._p_frame.width));
                 rows.forEach(s => {
-                    shape_height += s._p_frame.height + ver;
+                    shape_height += s.frameProxy._p_frame.height + ver;
                 })
                 shape_height -= ver;
             }

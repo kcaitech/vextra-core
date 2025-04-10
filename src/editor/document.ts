@@ -11,7 +11,7 @@
 import { Page } from "../data/page";
 import { Document } from "../data/document";
 import { PageListItem } from "../data/typesdefine";
-import { newPage } from "./creator";
+import { newPage } from "./creator/creator";
 import { v4 as uuid } from "uuid";
 import { exportPage } from "../data/baseexport";
 import {
@@ -22,7 +22,7 @@ import {
     importTextAttr,
     importTextMask,
 } from "../data/baseimport";
-import { newDocument } from "./creator";
+import { newDocument } from "./creator/creator";
 import { CoopRepository } from "../coop/cooprepo";
 import { TransactDataGuard } from "../data/transact";
 import * as types from "../data/typesdefine";

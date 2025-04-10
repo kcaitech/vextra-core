@@ -43,7 +43,7 @@ import {
     newRectShape,
     newStellateShape,
     newTextShape
-} from "../creator";
+} from "../creator/creator";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../coop";
 import { uuid } from "../../basic/uuid";
 import { Api } from "../../coop";
@@ -141,7 +141,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 this.updateView();
             }
         } catch (e) {
-            console.log('CreatorApiCaller.generator:', e);
+            console.error(e);
             this.exception = true;
         }
     }
