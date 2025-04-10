@@ -189,7 +189,7 @@ export * from "./editor/shape"
 export * from "./editor/textshape"
 export * from "./editor/table"
 export * from "./editor/controller"
-export * as creator from "./editor/creator"
+export * as creator from "./editor/creator/creator"
 
 
 export * from "./editor/asyncapi"
@@ -216,6 +216,7 @@ export { ShadowsModifier } from "./editor/style/shadows";
 export { BlurModifier } from "./editor/style/blur";
 export { TextModifier } from "./editor/style/text";
 
+export { ScreenPrinter } from "./printscreen";
 
 export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun) {
     gPal.text.textMeasure = textMeasure

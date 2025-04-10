@@ -26,5 +26,5 @@ export default [{
         babel({ babelHelpers: 'bundled' }),
         terser(),
     ],
-    external: ['uuid', 'kiwi-schema', 'uzip']
+    external: ['uuid', 'kiwi-schema', 'uzip', 'skia-canvas']
 }];

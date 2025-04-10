@@ -55,6 +55,6 @@ export function exportSvg(shape: Shape): string {
     view.render();
 
     const content = view.toSVGString();
-    view.destory();
+    view.destroy();
     return content;
 }

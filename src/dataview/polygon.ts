@@ -8,8 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { RadiusType } from "../data/consts";
-import { PolygonShape } from "../data/shape";
+import { RadiusType, PolygonShape } from "../data";
 import { PathShapeView } from "./pathshape";
 
 export class PolygonShapeView extends PathShapeView {

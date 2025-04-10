@@ -9,16 +9,13 @@
  */
 
 import { DViewCtx, PropsType } from "./viewctx";
-import { Shape, ShapeSize, SymbolRefShape, SymbolShape } from "../data";
+import { Shape, SymbolRefShape, SymbolShape } from "../data";
 import { getShapeViewId, stringh } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";
-
-// EventEmitter
-
-// interface IKeyAny {
-//     [key: string]: any
-// }
+import { IRenderer } from "../render/basic";
+import { SVGConstructorMap } from "../render/SVG/painters/map";
+import { CanvasConstructorMap } from "../render/canvas/painters/map";
 
 class EventEL extends EL {
     private _events: { [key: string]: Function[] } = {};
@@ -90,16 +87,16 @@ export interface RootView {
 
 export class DataView extends EventEL {
     m_ctx: DViewCtx;
+    m_renderer: IRenderer;
     m_data: Shape;
     m_children: DataView[] = [];
     m_parent: DataView | undefined;
     m_props: PropsType // 缓存排版参数，用于下次直接layout
 
-    // m_uniform_scale?: number;
     private m_varsContainer?: (SymbolRefShape | SymbolShape)[];
     m_isVirtual?: boolean;
 
-    m_isdistroyed: boolean = false;
+    m_is_destroyed: boolean = false;
     m_nodeCount: number = 1;
 
     constructor(ctx: DViewCtx, props: PropsType) {
@@ -109,36 +106,57 @@ export class DataView extends EventEL {
         this.m_props = props;
         this.m_isVirtual = props.isVirtual;
 
-        this._datawatcher = this._datawatcher.bind(this);
+        this._data_watcher = this._data_watcher.bind(this);
         // watch data & varsContainer
-        this.m_data.watch(this._datawatcher);
+        this.m_data.watch(this._data_watcher);
         this.varsContainer = (props.varsContainer);
 
         this.m_ctx.setDirty(this);
         ctx.markRaw(this)
+
+        this.m_renderer = this.rendererBuilder();
+    }
+
+    rendererBuilder(): IRenderer {
+        const view = this as unknown as any;
+        switch (this.m_ctx.gl) {
+            case "SVG":
+                const SVGRendererConstructor = SVGConstructorMap.get(view.type)!;
+                return new SVGRendererConstructor(view);
+            case "Canvas":
+                const CanvasRendererConstructor = CanvasConstructorMap.get(view.type)!;
+                return new CanvasRendererConstructor(view);
+            default:
+                const DefaultCon = SVGConstructorMap.get(view.type)!;
+                return new DefaultCon(view);
+        }
+    }
+
+    get canvasRenderingContext2D(): CanvasRenderingContext2D {
+        return this.m_ctx.m_canvas! as CanvasRenderingContext2D;
     }
 
     setData(data: Shape) {
         if (objectId(data) === objectId(this.m_data)) return;
         const old = this.m_data;
-        old.unwatch(this._datawatcher);
-        data.watch(this._datawatcher);
+        old.unwatch(this._data_watcher);
+        data.watch(this._data_watcher);
         this.m_data = data;
     }
 
     get varsContainer() {
         return this.m_varsContainer;
     }
-    protected set varsContainer(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
+
+    set varsContainer(varsContainer: (SymbolRefShape | SymbolShape)[] | undefined) {
         if (this.m_varsContainer) {
-            this.m_varsContainer.forEach((c) => c.unwatch(this._datawatcher));
+            this.m_varsContainer.forEach((c) => c.unwatch(this._data_watcher));
         }
         this.m_varsContainer = varsContainer;
         if (this.m_varsContainer) {
-            this.m_varsContainer.forEach((c) => c.watch(this._datawatcher));
+            this.m_varsContainer.forEach((c) => c.watch(this._data_watcher));
         }
     }
-
     // mock shape
     get isViewNode() {
         return true;
@@ -171,25 +189,24 @@ export class DataView extends EventEL {
         return this.m_isVirtual;
     }
 
-    private _datawatcher(...args: any[]) {
+    private _data_watcher(...args: any[]) {
         this.m_ctx.setReLayout(this);
         this.m_ctx.setDirty(this);
-        this.onDataChange(...args);
+        this.onUpdate(...args);
         this.notify(...args);
     }
 
     onDestroy() {
-
     }
 
-    get isDistroyed() {
-        return this.m_isdistroyed;
+    get isDestroyed() {
+        return this.m_is_destroyed;
     }
 
-    onDataChange(...args: any[]) {
+    onUpdate(...args: any[]) {
     }
 
-    layout(props?: PropsType) {
+    layout(args: any) {
         throw new Error('not implemented');
     }
 
@@ -236,39 +253,6 @@ export class DataView extends EventEL {
             (root as any as RootView).onAddView(child);
         }
         child.onMounted();
-    }
-
-    addChilds(childs: DataView[], idx?: number) {
-        // check
-        childs.forEach(c => {
-            if (c.m_parent) throw new Error('child already added');
-        })
-        if (idx !== undefined) {
-            this.m_children.splice(idx, 0, ...childs);
-        }
-        else {
-            this.m_children.push(...childs);
-        }
-        let nodeCount = 0;
-        childs.forEach(c => {
-            c.m_parent = this;
-            nodeCount += c.m_nodeCount;
-        })
-
-        this.m_nodeCount += nodeCount;
-        let p = this.m_parent;
-        let root: DataView = this;
-        while (p) {
-            root = p;
-            p.m_nodeCount += nodeCount;
-            p = p.m_parent;
-        }
-        if ((root as any).isRootView) {
-            (root as any as RootView).onAddView(childs);
-        }
-        childs.forEach(c => {
-            c.onMounted();
-        })
     }
 
     removeChild(idx: number | DataView) {
@@ -318,7 +302,6 @@ export class DataView extends EventEL {
         if (dom && dom.length) {
             let nodeCount = 0;
             dom.forEach(d => {
-                // d.m_parent = undefined;
                 nodeCount += d.m_nodeCount;
             });
 
@@ -351,34 +334,23 @@ export class DataView extends EventEL {
         attrs['preserveAspectRatio'] = "xMinYMin meet";
         attrs.width = frame.width;
         attrs.height = frame.height;
-        // attrs.viewBox = `${frame.x} ${frame.y} ${frame.width} ${frame.height}`;
         attrs.overflow = "visible";
         return stringh('svg', attrs, this.outerHTML);
     }
 
-    destory() {
+    destroy() {
         if (this.m_parent) throw new Error("parent is not null");
-        if (this.m_isdistroyed) throw new Error("already distroyed");
-        const tid = this.id;
+        if (this.m_is_destroyed) throw new Error("already distroyed");
         this.m_ctx.removeReLayout(this);
         this.m_ctx.removeDirty(this);
 
-        // if (this.m_el) {
-        //     this.m_el.remove();
-        //     this.m_el = undefined;
-        // }
-        this.m_data.unwatch(this._datawatcher);
+        this.m_data.unwatch(this._data_watcher);
         if (this.m_varsContainer) {
-            this.m_varsContainer.forEach((c) => c.unwatch(this._datawatcher));
+            this.m_varsContainer.forEach((c) => c.unwatch(this._data_watcher));
         }
-        this.removeChilds(0, Number.MAX_VALUE).forEach((c) => c.destory());
-        // --this.m_ctx.instanceCount;
-        // remove first?
+        this.removeChilds(0, Number.MAX_VALUE).forEach((c) => c.destroy());
         this.onDestroy();
-        this.m_isdistroyed = true;
+        this.m_is_destroyed = true;
         this.notify('destroy');
-        // destroy childs
-        // destroy dom
-        // recycle?
     }
 }

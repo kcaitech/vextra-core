@@ -35,7 +35,7 @@ import {
     StyleMangerMember
 } from "../../../data"
 import { Transform } from "../../../basic/transform"
-import * as shapeCreator from "../../../editor/creator"
+import * as shapeCreator from "../../../editor/creator/creator"
 import { ColVector3D, Matrix } from "../../../basic/matrix2"
 import { Transform as ShapeTransform } from "../../../data"
 

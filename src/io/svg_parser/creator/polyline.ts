@@ -9,7 +9,7 @@
  */
 
 import { BaseCreator } from "./base"
-import * as shapeCreator from "../../../editor/creator"
+import * as shapeCreator from "../../../editor/creator/creator"
 import { ShapeFrame } from "../../../data"
 import { Path } from "@kcdesign/path";
 import { ColVector3D } from "../../../basic/matrix2";

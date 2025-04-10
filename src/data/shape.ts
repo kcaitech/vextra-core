@@ -247,18 +247,6 @@ export class Shape extends Basic implements classes.Shape {
         return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
     }
 
-    // @deprecated
-    frame2Parent(): ShapeFrame {
-        const frame = this.frame;
-        if (this.isNoTransform()) {
-            return new ShapeFrame(this.transform.m02 + frame.x, this.transform.m12 + frame.y, frame.width, frame.height);
-        }
-        const m = this.transform;
-        const lt = m.computeCoord(frame.x, frame.y);
-        const rb = m.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-    }
-
     /**
      * root: page 往上一级
      * @returns

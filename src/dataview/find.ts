@@ -185,7 +185,7 @@ function intersect_skewrect_group_rect(view: GroupShapeView, skewrect: { x: numb
     const bounds = skewrect_bounds(skewrect);
     for (let i = 0; i < children.length; i++) {
         const child = children[i];
-        if (!intersect_rect(bounds, child._p_outerFrame)) continue;
+        if (!intersect_rect(bounds, child.frameProxy._p_outerFrame)) continue;
         const transfrom = child.transform.inverse;
         const cskewrect = skewrect.map((p) => transfrom.computeCoord(p));
         if (child.type === ShapeType.Group) {
@@ -232,7 +232,7 @@ function _find(view: ShapeView, rect: Rect, level: number, finder: (view: ShapeV
         { x: rect.x, y: rect.y + rect.height }]
     if (!finder(view, level, skewrect)) return;
     view.childs.forEach(c => {
-        if (!intersect_rect(rect, c._p_outerFrame)) return;
+        if (!intersect_rect(rect, c.frameProxy._p_outerFrame)) return;
         const transfrom = c.transform.inverse;
         const cskewrect = skewrect.map((p) => transfrom.computeCoord(p));
         __find(c, cskewrect, level + 1, finder);

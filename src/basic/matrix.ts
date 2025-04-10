@@ -337,8 +337,9 @@ export class Matrix {
     toString() {
         return 'matrix(' + this.m_matrix.join(',') + ')';
     }
-    toArray() {
-        return this.m_matrix.slice(0);
+
+    toArray(): [number, number, number, number, number, number] {
+        return this.m_matrix.slice(0) as [number, number, number, number, number, number];
     }
 
     get m00() {

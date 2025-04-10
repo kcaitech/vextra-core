@@ -11,7 +11,7 @@
 
 import { v4 as uuid } from "uuid"
 import { BaseCreator } from "./base"
-import * as shapeCreator from "../../../editor/creator"
+import * as shapeCreator from "../../../editor/creator/creator"
 import { getFormatFromBase64 } from "../../../basic/utils"
 import { ShapeFrame } from "../../../data"
 

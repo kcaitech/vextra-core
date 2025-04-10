@@ -26,7 +26,6 @@ function checkPath(v: ShapeView) {
 }
 
 export class PageView extends GroupShapeView implements RootView {
-
     private m_views: Map<string, ShapeView> = new Map();
     private m_artboards: Map<string, ArtboardView> = new Map();
     private m_cutouts: Map<string, CutoutShapeView> = new Map();
@@ -39,7 +38,7 @@ export class PageView extends GroupShapeView implements RootView {
         const destroyDelayDestroys = () => {
             this.m_delaydestorys.forEach((v) => {
                 if (v.parent) return; // 已复用
-                v.destory();
+                v.destroy();
             });
             this.m_delaydestorys.clear();
         }
@@ -111,24 +110,12 @@ export class PageView extends GroupShapeView implements RootView {
         return (this.m_data as Page).guides;
     }
 
-    protected renderProps() {
-        const prop: any = {
-            version: "1.1",
-            xmlns: "http://www.w3.org/2000/svg",
-            "xmlns:xlink": "http://www.w3.org/1999/xlink",
-            "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
-            preserveAspectRatio: "xMinYMin meet",
-            overflow: "visible"
-        }
-        return prop;
+    render(): number {
+        return this.m_renderer.render();
     }
 
-    render(): number {
-        const r = super.render();
-        if (r) {
-            this.eltag = "svg";
-        }
-        return r;
+    updateMaskMap() {
+        this.maskMap.clear();
     }
 
     dbgCheckPath() {
@@ -137,9 +124,5 @@ export class PageView extends GroupShapeView implements RootView {
 
     get backgroundColor() {
         return this.data.backgroundColor;
-    }
-
-    get connections() {
-        return this.data.connections;
     }
 }

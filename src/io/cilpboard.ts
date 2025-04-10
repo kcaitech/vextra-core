@@ -69,7 +69,7 @@ import {
 import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data";
-import { newSymbolRefShape, newTextShapeByText } from "../editor/creator";
+import { newSymbolRefShape, newTextShapeByText } from "../editor/creator/creator";
 import { Page } from "../data";
 import { FMT_VER_latest } from "../data/fmtver";
 

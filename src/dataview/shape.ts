@@ -8,39 +8,27 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { innerShadowId, renderBlur, renderBorders, renderFills, renderShadows } from "../render";
 import {
+    AutoLayout,
     BasicArray,
     Blur,
-    BlurMask,
-    BlurType,
     Border,
-    BorderMask,
-    BorderPosition,
     ContextSettings,
     CornerRadius,
-    CurveMode, CurvePoint,
     ExportOptions,
     Fill,
-    FillMask,
     FillType,
-    GradientType,
     MarkerType,
     OverlayBackgroundAppearance,
     OverlayBackgroundInteraction,
     OverlayPosition,
-    OverrideType, parsePath,
-    PathShape,
+    OverrideType,
     PrototypeInterAction,
     PrototypeStartingPoint,
-    RadiusMask,
-    RadiusType,
     ResizingConstraints2,
     ScrollBehavior,
     ScrollDirection,
     Shadow,
-    ShadowMask,
-    ShadowPosition,
     Shape,
     ShapeFrame,
     ShapeSize,
@@ -52,19 +40,16 @@ import {
     VariableType
 } from "../data";
 import { findOverrideAndVar } from "./basic";
-import { EL, elh } from "./el";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
 import { float_accuracy } from "../basic/consts";
-import { GroupShapeView } from "./groupshape";
-import { importFill } from "../data/baseimport";
-import { exportFill } from "../data/baseexport";
-import { PageView } from "./page";
-import { ArtboardView } from "./artboard";
 import { findOverrideAll } from "../data/utils";
-import { Path } from "@kcdesign/path";
 import { isEqual } from "../basic/number_utils";
+import { ViewModifyEffect } from "./proxy/effects/view";
+import { ViewCache } from "./proxy/cache/view";
+import { ViewLayout } from "./proxy/layout/view";
+import { FrameProxy } from "./proxy/frame/view";
 
 export function isDiffShapeSize(lsh: ShapeSize | undefined, rsh: ShapeSize | undefined) {
     if (lsh === rsh) { // both undefined
@@ -318,64 +303,52 @@ export function fixConstrainFrame2(shape: Shape, scale: {
 }
 
 export function matrix2parent(t: Transform, matrix?: Transform) {
-    // const t = this.transform;
     const m = t;
     if (!matrix) return m.clone();
     matrix.multiAtLeft(m);
     return matrix;
 }
 
-export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
-    if (frame.x !== x || frame.y !== y || frame.width !== w || frame.height !== h) {
-        frame.x = x;
-        frame.y = y;
-        frame.width = w;
-        frame.height = h;
-        return true;
-    }
-    return false;
-}
-
 export class ShapeView extends DataView {
-    m_transform: Transform;
-
-    _save_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小 // 用于updateFrames判断frame是否变更
-    m_frame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
-    m_visibleFrame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
-    m_outerFrame: ShapeFrame = new ShapeFrame(); // 对象内坐标系的大小
-
-    _p_frame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小 // 用于优化updateFrames, hittest
-    _p_visibleFrame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小 // 用于优化updateFrames, hittest
-    _p_outerFrame: ShapeFrame = new ShapeFrame(); // 父级坐标系的大小 // 用于优化updateFrames, hittest
-
-    m_fixedRadius?: number;
-
-    m_path?: Path;
-    m_pathstr?: string;
-
-    m_border_path?: Path;
-    m_border_path_box?: ShapeFrame;
-
-    m_transform_from_mask?: Transform;
-    m_mask_group?: ShapeView[];
-
-    m_fills: BasicArray<Fill> | undefined;
-    m_borders: Border | undefined;
+    frameProxy: FrameProxy;
+    cache: ViewCache;
+    effect: ViewModifyEffect;
+    layoutProxy: ViewLayout;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
-        const shape = props.data;
-        const t = shape.transform;
-        this.m_transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
-        this.m_fixedRadius = (shape as PathShape).fixedRadius;
-    }
+        const t = props.data.transform;
+        this.transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
 
-    hasSize() {
-        return this.m_data.hasSize();
+        this.frameProxy = new FrameProxy(this);
+        this.cache = new ViewCache(this);
+        this.effect = new ViewModifyEffect(this);
+        this.layoutProxy = new ViewLayout(this);
     }
 
     onMounted() {
-        this._layout(this.m_props.layoutSize, this.m_props.scale);
+        this.layoutProxy.measure(this.m_props.layoutSize, this.m_props.scale);
+    }
+
+    layout(props?: PropsType) {
+        this.layoutProxy.layout(props);
+    }
+
+    render(): number {
+        return this.m_renderer.render();
+    }
+
+    onUpdate(...args: any[]) {
+        this.effect.emit(args);
+        this.effect.clearCache(args);
+    }
+
+    asyncRender(): number {
+        return this.m_renderer.asyncRender();
+    }
+
+    staticRender() {
+        // todo
     }
 
     get parent(): ShapeView | undefined {
@@ -404,8 +377,8 @@ export class ShapeView extends DataView {
         return this.m_children as ShapeView[];
     }
 
-    get transform() {
-        return this.m_transform
+    get hasSize() {
+        return this.m_data.hasSize();
     }
 
     get size(): ShapeSize {
@@ -416,21 +389,78 @@ export class ShapeView extends DataView {
      * 对象内容区位置大小
      */
     get frame() {
-        return this.m_frame;
+        return this.frameProxy.frame;
+    }
+
+    get relativeFrame() {
+        return this.frameProxy._p_frame
     }
 
     /**
      * contentFrame+边框，对象实际显示的位置大小
      */
     get visibleFrame() {
-        return this.m_visibleFrame;
+        return this.frameProxy.visibleFrame;
+    }
+
+    get relativeVisibleFrame() {
+        return this.frameProxy._p_visibleFrame;
     }
 
     /**
      * 包含被裁剪的对象
      */
     get outerFrame() {
-        return this.m_outerFrame;
+        return this.frameProxy.outerFrame;
+    }
+
+    get relativeOuterFrame() {
+        return this.frameProxy._p_outerFrame;
+    }
+
+    get x(): number {
+        return this.transform.m02
+    }
+
+    get y(): number {
+        return this.transform.m12
+    }
+
+    get clientX(): number {
+        return this.frameProxy.clientX;
+    }
+
+    get clientY(): number {
+        return this.frameProxy.clientY;
+    }
+
+    boundingBox(): ShapeFrame {
+        return this.frameProxy.boundingBox();
+    }
+
+    transform: Transform;
+
+    isNoTransform() {
+        const { m00, m01, m10, m11 } = this.transform;
+        return Math.abs(m00 - 1) < float_accuracy && Math.abs(m01) < float_accuracy && Math.abs(m10) < float_accuracy && Math.abs(m11 - 1) < float_accuracy;
+    }
+
+    matrix2Parent(matrix?: Transform) {
+        const m = matrix2parent(this.transform, matrix);
+        if (this.parent?.uniformScale) m.scale(this.parent.uniformScale);
+        return m;
+    }
+
+    matrix2Root() {
+        const m = this.transform.clone()
+        const p = this.parent;
+        if (p) {
+            const offset = (p as any).innerTransform;
+            offset && m.multiAtLeft(offset)
+            p.uniformScale && m.scale(p.uniformScale);
+            m.multiAtLeft(p.matrix2Root())
+        }
+        return m;
     }
 
     get rotation(): number {
@@ -438,7 +468,7 @@ export class ShapeView extends DataView {
     }
 
     get fixedRadius() {
-        return this.m_fixedRadius;
+        return undefined;
     }
 
     get resizingConstraint() {
@@ -453,130 +483,21 @@ export class ShapeView extends DataView {
         return this.m_data.isClosed;
     }
 
-    get x(): number {
-        return this.transform.m02
+    maskMap: Map<string, ShapeView> = new Map;
+
+    updateMaskMap() {
     }
 
-    get y(): number {
-        return this.transform.m12
+    get mask(): boolean {
+        return !!this.m_data.mask;
     }
 
-    /**
-     *  transform -> clientXY
-     *  数据里的值(transform)并不一定是用户直观上的值(clientXY)，需要通过计算来简化或转换
-     *  需要注意的是，frame的偏移目前只发生编组类图形和页面上，其中页面的坐标系需要帮用户隐藏掉，取而代之的是一个固定的Root坐标系
-     *  所以在处理页面下的直接子元素时，也应该忽略掉frame的偏移；
-     */
-    protected m_client_x: number | undefined = undefined;
-
-    get clientX(): number {
-        return this.m_client_x ?? (this.m_client_x = (() => {
-            let offset = 0;
-            if (this.parent?.type !== ShapeType.Page) {
-                offset = this.parent?.frame.x ?? 0;
-            }
-            return this._p_frame.x - offset;
-        })());
+    get masked() {
+        return this.parent?.maskMap?.get(this.data.id);
     }
 
-    protected m_client_y: number | undefined = undefined;
-
-    get clientY(): number {
-        return this.m_client_y ?? (this.m_client_y = (() => {
-            let offset = 0;
-            if (this.parent?.type !== ShapeType.Page) {
-                offset = this.parent?.frame.y ?? 0;
-            }
-            return this._p_frame.y - offset;
-        })());
-    }
-
-    boundingBox(): ShapeFrame {
-        if (this.isNoTransform()) {
-            const tx = this.transform.translateX;
-            const ty = this.transform.translateY;
-            return new ShapeFrame(tx + this.frame.x, ty + this.frame.y, this.frame.width, this.frame.height);
-        }
-        const path = this.getPath().clone();
-        if (path.length > 0) {
-            const m = this.matrix2Parent();
-            path.transform(m);
-            const bounds = path.bbox();
-            return new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
-        }
-
-        const frame = this.frame;
-        const m = this.transform;
-        const corners = [
-            { x: frame.x, y: frame.y },
-            { x: frame.x + frame.width, y: frame.y },
-            { x: frame.x + frame.width, y: frame.y + frame.height },
-            { x: frame.x, y: frame.y + frame.height }]
-            .map((p) => m.computeCoord(p));
-        const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-        const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-        const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-        const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-        return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
-    }
-
-    onDataChange(...args: any[]): void {
-        if (args.includes('mask') || args.includes('isVisible')) {
-            (this.parent as GroupShapeView).updateMaskMap();
-        }
-        
-        if (this.parent && (args.includes('transform') || args.includes('size') || args.includes('isVisible') || args.includes('autoLayout'))) {
-            // 执行父级自动布局
-            let p = this.parent as ArtboardView;
-            while (p && p.autoLayout) {
-                p.m_ctx.setReLayout(p);
-                p = p.parent as ArtboardView;
-            }
-        } else if (args.includes('borders') && this.parent) {
-            let p = this.parent as ArtboardView;
-            while (p && p.autoLayout) {
-                if (p.autoLayout?.bordersTakeSpace) {
-                    p.m_ctx.setReLayout(p);
-                }
-                p = p.parent as ArtboardView;
-            }
-        }
-
-        if (args.includes('points')
-            || args.includes('pathsegs')
-            || args.includes('isClosed')
-            || (this.m_fixedRadius || 0) !== ((this.m_data as any).fixedRadius || 0)
-            || args.includes('cornerRadius')
-            || args.includes('imageRef')
-            || args.includes('radiusMask')
-            || args.includes('variables')
-        ) {
-            this.m_path = undefined;
-            this.m_pathstr = undefined;
-        }
-
-        if (args.includes('variables')) {
-            this.m_fills = undefined;
-            this.m_borders = undefined;
-            this.m_is_border_shape = undefined;
-        } else if (args.includes('fills')) {
-            this.m_fills = undefined;
-            this.m_is_border_shape = undefined;
-        } else if (args.includes('borders')) {
-            this.m_borders = undefined;
-            this.m_is_border_shape = undefined;
-        } else if (args.includes('fillsMask')) {
-            this.m_fills = undefined;
-            this.m_is_border_shape = undefined;
-        } else if (args.includes('bordersMask')) {
-            this.m_borders = undefined;
-            this.m_border_path = undefined;
-            this.m_border_path_box = undefined;
-            this.m_is_border_shape = undefined;
-        }
-
-        const masked = this.masked;
-        if (masked) masked.notify('rerender-mask');
+    get varbinds() {
+        return this.m_data.varbinds;
     }
 
     _findOV(ot: OverrideType, vt: VariableType): Variable | undefined {
@@ -592,39 +513,6 @@ export class ShapeView extends DataView {
         return findOverrideAll(this.m_data.id, ot, this.varsContainer);
     }
 
-    matrix2Root() {
-        const m = this.transform.clone()
-        const p = this.parent;
-        if (p) {
-            const offset = (p as ArtboardView).innerTransform;
-            offset && m.multiAtLeft(offset)
-            p.uniformScale && m.scale(p.uniformScale);
-            m.multiAtLeft(p.matrix2Root())
-        }
-        return m;
-    }
-
-    frame2Root(): ShapeFrame {
-        const frame = this.frame;
-        const m = this.matrix2Root();
-        const lt = m.computeCoord(frame.x, frame.y);
-        const rb = m.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-    }
-
-    frame2Parent(): ShapeFrame {
-        if (this.isNoTransform()) {
-            const tx = this.transform.translateX;
-            const ty = this.transform.translateY;
-            return new ShapeFrame(tx + this.frame.x, ty + this.frame.y, this.frame.width, this.frame.height);
-        }
-        const frame = this.frame;
-        const m = this.matrix2Parent();
-        const lt = m.computeCoord(frame.x, frame.y);
-        const rb = m.computeCoord(frame.x + frame.width, frame.y + frame.height);
-        return new ShapeFrame(lt.x, lt.y, rb.x - lt.x, rb.y - lt.y);
-    }
-
     get name(): string {
         const v = this._findOV(OverrideType.Name, VariableType.Name);
         return v ? v.value : this.m_data.name;
@@ -638,128 +526,17 @@ export class ShapeView extends DataView {
         return p.type === ShapeType.Page ? p : undefined;
     }
 
-    get varbinds() {
-        return this.m_data.varbinds;
-    }
-
-    isNoTransform() {
-        const { m00, m01, m10, m11 } = this.transform;
-        return Math.abs(m00 - 1) < float_accuracy && Math.abs(m01) < float_accuracy && Math.abs(m10) < float_accuracy && Math.abs(m11 - 1) < float_accuracy;
-    }
-
-    matrix2Parent(matrix?: Transform) {
-        const m = matrix2parent(this.transform, matrix);
-        if (this.parent?.uniformScale) m.scale(this.parent.uniformScale);
-        return m;
-    }
-
     get fillsMask(): string | undefined {
         const v = this._findOV(OverrideType.FillsMask, VariableType.FillsMask);
         return v ? v.value : this.m_data.style.fillsMask;
     }
 
-    private _onFillMaskChange() {
-        this.m_fills = undefined;
-        this.m_ctx.setDirty(this);
-        this.notify('style', 'fills', 'mask');
-    }
-
-    private m_unbind_fill: undefined | (() => void) = undefined;
-
-    private onFillMaskChange = this._onFillMaskChange.bind(this);
-
-    protected watchFillMask(mask: FillMask) {
-        this.m_unbind_fill?.();
-        this.m_unbind_fill = mask.watch(this.onFillMaskChange);
-    }
-
-    protected unwatchFillMask() {
-        this.m_unbind_fill?.();
-    }
-
     getFills(): BasicArray<Fill> {
-        if (this.m_fills) return this.m_fills;
-        let fills: BasicArray<Fill>;
-
-        const fillsMask: string | undefined = this.fillsMask;
-        if (fillsMask) {
-            const mask = this.style.getStylesMgr()!.getSync(fillsMask) as FillMask;
-            fills = mask.fills;
-            this.watchFillMask(mask);
-        } else {
-            const v = this._findOV(OverrideType.Fills, VariableType.Fills);
-            fills = v ? v.value : this.m_data.style.fills;
-            this.unwatchFillMask();
-        }
-
-        return this.m_fills = fills;
+        return this.cache.fills;
     }
 
-    private _onBorderMaskChange() {
-        this.m_borders = undefined;
-        this.m_ctx.setDirty(this);
-        this.notify('style', 'border', 'mask');
-    }
-
-    private m_unbind_border: undefined | (() => void) = undefined;
-
-    private onBorderMaskChange = this._onBorderMaskChange.bind(this);
-
-    protected watchBorderMask(mask: BorderMask) {
-        this.m_unbind_border?.();
-        this.m_unbind_border = mask.watch(this.onBorderMaskChange);
-    }
-
-    protected unwatchBorderMask() {
-        this.m_unbind_border?.();
-    }
-
-    private _onBorderFillMaskChange() {
-        this.m_borders = undefined;
-        this.m_ctx.setDirty(this);
-        this.notify('style', 'paints', 'mask');
-    }
-
-    private m_unbind_border_fill: undefined | (() => void) = undefined;
-
-    private onBorderFillMaskChange = this._onBorderFillMaskChange.bind(this);
-
-    protected watchBorderFillMask(mask: FillMask) {
-        this.m_unbind_border_fill?.();
-        this.m_unbind_border_fill = mask.watch(this.onBorderFillMaskChange);
-    }
-
-    protected unwatchBorderFillMask() {
-        this.m_unbind_border_fill?.();
-    }
-
-    getBorders(): Border {
-        if (this.m_borders) return this.m_borders;
-        const mgr = this.style.getStylesMgr();
-        if (!mgr) return this.m_borders ?? this.m_data.style.borders;
-
-        const v = this._findOV(OverrideType.Borders, VariableType.Borders);
-        const border = v ? { ...v.value } : { ...this.m_data.style.borders };
-
-        const bordersMask: string | undefined = this.bordersMask;
-        if (bordersMask) {
-            const mask = mgr.getSync(bordersMask) as BorderMask
-            border.position = mask.border.position;
-            border.sideSetting = mask.border.sideSetting;
-            this.watchBorderMask(mask);
-        } else {
-            this.unwatchBorderMask();
-        }
-
-        const fillsMask: string | undefined = this.borderFillsMask;
-        if (fillsMask) {
-            const mask = mgr.getSync(fillsMask) as FillMask;
-            border.strokePaints = mask.fills;
-            this.watchBorderFillMask(mask);
-        } else {
-            this.unwatchBorderFillMask();
-        }
-        return this.m_borders = border;
+    getBorder(): Border {
+        return this.cache.border;
     }
 
     get bordersMask(): string | undefined {
@@ -791,41 +568,8 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.shadowsMask;
     }
 
-    private _onShadowMaskChange() {
-        this.m_ctx.setDirty(this);
-        this.notify('style', 'shadows', 'mask');
-    }
-
-    private m_unbind_shadow: undefined | (() => void) = undefined;
-    private onShadowMaskChange = this._onShadowMaskChange.bind(this);
-
-    protected watchShadowMask(mask: ShadowMask) {
-        this.m_unbind_shadow?.();
-        this.m_unbind_shadow = mask.watch(this.onShadowMaskChange);
-    }
-
-    protected unwatchShadowMask() {
-        this.m_unbind_shadow?.();
-    }
-
     getShadows(): BasicArray<Shadow> {
-        let shadows: BasicArray<Shadow>;
-        if (this.shadowsMask) {
-            const mgr = this.style.getStylesMgr()!;
-            const mask = mgr.getSync(this.shadowsMask) as ShadowMask;
-            shadows = mask.shadows;
-            this.watchShadowMask(mask);
-        } else {
-            const v = this._findOV(OverrideType.Shadows, VariableType.Shadows);
-            shadows = v ? v.value : this.m_data.style.shadows;
-            this.unwatchShadowMask()
-        }
-        return shadows;
-    }
-
-    private _onBlurMaskChange() {
-        this.m_ctx.setDirty(this);
-        this.notify('style', 'blur', 'mask');
+        return this.cache.shadows;
     }
 
     get blurMask(): string | undefined {
@@ -833,70 +577,24 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.style.blursMask;
     }
 
-    private m_unbind_blur: undefined | (() => void) = undefined;
-    private onBlurMaskChange = this._onBlurMaskChange.bind(this);
-
-    watchBlurMask(mask: BlurMask) {
-        this.m_unbind_blur?.();
-        this.m_unbind_blur = mask.watch(this.onBlurMaskChange);
-    }
-
-    unwatchBlurMask() {
-        this.m_unbind_blur?.();
-    }
-
     get blur(): Blur | undefined {
-        let blur: Blur;
-        if (this.blurMask) {
-            const mgr = this.style.getStylesMgr()!;
-            const mask = mgr.getSync(this.blurMask) as BlurMask
-            blur = mask.blur;
-            this.watchBlurMask(mask);
-        } else {
-            const v = this._findOV(OverrideType.Blur, VariableType.Blur);
-            blur = v ? v.value : this.m_data.style.blur;
-            this.unwatchBlurMask();
-        }
-        return blur;
-    }
-
-    getPathOfSize() {
-        const p1 = new CurvePoint([] as any, '', 0, 0, CurveMode.Straight);
-        const p2 = new CurvePoint([] as any, '', 1, 0, CurveMode.Straight);
-        const p3 = new CurvePoint([] as any, '', 1, 1, CurveMode.Straight);
-        const p4 = new CurvePoint([] as any, '', 0, 1, CurveMode.Straight);
-        const radius = this.radius;
-        p1.radius = radius[0];
-        p2.radius = radius[1] ?? radius[0];
-        p3.radius = radius[2] ?? radius[0];
-        p4.radius = radius[3] ?? radius[0];
-        return parsePath([p1, p2, p3, p4], true, this.frame.width, this.frame.height);
+        return this.cache.blur;
     }
 
     getPathStr() {
-        if (this.m_pathstr) return this.m_pathstr;
-        this.m_pathstr = this.getPath().toString();
-        return this.m_pathstr;
+        return this.cache.pathStr;
     }
 
     getPath() {
-        if (this.m_path) return this.m_path;
-        this.m_path = this.getPathOfSize();
-        const frame = this.frame;
-        if (frame.x || frame.y) this.m_path.translate(frame.x, frame.y);
-        this.m_path.freeze();
-        return this.m_path;
+        return this.cache.path;
     }
 
     get borderPath() {
-        return this.m_border_path ?? (this.m_border_path = (() => new Path())());
+        return this.cache.borderPath;
     }
 
     get borderPathBox() {
-        return this.m_border_path_box ?? (this.m_border_path_box = (() => {
-            const bbox = this.borderPath.bbox();
-            return new ShapeFrame(bbox.x, bbox.y, bbox.w, bbox.h);
-        })());
+        return this.cache.borderPathBox;
     }
 
     get isVisible(): boolean {
@@ -909,500 +607,8 @@ export class ShapeView extends DataView {
         return v ? v.value : !!this.m_data.isLocked;
     }
 
-    get mask(): boolean {
-        return !!this.m_data.mask;
-    }
-
-    get masked() {
-        return (this.parent as GroupShapeView)?.maskMap?.get(this.m_data.id);
-    }
-
     indexOfChild(view: ShapeView) {
         return this.childs.indexOf(view)
-    }
-
-    // =================== update ========================
-    updateLayoutArgs(trans: Transform, size: ShapeFrame, radius: number | undefined) {
-        if (size.width !== this.m_frame.width || size.height !== this.m_frame.height || size.x !== this.m_frame.x || size.y !== this.m_frame.y) {
-            this.m_pathstr = undefined; // need update
-            this.m_path = undefined;
-            this.m_frame.x = size.x;
-            this.m_frame.y = size.y;
-            this.m_frame.width = size.width;
-            this.m_frame.height = size.height;
-        }
-
-        if ((this.m_fixedRadius || 0) !== (radius || 0)) {
-            this.m_fixedRadius = radius;
-            this.m_pathstr = undefined; // need update
-            this.m_path = undefined;
-        }
-
-        if (!this.m_transform.equals(trans)) {
-            this.m_transform.reset(trans);
-            this.m_pathstr = undefined; // need update
-            this.m_path = undefined;
-        }
-    }
-
-    updateFrames() {
-        let changed = this._save_frame.x !== this.m_frame.x || this._save_frame.y !== this.m_frame.y ||
-            this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
-
-        if (changed) {
-            this._save_frame.x = this.m_frame.x;
-            this._save_frame.y = this.m_frame.y;
-            this._save_frame.width = this.m_frame.width;
-            this._save_frame.height = this.m_frame.height;
-        }
-
-        const border = this.getBorders();
-        let maxtopborder = 0;
-        let maxleftborder = 0;
-        let maxrightborder = 0;
-        let maxbottomborder = 0;
-        if (border) {
-            const isEnabled = border.strokePaints.some(p => p.isEnabled);
-            if (isEnabled) {
-                const outer = border.position === BorderPosition.Outer;
-                maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;
-                maxleftborder = outer ? border.sideSetting.thicknessLeft : border.sideSetting.thicknessLeft / 2;
-                maxrightborder = outer ? border.sideSetting.thicknessRight : border.sideSetting.thicknessRight / 2;
-                maxbottomborder = outer ? border.sideSetting.thicknessBottom : border.sideSetting.thicknessBottom / 2;
-            }
-        }
-        // 阴影
-        const shadows = this.getShadows();
-        let st = 0, sb = 0, sl = 0, sr = 0;
-        shadows.forEach(s => {
-            if (!s.isEnabled) return;
-            if (s.position !== ShadowPosition.Outer) return;
-            const w = s.blurRadius + s.spread;
-            sl = Math.max(-s.offsetX + w, sl);
-            sr = Math.max(s.offsetX + w, sr);
-            st = Math.max(-s.offsetY + w, st);
-            sb = Math.max(s.offsetY + w, sb);
-        })
-
-        const el = Math.max(maxleftborder, sl);
-        const et = Math.max(maxtopborder, st);
-        const er = Math.max(maxrightborder, sr);
-        const eb = Math.max(maxbottomborder, sb);
-
-        // update visible
-        if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
-
-        // update outer
-        if (updateFrame(this.m_outerFrame, this.m_visibleFrame.x, this.m_visibleFrame.y, this.m_visibleFrame.width, this.m_visibleFrame.height)) changed = true;
-
-        // to parent frame
-        const mapframe = (i: ShapeFrame, out: ShapeFrame) => {
-            const transform = this.transform;
-            if (this.isNoTransform()) {
-                return updateFrame(out, i.x + transform.translateX, i.y + transform.translateY, i.width, i.height);
-            }
-            const frame = i;
-            const m = transform;
-            const corners = [
-                { x: frame.x, y: frame.y },
-                { x: frame.x + frame.width, y: frame.y },
-                { x: frame.x + frame.width, y: frame.y + frame.height },
-                { x: frame.x, y: frame.y + frame.height }]
-                .map((p) => m.computeCoord(p));
-            const minx = corners.reduce((pre, cur) => Math.min(pre, cur.x), corners[0].x);
-            const maxx = corners.reduce((pre, cur) => Math.max(pre, cur.x), corners[0].x);
-            const miny = corners.reduce((pre, cur) => Math.min(pre, cur.y), corners[0].y);
-            const maxy = corners.reduce((pre, cur) => Math.max(pre, cur.y), corners[0].y);
-            return updateFrame(out, minx, miny, maxx - minx, maxy - miny);
-        }
-        if (mapframe(this.m_frame, this._p_frame)) changed = true;
-        if (mapframe(this.m_visibleFrame, this._p_visibleFrame)) changed = true;
-        if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
-
-        if (changed) {
-            this.m_ctx.addNotifyLayout(this);
-            this.m_client_x = this.m_client_y = undefined;
-            this.m_border_path = undefined;
-            this.m_is_border_shape = undefined;
-            this.m_border_path_box = undefined;
-        }
-
-        return changed;
-    }
-
-    protected layoutChilds(parentFrame: ShapeSize | undefined, scale?: { x: number, y: number }) {
-    }
-
-    protected _layout(parentFrame: ShapeSize | undefined, scale: { x: number, y: number } | undefined,) {
-        const shape = this.data;
-        const transform = shape.transform.clone();
-        if (this.parent && (this.parent as ArtboardView).autoLayout) {
-            transform.translateX = this.m_transform.translateX;
-            transform.translateY = this.m_transform.translateY;
-        }
-
-        // case 1 不需要变形
-        if (!scale || isEqual(scale.x, 1) && isEqual(scale.y, 1)) {
-            let frame = this.frame;
-            if (this.hasSize()) frame = this.data.frame;
-            this.updateLayoutArgs(transform, frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(this.frame);
-            this.updateFrames();
-            return;
-        }
-
-        const skewTransform = (scalex: number, scaley: number) => {
-            let t = transform;
-            if (scalex !== scaley) {
-                t = t.clone();
-                t.scale(scalex, scaley);
-                // 保留skew去除scale
-                t.clearScaleSize();
-            }
-            return t;
-        }
-
-        const resizingConstraint = shape.resizingConstraint ?? 0; // 默认值为靠左、靠顶、宽高固定
-        // 当前对象如果没有frame,需要childs layout完成后才有
-        // 但如果有constrain,则需要提前计算出frame?当前是直接不需要constrain
-        if (!this.hasSize() && (resizingConstraint === 0 || !parentFrame)) {
-            let frame = this.frame; // 不需要更新
-            const t0 = transform.clone();
-            t0.scale(scale.x, scale.y);
-            const save1 = t0.computeCoord(0, 0);
-            const t = skewTransform(scale.x, scale.y).clone();
-            const save2 = t.computeCoord(0, 0)
-            const dx = save1.x - save2.x;
-            const dy = save1.y - save2.y;
-            t.trans(dx, dy);
-            this.updateLayoutArgs(t, frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(undefined, scale);
-            this.updateFrames();
-            return;
-        }
-
-        const size = this.data.size; // 如果是group,实时计算的大小。view中此时可能没有
-        const saveW = size.width;
-        const saveH = size.height;
-
-        let scaleX = scale.x;
-        let scaleY = scale.y;
-
-        if (parentFrame && resizingConstraint !== 0) {
-            const { transform, targetWidth, targetHeight } = fixFrameByConstrain(shape, parentFrame, scaleX, scaleY);
-            this.updateLayoutArgs((transform), new ShapeFrame(0, 0, targetWidth, targetHeight), (shape as PathShape).fixedRadius);
-            this.layoutChilds(this.frame, { x: targetWidth / saveW, y: targetHeight / saveH });
-        } else {
-            const transform = (shape.transform.clone());
-            transform.scale(scaleX, scaleY);
-            const __decompose_scale = transform.clearScaleSize();
-            // 这里应该是virtual，是整体缩放，位置是会变化的，不需要trans
-            // 保持对象位置不变
-            const size = shape.size;
-            let layoutSize = new ShapeSize();
-            const frame = new ShapeFrame(0, 0, size.width * __decompose_scale.x, size.height * __decompose_scale.y);
-
-            if (this.parent && (this.parent as ArtboardView).autoLayout) {
-                transform.translateX = this.m_transform.translateX;
-                transform.translateY = this.m_transform.translateY;
-            }
-
-            layoutSize.width = frame.width
-            layoutSize.height = frame.height
-            this.updateLayoutArgs((transform), frame, (shape as PathShape).fixedRadius);
-            this.layoutChilds(this.frame, { x: frame.width / saveW, y: frame.height / saveH });
-        }
-        this.updateFrames();
-    }
-
-    protected updateLayoutProps(props: PropsType, needLayout: boolean) {
-        if (props.data.id !== this.m_data.id) throw new Error('id not match');
-        const dataChanged = objectId(props.data) !== objectId(this.m_data);
-        if (dataChanged) {
-            // data changed
-            this.setData(props.data);
-        }
-        // check
-        const diffScale = isDiffScale(props.scale, this.m_props.scale);
-        const diffLayoutSize = isDiffShapeSize(props.layoutSize, this.m_props.layoutSize)
-        const diffVars = isDiffVarsContainer(props.varsContainer, this.varsContainer);
-        if (!needLayout &&
-            !dataChanged &&
-            !diffScale &&
-            !diffVars &&
-            !diffLayoutSize) {
-            return false;
-        }
-        this.m_props = props
-        this.m_isVirtual = props.isVirtual
-        if (diffVars) {
-            this.m_ctx.removeDirty(this);
-            this.varsContainer = props.varsContainer;
-        }
-        return true;
-    }
-
-    // 更新frame, vflip, hflip, rotate, fixedRadius, 及对应的cache数据，如path
-    // 更新childs, 及向下更新数据变更了的child(在datachangeset)
-    // 父级向下更新时带props, 自身更新不带
-    layout(props?: PropsType) {
-        // todo props没更新时是否要update
-        // 在frame、flip、rotate修改时需要update
-        const needLayout = this.m_ctx.removeReLayout(this); // remove from changeset
-        if (props && !this.updateLayoutProps(props, needLayout)) return;
-
-        this.m_ctx.setDirty(this);
-        this._layout(this.m_props.layoutSize, this.m_props.scale);
-        this.m_ctx.addNotifyLayout(this);
-    }
-
-    protected renderFills(): EL[] {
-        let fills = this.getFills() as Fill[];
-        if (this.mask) {
-            fills = fills.map(f => {
-                if (f.fillType === FillType.Gradient && f.gradient?.gradientType === GradientType.Angular) {
-                    const nf = importFill(exportFill(f));
-                    nf.fillType = FillType.SolidColor;
-                    return nf;
-                } else return f;
-            })
-        }
-        return renderFills(elh, fills, this.size, this.getPathStr(), 'fill-' + this.id);
-    }
-
-    protected renderBorders(): EL[] {
-        let border = this.getBorders();
-        if (this.mask && border) {
-            border.strokePaints.map(b => {
-                const nb = importFill(exportFill(b));
-                if (nb.fillType === FillType.Gradient && nb.gradient?.gradientType === GradientType.Angular) nb.fillType = FillType.SolidColor;
-                return nb;
-            });
-        }
-        return renderBorders(elh, border, this.size, this.getPathStr(), this.m_data, this.radius);
-    }
-
-    protected renderShadows(filterId: string): EL[] {
-        return renderShadows(elh, filterId, this.getShadows(), this.getPathStr(), this.frame, this.getBorders(), this.m_data, this.radius, this.blur);
-    }
-
-    protected renderBlur(blurId: string): EL[] {
-        if (!this.blur) return [];
-        return renderBlur(elh, this.blur, blurId, this.frame, this.getFills(), this.getBorders(), this.getPathStr());
-    }
-
-    protected renderProps(): { [key: string]: string } & { style: any } {
-        const props: any = {};
-        const style: any = {};
-
-        style['transform'] = this.transform.toString();
-
-        const contextSettings = this.contextSettings;
-
-        if (contextSettings) {
-            if (contextSettings.opacity !== undefined) {
-                props.opacity = contextSettings.opacity;
-            }
-            style['mix-blend-mode'] = contextSettings.blenMode;
-        }
-
-        props.style = style;
-
-        return props;
-    }
-
-    protected renderStaticProps() {
-        const frame = this.frame;
-        const props: any = {};
-        if (this.isNoTransform()) {
-            if (frame.width > frame.height) {
-                props.transform = `translate(0, ${(frame.width - frame.height) / 2})`;
-            } else {
-                props.transform = `translate(${(frame.height - frame.width) / 2}, 0)`;
-            }
-        } else {
-            const box = this.boundingBox();
-            let modifyX = 0;
-            let modifyY = 0;
-            if (box.width > box.height) {
-                modifyY = (box.width - box.height) / 2;
-            } else {
-                modifyX = (box.height - box.width) / 2;
-            }
-            const __t = this.transform.clone();
-            __t.m02 = modifyX;
-            __t.m12 = modifyY;
-            props.style = { transform: __t.toString() };
-        }
-        const contextSettings = this.style.contextSettings;
-        if (contextSettings) {
-            if (props.style) {
-                props.style['mix-blend-mode'] = contextSettings.blenMode;
-            } else {
-                props.style = { 'mix-blend-mode': contextSettings.blenMode };
-            }
-        }
-
-        return props;
-    }
-
-    protected renderContents(): EL[] {
-        const childs = this.m_children;
-        childs.forEach((c) => c.render());
-        return childs;
-    }
-
-    protected m_render_version: number = 0;
-
-    protected checkAndResetDirty(): boolean {
-        return this.m_ctx.removeDirty(this);
-    }
-
-    asyncRender(): number {
-        const renderContents = this.renderContents;
-        this.renderContents = () => this.m_children;
-        const version = this.render();
-        this.renderContents = renderContents;
-        return version;
-    }
-
-    render(): number {
-        if (!this.checkAndResetDirty()) return this.m_render_version;
-
-        const masked = this.masked;
-        if (masked) {
-            (this.getPage() as PageView)?.getView(masked.id)?.render();
-            this.reset("g");
-            return ++this.m_render_version;
-        }
-
-        if (!this.isVisible) {
-            this.reset("g");
-            return ++this.m_render_version;
-        }
-
-        const fills = this.renderFills();
-        const borders = this.renderBorders();
-        let childs = this.renderContents();
-        const autoInfo = (this as any).autoLayout;
-        if (autoInfo && autoInfo.stackReverseZIndex) {
-            childs = childs.reverse();
-        }
-
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-
-
-        let props = this.renderProps();
-        let children = [...fills, ...childs, ...borders];
-        // 阴影
-        if (shadows.length) {
-            let filter: string = '';
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            filter = `url(#pd_outer-${filterId}) `;
-            if (inner_url.length) filter += inner_url.join(' ');
-            children = [...shadows, elh("g", { filter }, children)];
-        }
-
-        // 模糊
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
-        if (blur.length) {
-            if (this.blur!.type === BlurType.Gaussian) {
-                children = [...blur, elh('g', { filter: `url(#${blurId})` }, children)];
-            } else {
-                const __props: any = {};
-                if (props.opacity) {
-                    __props.opacity = props.opacity;
-                    delete props.opacity;
-                }
-                if (props.style?.["mix-blend-mode"]) {
-                    __props["mix-blend-mode"] = props.style["mix-blend-mode"];
-                    delete props.style["mix-blend-mode"];
-                }
-                children = [...blur, elh('g', __props, children)];
-            }
-        }
-
-        // 遮罩
-        const _mask_space = this.renderMask();
-        if (_mask_space) {
-            Object.assign(props.style, { transform: _mask_space.toString() });
-            const id = `mask-base-${objectId(this)}`;
-            const __body_transform = this.transformFromMask;
-            const __body = elh("g", { style: { transform: __body_transform } }, children);
-            this.bleach(__body);
-            children = [__body];
-            const mask = elh('mask', { id }, children);
-            const rely = elh('g', { mask: `url(#${id})` }, this.relyLayers);
-            children = [mask, rely];
-        }
-
-        this.reset("g", props, children);
-
-        return ++this.m_render_version;
-    }
-
-    renderStatic() {
-        const fills = this.renderFills() || [];
-        let childs = this.renderContents();
-        const autoInfo = (this as any).autoLayout;
-        if (autoInfo && autoInfo.stackReverseZIndex) {
-            childs = childs.reverse();
-        }
-        const borders = this.renderBorders() || [];
-
-        const props = this.renderStaticProps();
-
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
-        const g_props: any = {}
-        const contextSettings = this.style.contextSettings;
-        if (contextSettings) {
-            const style: any = {
-                'mix-blend-mode': contextSettings.blenMode
-            }
-            if (blur.length) {
-                g_props.style = style;
-                g_props.opacity = props.opacity;
-                delete props.opacity;
-            } else {
-                if (props.style) {
-                    props.style['mix-blend-mode'] = contextSettings.blenMode;
-                } else {
-                    props.style = style;
-                }
-            }
-        }
-
-        if (shadows.length) { // 阴影
-            const ex_props = Object.assign({}, props);
-            delete props.style;
-            delete props.transform;
-            delete props.opacity;
-
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            props.filter = `url(#pd_outer-${filterId}) `;
-            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter += `url(#${blurId}) `;
-            if (inner_url.length) props.filter += inner_url.join(' ');
-            const body = elh("g", props, [...fills, ...childs, ...borders]);
-            if (blur.length) {
-                const g = elh('g', g_props, [...shadows, body])
-                return elh("g", ex_props, [...blur, g]);
-            } else {
-                return elh("g", ex_props, [...shadows, ...blur, body]);
-            }
-        } else {
-            if (blur.length && this.blur?.type === BlurType.Gaussian) props.filter = `url(#${blurId})`;
-            if (blur.length) {
-                const g = elh('g', g_props, [...fills, ...childs, ...borders])
-                return elh("g", props, [...blur, g])
-            } else {
-                return elh("g", props, [...blur, ...fills, ...childs, ...borders])
-            }
-        }
     }
 
     get isContainer() {
@@ -1417,39 +623,8 @@ export class ShapeView extends DataView {
         return this.m_data.isPathIcon;
     }
 
-    private _onRadiusMaskChange() {
-        this.m_ctx.setDirty(this);
-        this.onDataChange('radiusMask');
-        this.notify('radiusMask');
-    }
-
-    private m_unbind_Radius: undefined | (() => void) = undefined;
-    private onRadiusMaskChange = this._onRadiusMaskChange.bind(this);
-
-    protected watchRadiusMask(mask: RadiusMask) {
-        this.m_unbind_Radius?.();
-        this.m_unbind_Radius = mask.watch(this.onRadiusMaskChange);
-    }
-
-    protected unwatchRadiusMask() {
-        this.m_unbind_Radius?.();
-    }
-
     get radius(): number[] {
-        let _radius: number[];
-        if (this.radiusMask) {
-            const mgr = this.style.getStylesMgr()!;
-            const mask = mgr.getSync(this.radiusMask) as RadiusMask
-            _radius = [...mask.radius];
-            this.watchRadiusMask(mask);
-        } else {
-            _radius = [this.fixedRadius ?? 0]
-            if (this.radiusType === RadiusType.Rect && _radius.length === 1) {
-                _radius = [_radius[0], _radius[0], _radius[0], _radius[0]];
-            }
-            this.unwatchRadiusMask();
-        }
-        return _radius
+        return this.cache.radius;
     }
 
     get radiusType() {
@@ -1473,8 +648,7 @@ export class ShapeView extends DataView {
         if (!v) {
             return this.m_data.prototypeInteractions;
         }
-        // 需要做合并
-        // 合并vars
+        // 需要做合并 合并vars
         const overrides = new BasicArray<PrototypeInterAction>();
         v.reverse().forEach(v => {
             const o = (v.value as BasicArray<PrototypeInterAction>).slice(0).reverse();
@@ -1521,125 +695,6 @@ export class ShapeView extends DataView {
         return this.m_data.scrollBehavior;
     }
 
-    get relyLayers() {
-        if (!this.m_transform_from_mask) this.m_transform_from_mask = this.renderMask();
-        if (!this.m_transform_from_mask) return;
-
-        const group = this.m_mask_group || [];
-        if (group.length < 2) return;
-        const inverse = (this.m_transform_from_mask).inverse;
-        const els: EL[] = [];
-        for (let i = 1; i < group.length; i++) {
-            const __s = group[i];
-            if (!__s.isVisible) continue;
-            const dom = __s.dom;
-            if (!(dom.elattr as any)['style']) {
-                (dom.elattr as any)['style'] = {};
-            }
-            (dom.elattr as any)['style']['transform'] = (__s.transform.clone().multi(inverse)).toString();
-            els.push(dom);
-        }
-
-        return els;
-    }
-
-    get transformFromMask() {
-        this.m_transform_from_mask = this.renderMask();
-        if (!this.m_transform_from_mask) return;
-
-        const space = (this.m_transform_from_mask).inverse;
-
-        return (this.transform.clone().multi(space)).toString()
-    }
-
-    renderMask() {
-        if (!this.mask) return;
-        const parent = this.parent;
-        if (!parent) return;
-        const __children = parent.childs;
-        let index = __children.findIndex(i => i.id === this.id);
-        if (index === -1) return;
-        const maskGroup: ShapeView[] = [this];
-        this.m_mask_group = maskGroup;
-        for (let i = index + 1; i < __children.length; i++) {
-            const cur = __children[i];
-            if (cur && !cur.mask) maskGroup.push(cur);
-            else break;
-        }
-        let x = Infinity;
-        let y = Infinity;
-
-        maskGroup.forEach(s => {
-            const box = s.boundingBox();
-            if (box.x < x) x = box.x;
-            if (box.y < y) y = box.y;
-        });
-
-        return new Transform(1, 0, x, 0, 1, y);
-    }
-
-    bleach(el: EL) {  // 漂白
-        if (el.elattr.fill && el.elattr.fill !== 'none' && !(el.elattr.fill as string).startsWith('url(#gradient')) {
-            el.elattr.fill = '#FFF';
-        }
-        if (el.elattr.stroke && el.elattr.stroke !== 'none' && !(el.elattr.stroke as string).startsWith('url(#gradient')) {
-            el.elattr.stroke = '#FFF';
-        }
-        // 漂白阴影
-        if (el.eltag === 'feColorMatrix' && el.elattr.result) {
-            let values: any = el.elattr.values;
-            if (values) values = values.split(' ');
-            if (values[3]) values[3] = 1;
-            if (values[8]) values[8] = 1;
-            if (values[13]) values[13] = 1;
-            el.elattr.values = values.join(' ');
-        }
-
-        if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
-    }
-
-    get dom() {
-        const fills = this.renderFills();
-        const childs = this.renderContents();
-        const borders = this.renderBorders();
-
-        const filterId = `${objectId(this)}`;
-        const shadows = this.renderShadows(filterId);
-        const blurId = `blur_${objectId(this)}`;
-        const blur = this.renderBlur(blurId);
-
-        const contextSettings = this.style.contextSettings;
-        const props: any = {};
-        if (contextSettings) {
-            if (contextSettings.opacity !== undefined) {
-                props.opacity = contextSettings.opacity;
-            }
-            props.style = { 'mix-blend-mode': contextSettings.blenMode };
-        }
-
-        let children = [...fills, ...childs, ...borders];
-
-        if (shadows.length) {
-            let filter: string = '';
-            const inner_url = innerShadowId(filterId, this.getShadows());
-            if (this.type === ShapeType.Rectangle || this.type === ShapeType.Oval) {
-                if (inner_url.length) filter = `${inner_url.join(' ')}`
-            } else {
-                filter = `url(#pd_outer-${filterId}) `;
-                if (inner_url.length) filter += inner_url.join(' ');
-            }
-            children = [...shadows, elh("g", { filter }, children)];
-        }
-
-        if (blur.length) {
-            let filter: string = '';
-            if (this.blur?.type === BlurType.Gaussian) filter = `url(#${blurId})`;
-            children = [...blur, elh('g', { filter }, children)];
-        }
-
-        return elh("g", props, children);
-    }
-
     reloadImage(target?: Set<string>) {
         const fills = this.getFills(); // 重载填充图片
         fills.forEach((fill) => {
@@ -1664,12 +719,19 @@ export class ShapeView extends DataView {
         return v ? v.value : this.m_data.radiusMask;
     }
 
-    protected m_is_border_shape: boolean | undefined = undefined;
-
     get isBorderShape() {
-        return this.m_is_border_shape ?? (this.m_is_border_shape = (() => {
-            const borders = this.getBorders();
-            return !this.getFills().length && borders && borders.strokePaints.some(p => p.isEnabled);
-        })());
+        return this.cache.isBorderShape;
+    }
+
+    get isCustomBorder() {
+        return false;
+    }
+
+    get autoLayout(): AutoLayout | undefined {
+        return undefined;
+    }
+
+    get frameMaskDisabled(): boolean | undefined {
+        return undefined;
     }
 }

@@ -8,11 +8,15 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { RectShape } from "../data";
+import { RectShape, SideType } from "../data";
 import { PathShapeView } from "./pathshape";
 
 export class RectShapeView extends PathShapeView {
     get data(): RectShape {
         return this.m_data as RectShape;
+    }
+
+    get isCustomBorder() {
+        return !(this.getBorder().sideSetting.sideType === SideType.Normal || this.haveEdit);
     }
 }
