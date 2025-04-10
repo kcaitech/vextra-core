@@ -1,13 +1,3 @@
-/*
- * Copyright (c) 2023-2024 KCai Technology(kcaitech.com). All rights reserved.
- *
- * This file is part of the vextra.io/vextra.cn project, which is licensed under the AGPL-3.0 license.
- * The full license text can be found in the LICENSE file in the root directory of this source tree.
- *
- * For more information about the AGPL-3.0 license, please visit:
- * https://www.gnu.org/licenses/agpl-3.0.html
- */
-
 /* 代码生成，勿手动修改 */
 import * as types from "./typesdefine"
 export interface IExportContext {
@@ -1518,7 +1508,7 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
     ret.name = source.name
     ret.fmtVer = source.fmtVer
     ret.pagesList = exportDocumentMeta_pagesList(source.pagesList, ctx)
-    ret.lastCmdId = source.lastCmdId
+    ret.lastCmdVer = source.lastCmdVer
     ret.symbolregist = (() => {
         const ret: any = {}
         source.symbolregist.forEach((source, k) => {

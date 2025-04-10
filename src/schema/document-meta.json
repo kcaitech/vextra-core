@@ -14,8 +14,8 @@
                 "$ref": "./page-list-item.json"
             }
         },
-        "lastCmdId": {
-            "type": "string"
+        "lastCmdVer": {
+            "type": "number"
         },
         "symbolregist": {
             "type": "map",
@@ -57,7 +57,7 @@
         "name",
         "fmtVer",
         "pagesList",
-        "lastCmdId",
+        "lastCmdVer",
         "symbolregist"
     ],
     "additionalProperties": false

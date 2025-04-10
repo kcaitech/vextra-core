@@ -140,11 +140,11 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
         }
     }
 
-    const { id, name, lastCmdId, pagesList, symbolregist, freesymbols } = meta;
+    const { id, name, lastCmdVer, pagesList, symbolregist, freesymbols } = meta;
 
     const document = new Document(id, name, gurad, {
         versionId,
-        lastCmdId,
+        lastCmdVer,
         pageList: pagesList,
         freeSymbols: freesymbols as BasicMap<string, SymbolShape>,
         symbolRegister: symbolregist,
@@ -218,12 +218,12 @@ export async function importLocalDocument(storage: storage.IStorage, documentPat
         }
     }
 
-    const { id, name, lastCmdId, pagesList, symbolregist, freesymbols } = meta;
+    const { id, name, lastCmdVer, pagesList, symbolregist, freesymbols } = meta;
 
     const document = new Document(id, name, gurad, {
         versionId,
         symbolRegister: symbolregist,
-        lastCmdId,
+        lastCmdVer,
         pageList: pagesList,
         freeSymbols: freesymbols as BasicMap<string, SymbolShape>,
         stylelib: libs

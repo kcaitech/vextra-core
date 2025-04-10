@@ -119,7 +119,7 @@ export class Document extends DocumentMeta {
         guard: IDataGuard,
         source?: {
             versionId?: string, /* 版本id */
-            lastCmdId?: string, /* 此版本最后一个cmd的id */
+            lastCmdVer?: number, /* 此版本最后一个cmd的version */
             pageList?: BasicArray<PageListItem>,
             symbolRegister?: BasicMap<string, string>,
             freeSymbols?: BasicMap<string, SymbolShape>,
@@ -131,9 +131,9 @@ export class Document extends DocumentMeta {
         const symbolRegister = source?.symbolRegister ?? new BasicMap<string, string>();
         const freesymbols = source?.freeSymbols ?? new BasicMap<string, SymbolShape>();
         const versionId = source?.versionId ?? "";
-        const lastCmdId = source?.lastCmdId ?? "";
+        const lastCmdVer = source?.lastCmdVer ?? 0;
 
-        super(id, name, FMT_VER_latest, pagesList, lastCmdId, symbolRegister)
+        super(id, name, FMT_VER_latest, pagesList, lastCmdVer, symbolRegister)
 
         this.__versionId = versionId;
         this.__name = name;
