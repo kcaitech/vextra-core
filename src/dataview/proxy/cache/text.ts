@@ -1,3 +1,4 @@
+
 import { ViewCache } from "./view";
 import { TextShapeView } from "../../textshape";
 import { Path } from "@kcdesign/path";
