@@ -54,10 +54,10 @@ export class TextModifier extends Modifier {
             const page = pageView.data;
             for (const view of views) {
                 const text = view.getText();
-                const length = len === Infinity ? Math.min(text.length, len) - 1 : len;
-                const textWithFormatButMask = importText(cleanMask(exportText(text.getTextWithFormat(idx, length)) as Text));
+                const textWithFormatButMask = importText(cleanMask(exportText(text.getTextWithFormat(idx, len)) as Text));
                 const target = this.text4edit(document, pageView, view, api);
-                api.deleteText(page, target, idx, length);
+                api.textModifyTextMask(page, target, idx, len, undefined);
+                api.deleteText(page, target, idx, len);
                 api.insertComplexText(page, target, idx, textWithFormatButMask);
             }
             this.commit();
