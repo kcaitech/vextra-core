@@ -49,7 +49,6 @@ export class TextModifyEffect extends ViewModifyEffect {
             target && target.forEach(t => task.add(t))
         });
         Array.from(task).forEach(t => t(this.view));
-
         this.view.getText().dropAllLayout();
     }
 }

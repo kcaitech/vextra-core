@@ -1,7 +1,6 @@
 import { ViewLayout } from "./view";
 import { ShapeFrame, ShapeSize, Text, TextBehaviour, TextHorAlign, TextVerAlign, Transform } from "../../../data";
 import { TextShapeView } from "../../textshape";
-import { ArtboardView } from "../../artboard";
 import { ShapeView } from "../../shape";
 
 export class TextLayoutMgr extends ViewLayout {
@@ -21,15 +20,15 @@ export class TextLayoutMgr extends ViewLayout {
         const view = this.view;
         const shape = view.data;
         const transform = shape.transform.clone();
-        if (view.parent && (view.parent as ArtboardView).autoLayout) {
+        if (view.parent && view.parent.autoLayout) {
             transform.translateX = view.transform.translateX;
             transform.translateY = view.transform.translateY;
         }
-        if (!view.isVirtualShape && view.getText() === view.data.text) {
-            this.updateLayoutArgs(transform, view.data.frame)
-            this.updateFrames();
-            return
-        }
+        // if (!view.isVirtualShape && view.getText() === view.data.text) {
+        //     this.updateLayoutArgs(transform, view.data.frame)
+        //     this.updateFrames();
+        //     return
+        // }
 
         function fixTransform(offsetX: number, offsetY: number, transform: Transform, s: ShapeView) {
             const targetXY = transform.computeCoord(offsetX, offsetY)
@@ -38,7 +37,7 @@ export class TextLayoutMgr extends ViewLayout {
             if (dx || dy) {
                 transform = transform.clone().trans(dx, dy)
             }
-            if (s.parent && (s.parent as ArtboardView).autoLayout) {
+            if (s.parent && s.parent.autoLayout) {
                 transform.translateX = s.transform.translateX;
                 transform.translateY = s.transform.translateY;
             }
