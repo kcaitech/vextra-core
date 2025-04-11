@@ -55,6 +55,7 @@ export class TextModifier extends Modifier {
             for (const view of views) {
                 const textWithFormatButMask = cleanMask(view.getText());
                 const target = this.text4edit(document, pageView, view, api);
+                api.textModifyTextMask(page, target, idx, len, undefined);
                 api.deleteText(page, target, idx, len);
                 api.insertComplexText(page, target, idx, textWithFormatButMask);
             }
