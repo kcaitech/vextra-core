@@ -20,7 +20,6 @@ import {
     importBorderMaskType, importFill,
     importPage, importShadow,
     importTextAttr,
-    importTextMask,
 } from "../data/baseimport";
 import { newDocument } from "./creator/creator";
 import { CoopRepository } from "../coop/cooprepo";
