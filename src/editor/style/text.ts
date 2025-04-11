@@ -70,13 +70,13 @@ export class TextModifier extends Modifier {
             textWithFormat.paras.forEach(para => {
                 para.spans.forEach(span => span.textMask = undefined);
             });
-            const paras = textWithFormat.paras;
-            if (paras.length === 1
-                && paras[0].text.endsWith('\n')
-                && paras[0].spans[paras[0].spans.length - 1].length === 1
+            const last = textWithFormat.paras[textWithFormat.paras.length - 1];
+            if (
+                last.text.endsWith('\n')
+                && last.spans[last.spans.length - 1].length === 1
             ) {
-                paras[0].spans.pop();
-                paras[0].text = paras[0].text.slice(0, paras[0].text.length - 1);
+                last.spans.pop();
+                last.text = last.text.slice(0, last.text.length - 1);
             }
             textWithFormat = importText(textWithFormat);
             return textWithFormat as Text;
