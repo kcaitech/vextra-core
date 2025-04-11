@@ -24,11 +24,6 @@ export class TextLayoutMgr extends ViewLayout {
             transform.translateX = view.transform.translateX;
             transform.translateY = view.transform.translateY;
         }
-        // if (!view.isVirtualShape && view.getText() === view.data.text) {
-        //     this.updateLayoutArgs(transform, view.data.frame)
-        //     this.updateFrames();
-        //     return
-        // }
 
         function fixTransform(offsetX: number, offsetY: number, transform: Transform, s: ShapeView) {
             const targetXY = transform.computeCoord(offsetX, offsetY)

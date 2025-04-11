@@ -52,8 +52,7 @@ export class TextShapeView extends ShapeView {
     }
 
     locateText(x: number, y: number): TextLocate {
-        const layout = this.getLayout();
-        return locateText(layout, x, y);
+        return locateText(this.getLayout(), x, y);
     }
 
     locateRange(start: number, end: number): { x: number, y: number }[] {

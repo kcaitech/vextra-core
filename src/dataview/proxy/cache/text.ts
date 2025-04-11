@@ -62,7 +62,7 @@ export class TextViewCache extends ViewCache {
 
             this.m_str = v.value;
 
-            const _text: Text = v.value instanceof Text ? v.value : string2Text(v.value);
+            const textWithPlainFormat: Text = v.value instanceof Text ? v.value : string2Text(v.value);
 
             let origin = (view.m_data as TextShape).text;
 
@@ -87,7 +87,7 @@ export class TextViewCache extends ViewCache {
                 }
             }
 
-            return this.m_text = overrideText(_text, origin);
+            return this.m_text = overrideText(textWithPlainFormat, origin);
         }
 
         const _text = (view.m_data as TextShape).text;
