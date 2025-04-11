@@ -103,12 +103,6 @@ export class TextViewCache extends ViewCache {
         'weight'
     ]);
 
-    private spanPropGetter(mask: Text, target: object, propertyKey: PropertyKey, receiver?: any) {
-        const val = Reflect.get(mask, propertyKey)
-        if (val !== undefined) return val
-        return Reflect.get(target, propertyKey, receiver)
-    }
-
     private textProxy(text: Text) {
         const __textMaskSet: Set<TextMask> = new Set();
 
