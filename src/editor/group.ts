@@ -13,10 +13,9 @@
 // 2. 画板
 // 3. BOOL
 
-import { GroupShape, Shape, Document, Page, ShapeType, ScrollBehavior } from "../data";
+import { GroupShape, Shape, Document, Page, ShapeType, ScrollBehavior, Transform } from "../data";
 import { Operator } from "../coop/recordop";
 import { ColVector3D } from "../basic/matrix2";
-import { Transform } from "../data/transform";
 
 export function expandBounds(bounds: {
     left: number,
@@ -40,6 +39,7 @@ export function deleteEmptyGroupShape(document: Document, page: Page, shape: Sha
     return true;
 }
 
+// todo 将shapes提升到views
 export function group<T extends GroupShape>(document: Document, page: Page, shapes: Shape[], gshape: T, savep: GroupShape, saveidx: number, api: Operator): T {
     // 图层在root上的transform
     const shapes2rootTransform = shapes.map(s => (s.matrix2Root()));

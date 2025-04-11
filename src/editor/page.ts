@@ -519,12 +519,11 @@ export class PageEditor {
     /**
      * 创建组件
      */
-    makeSymbol(document: Document, shapes: Shape[], name?: string) {
+    makeSymbol(document: Document, views: ShapeView[], name?: string) {
         try {
-            if (!shapes.length) return;
-
+            const shapes = views.map(i => adapt2Shape(i));
             const shape0 = shapes[0];
-            const __f = FrameCpt.frame2Parent(shape0);
+            const __f = FrameCpt.frame2Parent(views[0]);
             const frame = new ShapeFrame(__f.x, __f.y, __f.width, __f.height);
 
             const replace = shapes.length === 1
