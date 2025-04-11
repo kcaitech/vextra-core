@@ -17,12 +17,12 @@ export class TextModifyEffect extends ViewModifyEffect {
         cornerRadius: ['m_path', 'm_pathstr'],
         radiusMask: ['m_path', 'm_pathstr'],
         fixedRadius: ['m_path', 'm_pathstr'],
-        variables: ['m_path', 'm_pathstr', 'm_fills', 'm_border', 'm_border_path', 'm_border_path_box', 'm_str'],
+        variables: ['m_path', 'm_pathstr', 'm_fills', 'm_border', 'm_border_path', 'm_border_path_box', 'm_text'],
         fills: ['m_fills', 'm_is_border_shape', 'm_border_path', 'm_border_path_box'],
         borders: ['m_border', 'm_is_border_shape'],
         fillsMask: ['m_fills', 'm_is_border_shape'],
         bordersMask: ['m_border', 'm_border_path',],
-        text: ['m_str'],
+        text: ['m_text'],
     }
 
    protected static effectMap: {

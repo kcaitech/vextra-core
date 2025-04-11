@@ -970,6 +970,7 @@ export type Text = {
     typeId: string,
     paras: Text_paras,
     attr?: TextAttr,
+    fixed?: boolean,
 }
 /* border */
 export type Border = {

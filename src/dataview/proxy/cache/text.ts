@@ -10,7 +10,7 @@ import {
     SymbolShape,
     Text, TextLayout,
     TextMask,
-    TextShape,
+    TextShape, Variable,
     VariableType
 } from "../../../data";
 import { objectId } from "../../../basic/objectid";
@@ -21,7 +21,6 @@ export class TextViewCache extends ViewCache {
     }
 
     private m_textpath?: Path;
-    private m_str: string | Text | undefined;
     private m_text: Text | undefined;
     private m_layout?: TextLayout;
     private m_layout_token: string | undefined;
@@ -43,90 +42,82 @@ export class TextViewCache extends ViewCache {
     textMaskSet: Set<TextMask> = new Set();
 
     get text(): Text {
-        const __textMaskSet: Set<TextMask> = new Set();
-        const view = this.view
+        if (this.m_text) return this.m_text;
 
-        const v = view._findOV(OverrideType.Text, VariableType.Text);
+        const v = this.view._findOV(OverrideType.Text, VariableType.Text);
         if (v) {
-            if (this.m_str) {
-                if (typeof this.m_str === "string") {
-                    if (this.m_str === v.value) {
-                        return this.m_text!;
-                    }
-                } else if (typeof v.value === "string") {
-                    //
-                } else if (this.m_str && v.value && objectId(this.m_str) === objectId(v.value)) {
-                    return this.m_text!;
-                }
-            }
+            this.m_text = this.getTextFromVariable(v);
+        } else {
+            this.m_text = this.textProxy(this.view.data.text);
+        }
+        return this.m_text;
+    }
 
-            this.m_str = v.value;
+    private getTextFromVariable(variable: Variable) {
+        const view = this.view;
 
-            const textWithPlainFormat: Text = v.value instanceof Text ? v.value : string2Text(v.value);
+        const textWithUnknownFormat: Text = variable.value instanceof Text ? variable.value : string2Text(variable.value);
 
-            let origin = (view.m_data as TextShape).text;
+        if (textWithUnknownFormat.fixed) {
+            return this.textProxy(textWithUnknownFormat);
+        } else {
+            let origin = view.data.text;
 
-            // 可能是var // 有个继承链条？
             if ((view.m_data as TextShape).varbinds?.has(OverrideType.Text)) {
-                let ovar: Text | undefined
-                const varid = (view.m_data as TextShape).varbinds?.get(OverrideType.Text)!
+                let overrideVar: Text | undefined
+                const varId = view.data.varbinds?.get(OverrideType.Text)!
                 let p = view.m_data.parent;
                 while (p) {
                     if (p instanceof SymbolShape) {
-                        const variable = p.variables.get(varid)
+                        const variable = p.variables.get(varId)
                         if (variable && variable.value instanceof Text) {
-                            ovar = variable.value
+                            overrideVar = variable.value
                             break;
                         }
                     }
                     p = p.parent;
                 }
 
-                if (ovar && ovar !== v.value) {
-                    origin = overrideText(ovar, origin)
+                if (overrideVar && overrideVar !== variable.value) {
+                    origin = overrideText(overrideVar, origin)
                 }
             }
 
-            return this.m_text = overrideText(textWithPlainFormat, origin);
+            return this.textProxy(overrideText(textWithUnknownFormat, origin));
         }
+    }
 
-        const _text = (view.m_data as TextShape).text;
+    private m_proxy_field = new Set<string>([
+        'alignment',
+        'paraSpacing',
+        'autoLineHeight',
+        'minimumLineHeight',
+        'maximumLineHeight',
+        'indent',
+        'textMask'
+    ]);
 
-        // 检查并应用textMask样式
-        const stylesMgr = _text.getStylesMgr();
+    private textProxy(text: Text) {
+        const __textMaskSet: Set<TextMask> = new Set();
+
+        const stylesMgr = text.getStylesMgr() ?? this.view.style.getStylesMgr();
         if (stylesMgr) {
             // 创建一个Proxy来包装text对象
-            let maskid: {
-                lineheight: number | undefined
-                id: string
-            }[] = [];
-            const specialProperties = new Set([
-                'alignment',
-                'paraSpacing',
-                'autoLineHeight',
-                'minimumLineHeight',
-                'maximumLineHeight',
-                'indent',
-                'textMask'
-            ]);
-            _text.paras.forEach(p => {
-                p.spans.forEach(span => {
-                    // span
+            const maskid: { lineheight: number | undefined; id: string }[] = [];
+            const proxyField = this.m_proxy_field;
+            text.paras.forEach(p => {
+                p.spans.forEach((span: any) => {
                     const mask = (span.textMask && stylesMgr.getSync(span.textMask)) as TextMask | undefined;
-                    if (!mask?.text) {
-                        (span as any).__getter = undefined
-                        return
-                    }
+                    if (!mask?.text) return span.__getter = undefined
 
                     __textMaskSet.add(mask);
                     maskid.push({ lineheight: mask.text.maximumLineHeight, id: mask.id });
-                    (span as any).__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
+                    span.__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
                         const val = Reflect.get(mask.text, propertyKey)
                         if (val !== undefined) return val
                         return Reflect.get(target, propertyKey, receiver)
                     }
                 })
-                // para
                 const _mask = maskid.reduce((max, current) => {
                     return (current.lineheight ?? 0) > (max.lineheight ?? 0) ? current : max;
                 }, { lineheight: undefined, id: '' });
@@ -140,13 +131,14 @@ export class TextViewCache extends ViewCache {
                 (p.attr as any).__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
                     const val = Reflect.get(mask.text, propertyKey);
                     const key = propertyKey as string;
-                    if (specialProperties.has(key)) {
+                    if (proxyField.has(key)) {
                         return key === 'textMask' ? '' : val !== undefined ? val : Reflect.get(target, propertyKey, receiver);
                     }
                     return Reflect.get(target, propertyKey, receiver);
                 }
             })
         }
+
         this.textMaskSet.forEach(mask => {
             if (__textMaskSet.has(mask)) return;
             mask.unwatch(this.onTextMaskChange);
@@ -157,7 +149,7 @@ export class TextViewCache extends ViewCache {
         });
         this.textMaskSet = __textMaskSet;
 
-        return _text;
+        return text;
     }
 
     get layout() {

@@ -1158,6 +1158,7 @@ export function exportText(source: types.Text, ctx?: IExportContext): types.Text
     ret.typeId = source.typeId
     ret.paras = exportText_paras(source.paras, ctx)
     if (source.attr !== undefined) ret.attr = exportTextAttr(source.attr, ctx)
+    if (source.fixed !== undefined) ret.fixed = source.fixed
     return ret
 }
 /* border */

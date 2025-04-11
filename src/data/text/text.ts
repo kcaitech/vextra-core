@@ -245,7 +245,14 @@ export class Text extends Basic implements classes.Text {
     typeId = 'text'
     paras: BasicArray<Para>
     attr?: TextAttr
-    // isPureString?: boolean
+    fixed?: boolean
+
+    constructor(
+        paras: BasicArray<Para>
+    ) {
+        super()
+        this.paras = paras
+    }
 
     // layout与显示窗口大小有关
     // 尽量复用, layout缓存排版信息，进行update
@@ -329,13 +336,6 @@ export class Text extends Basic implements classes.Text {
         return this.attr.getOpTarget(path.splice(1));
     }
     private __styleMgr?: ResourceMgr<StyleMangerMember>;
-
-    constructor(
-        paras: BasicArray<Para>
-    ) {
-        super()
-        this.paras = paras
-    }
 
     setStylesMgr(styleMgr: ResourceMgr<StyleMangerMember>) {
         this.__styleMgr = styleMgr;

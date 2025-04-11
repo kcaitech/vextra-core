@@ -544,7 +544,6 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
         assignGraphysX(graphys, startX);
         line.push(...graphys);
         curX = startX + cw + lastKerning;
-        continue;
     }
 
     if (line.length > 0) {

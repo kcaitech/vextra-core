@@ -1289,6 +1289,7 @@ export function importTextMask(source: types.TextMask, ctx?: IImportContext): im
 /* text */
 function importTextOptional(tar: impl.Text, source: types.Text, ctx?: IImportContext) {
     if (source.attr !== undefined) tar.attr = importTextAttr(source.attr, ctx)
+    if (source.fixed !== undefined) tar.fixed = source.fixed
 }
 export function importText(source: types.Text, ctx?: IImportContext): impl.Text {
     const ret: impl.Text = new impl.Text (
