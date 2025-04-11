@@ -109,7 +109,7 @@ export class TextViewCache extends ViewCache {
         const stylesMgr = text.getStylesMgr() ?? this.view.style.getStylesMgr();
         if (stylesMgr) {
             // 创建一个Proxy来包装text对象
-            const maskid: { lineheight: number | undefined; id: string }[] = [];
+            const masks: { lineheight: number | undefined; id: string, auto: boolean | undefined }[] = [];
             const attrField = this.m_proxy_attr_field;
             const spanField = this.m_proxy_span_field;
             text.paras.forEach(p => {
@@ -118,7 +118,11 @@ export class TextViewCache extends ViewCache {
                     if (!mask?.text) {
                         return span.__getter = undefined
                     } else {
-                        maskid.push({ lineheight: mask.text.maximumLineHeight, id: mask.id });
+                        masks.push({
+                            lineheight: mask.text.maximumLineHeight,
+                            id: mask.id,
+                            auto: mask.text.autoLineHeight
+                        });
                         span.__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
                             const t = spanField.has(propertyKey.toString()) ? mask.text : target;
                             return Reflect.get(t, propertyKey, receiver);
@@ -126,11 +130,23 @@ export class TextViewCache extends ViewCache {
                         __textMaskSet.add(mask);
                     }
                 })
-                const _mask = maskid.reduce((max, current) => {
-                    return (current.lineheight ?? 0) > (max.lineheight ?? 0) ? current : max;
-                }, { lineheight: undefined, id: '' });
+                if (!masks.length) {
+                    (p as any).attr.__getter = undefined;
+                    return
+                }
 
-                const mask = (_mask.id && stylesMgr.getSync(_mask.id)) as TextMask;
+                let id: string = masks[0].id;
+                let max: number = -Infinity;
+
+                for (const mask of masks) {
+                    if (mask.auto) continue;
+                    if (mask.lineheight !== undefined && mask.lineheight > max) {
+                        id = mask.id;
+                        max = mask.lineheight;
+                    }
+                }
+
+                const mask = stylesMgr.getSync(id) as TextMask;
                 if (!mask?.text) {
                     (p as any).attr.__getter = undefined;
                 } else {
