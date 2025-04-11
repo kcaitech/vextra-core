@@ -13,7 +13,6 @@ import {
     BulletNumbersBehavior,
     BulletNumbersType,
     Color,
-    Page,
     SpanAttr,
     StrikethroughType,
     TextBehaviour,
@@ -22,7 +21,6 @@ import {
     TextTransformType,
     TextVerAlign,
     UnderlineType,
-    TextShape,
     TableCell,
     VariableType,
     OverrideType,
@@ -32,15 +30,13 @@ import {
     Variable, Document, FillType, Gradient,
     string2Text,
 } from "../data";
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository, CmdMergeType } from "../coop";
 import { Operator } from "../coop/recordop";
 import { ShapeEditor } from "./shape";
-import { fixTableShapeFrameByLayout, fixTextShapeFrameByLayout } from "./utils/other";
 import { BasicArray } from "../data";
 import { mergeParaAttr, mergeSpanAttr } from "../data/text/textutils";
 import { importGradient, importText } from "../data/baseimport";
 import { AsyncGradientEditor, Status } from "./controller";
-import { CmdMergeType } from "../coop/localcmd";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../dataview";
 import { cell4edit2, varParent } from "./symbol";
 import { uuid } from "../basic/uuid";
@@ -108,6 +104,12 @@ export class TextShapeEditor extends ShapeEditor {
         return prepareVar(api, this._page, view, overrideType, varType, valuefun)?.var;
     }
 
+    private fixText(text: Text) {
+        const fixedText = importText(text);
+        fixedText.fixed = true;
+        return fixedText;
+    }
+
     public shape4edit(api: Operator, shape?: TextShapeView | TableCellView): Variable | TableCellView | TextShapeView {
         const _shape = shape ?? this.__shape as (TextShapeView | TableCellView);
 
@@ -136,7 +138,7 @@ export class TextShapeEditor extends ShapeEditor {
                     }
                 }
                 else {
-                    return string2Text(_shape.text.toString())
+                    return this.fixText(_shape.text);
                 }
                 throw new Error();
             }, api, shape);

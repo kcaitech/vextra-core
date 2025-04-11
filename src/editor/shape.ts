@@ -351,14 +351,9 @@ export class ShapeEditor {
      */
     makeTextVar(symbolView: SymbolView, name: string, dlt: string, shapes: (Shape & { text?: Text })[]) {
         let symbol = adapt2Shape(symbolView) as SymbolShape;
-        if (!is_symbol_or_union(symbol)) {
-            throw new Error('wrong role!');
-        }
+        if (!is_symbol_or_union(symbol)) return;
         const api = this.__repo.start("makeTextVar");
         try {
-            // const first = shapes[0]?.text instanceof Text ? shapes[0]?.text : undefined;
-            // const text = newText2(first?.attr, first?.paras[0]?.attr, first?.paras[0]?.spans[0]);
-            // text.insertText(dlt, 0);
             const text = string2Text(dlt)
             const _var = new Variable(v4(), VariableType.Text, name, text);
             api.shapeAddVariable(this.__page, symbol, _var);
