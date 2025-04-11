@@ -53,10 +53,8 @@ export class TextModifier extends Modifier {
             const api = this.getApi('unbindShapesTextMask');
             const page = pageView.data;
             for (const view of views) {
-                const text = view.getText();
-                const textWithFormatButMask = importText(cleanMask(exportText(text.getTextWithFormat(idx, len)) as Text));
+                const textWithFormatButMask = cleanMask(view.getText());
                 const target = this.text4edit(document, pageView, view, api);
-                api.textModifyTextMask(page, target, idx, len, undefined);
                 api.deleteText(page, target, idx, len);
                 api.insertComplexText(page, target, idx, textWithFormatButMask);
             }
@@ -68,10 +66,20 @@ export class TextModifier extends Modifier {
         }
 
         function cleanMask(text: Text) {
-            text.paras.forEach(para => {
+            let textWithFormat = exportText(text.getTextWithFormat(idx, len));
+            textWithFormat.paras.forEach(para => {
                 para.spans.forEach(span => span.textMask = undefined);
             });
-            return text;
+            const paras = textWithFormat.paras;
+            if (paras.length === 1
+                && paras[0].text.endsWith('\n')
+                && paras[0].spans[paras[0].spans.length - 1].length === 1
+            ) {
+                paras[0].spans.pop();
+                paras[0].text = paras[0].text.slice(0, paras[0].text.length - 1);
+            }
+            textWithFormat = importText(textWithFormat);
+            return textWithFormat as Text;
         }
     }
 
