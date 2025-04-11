@@ -87,15 +87,27 @@ export class TextViewCache extends ViewCache {
         }
     }
 
-    private m_proxy_field = new Set<string>([
-        'alignment',
-        'paraSpacing',
+    private m_proxy_attr_field = new Set<string>([
         'autoLineHeight',
         'minimumLineHeight',
         'maximumLineHeight',
-        'indent',
-        'textMask'
     ]);
+    private m_proxy_span_field = new Set<string>([
+        'fontName',
+        'fontSize',
+        'italic',
+        'kerning',
+        'strikethrough',
+        'transform',
+        'underline',
+        'weight'
+    ]);
+
+    private spanPropGetter(mask: Text, target: object, propertyKey: PropertyKey, receiver?: any) {
+        const val = Reflect.get(mask, propertyKey)
+        if (val !== undefined) return val
+        return Reflect.get(target, propertyKey, receiver)
+    }
 
     private textProxy(text: Text) {
         const __textMaskSet: Set<TextMask> = new Set();
@@ -104,18 +116,20 @@ export class TextViewCache extends ViewCache {
         if (stylesMgr) {
             // 创建一个Proxy来包装text对象
             const maskid: { lineheight: number | undefined; id: string }[] = [];
-            const proxyField = this.m_proxy_field;
+            const attrField = this.m_proxy_attr_field;
+            const spanField = this.m_proxy_span_field;
             text.paras.forEach(p => {
                 p.spans.forEach((span: any) => {
-                    const mask = (span.textMask && stylesMgr.getSync(span.textMask)) as TextMask | undefined;
-                    if (!mask?.text) return span.__getter = undefined
-
-                    __textMaskSet.add(mask);
-                    maskid.push({ lineheight: mask.text.maximumLineHeight, id: mask.id });
-                    span.__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
-                        const val = Reflect.get(mask.text, propertyKey)
-                        if (val !== undefined) return val
-                        return Reflect.get(target, propertyKey, receiver)
+                    const mask = (span.textMask && stylesMgr.getSync(span.textMask)) as TextMask;
+                    if (!mask?.text) {
+                        return span.__getter = undefined
+                    } else {
+                        maskid.push({ lineheight: mask.text.maximumLineHeight, id: mask.id });
+                        span.__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
+                            const t = spanField.has(propertyKey.toString()) ? mask.text : target;
+                            return Reflect.get(t, propertyKey, receiver);
+                        }
+                        __textMaskSet.add(mask);
                     }
                 })
                 const _mask = maskid.reduce((max, current) => {
@@ -124,17 +138,13 @@ export class TextViewCache extends ViewCache {
 
                 const mask = (_mask.id && stylesMgr.getSync(_mask.id)) as TextMask;
                 if (!mask?.text) {
-                    (p as any).attr.__getter = undefined
-                    return
-                }
-                __textMaskSet.add(mask);
-                (p.attr as any).__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
-                    const val = Reflect.get(mask.text, propertyKey);
-                    const key = propertyKey as string;
-                    if (proxyField.has(key)) {
-                        return key === 'textMask' ? '' : val !== undefined ? val : Reflect.get(target, propertyKey, receiver);
+                    (p as any).attr.__getter = undefined;
+                } else {
+                    (p.attr as any).__getter = (target: object, propertyKey: PropertyKey, receiver?: any) => {
+                        const t = attrField.has(propertyKey.toString()) ? mask.text : target;
+                        return Reflect.get(t, propertyKey, receiver);
                     }
-                    return Reflect.get(target, propertyKey, receiver);
+                    __textMaskSet.add(mask);
                 }
             })
         }
