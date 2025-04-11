@@ -41,11 +41,10 @@ import { deleteText, formatPara, formatText, insertComplexText, insertSimpleText
 import { LayoutItem, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
-import { _travelTextPara } from "./texttravel";
 import { FillType, Padding } from "../baseclasses";
-import { Gradient, StyleMangerMember, TextMask } from "../style"
+import { Gradient, StyleMangerMember } from "../style"
 import { Color } from "../color";
-import { ShapeFrame, ShapeSize } from "../typesdefine";
+import { ShapeSize } from "../typesdefine";
 import { getNextChar } from "./basic";
 
 /*
