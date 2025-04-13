@@ -38,4 +38,29 @@ export class FrameCpt {
         const box = XYsBounding(points);
         return { x: box.left, y: box.top, width: box.right - box.left, height: box.bottom - box.top };
     }
+
+    static frames2RootBound(views: (ShapeView | Shape)[]) {
+        if (views.length === 0) throw new Error('No frames found');
+        let left = Infinity;
+        let right = -Infinity;
+        let top = Infinity;
+        let bottom = -Infinity;
+
+        for (const view of views) {
+            const m = view.matrix2Root();
+            const frame = view.frame;
+            const points = [
+                { x: frame.x, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y },
+                { x: frame.x + frame.width, y: frame.y + frame.height },
+                { x: frame.x, y: frame.y + frame.height },
+            ].map(p => m.computeCoord3(p));
+            const box = XYsBounding(points);
+            if (box.left < left) left = box.left;
+            if (box.left > right) right = box.right;
+            if (box.top < top) top = box.top;
+            if (box.bottom > bottom) bottom = box.bottom;
+        }
+        return new ShapeFrame(left, top, right - left, bottom - top);
+    }
 }
