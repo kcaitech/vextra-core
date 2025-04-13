@@ -21,6 +21,7 @@ import { stroke } from "../render/stroke";
 import { DViewCtx, PropsType } from "./viewctx";
 import { BoolModifyEffect } from "./proxy/effects/bool";
 import { BoolShapeViewCache } from "./proxy/cache/bool";
+import { BoolFrameProxy } from "./proxy/frame/bool";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
@@ -165,6 +166,7 @@ export class BoolShapeView extends GroupShapeView {
         super(ctx, props);
         this.effect = new BoolModifyEffect(this);
         this.cache = new BoolShapeViewCache(this);
+        this.frameProxy = new BoolFrameProxy(this);
     }
     onMounted() {
         super.onMounted();
