@@ -11,7 +11,6 @@
 import { Page } from "../data/page";
 import { Matrix } from "../basic/matrix";
 import {
-    GroupShape,
     Shape,
     SymbolShape,
     TextShape
