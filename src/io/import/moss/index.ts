@@ -9,8 +9,7 @@
  */
 
 import {
-    BasicArray, IDataGuard, PageListItem, Document,
-    BasicMap, Transform, Page, ShapeType, Style,
+    BasicArray, IDataGuard, Document, Transform, Page, ShapeType, Style,
     BorderSideSetting,
     SideType,
     Border,
@@ -76,9 +75,11 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
 }
 
 export function importDocument(name: string, mdd: { [p: string]: string | Uint8Array }, guard: IDataGuard) {
-    const meta = JSON.parse(mdd['document-meta.json'] as string);
-    const pageList = importDocumentMeta(meta, undefined).pagesList;
-    const document = new Document(uuid(), name, guard, { pageList });
+    const meta = importDocumentMeta(JSON.parse(mdd['document-meta.json'] as string));
+    const document = new Document(uuid(), name, guard, {
+        pageList: meta.pagesList,
+        stylelib: meta.stylelib as any
+    });
     setLoader(mdd, document);
     return document;
 }
