@@ -719,7 +719,7 @@ export class RefUnbind {
 
         tmpArtboard.frameMaskDisabled = view.frameMaskDisabled;
 
-        const layoutInfo = (view as SymbolRefView).autoLayout;
+        const layoutInfo = view.autoLayout;
         if (layoutInfo) {
             tmpArtboard.autoLayout = importAutoLayout(layoutInfo);
         }

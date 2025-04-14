@@ -787,9 +787,9 @@ export class PageEditor {
      */
     extractSymbol(shapes: ShapeView[]) {
         const actions: {
-            parent: Shape,
-            self: Shape,
-            insertIndex: number
+            parent: Shape;
+            self: Shape;
+            insertIndex: number;
         }[] = []
         const _this = this;
         const ctx: IImportContext = new class implements IImportContext {
@@ -832,8 +832,7 @@ export class PageEditor {
                 const ret = api.shapeInsert(this.__document, this.page, parent as GroupShape, self, insertIndex);
                 api.shapeDelete(this.__document, this.page, parent as GroupShape, insertIndex + 1);
 
-                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-                if (_types.includes(parent.type)) {
+                if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(parent.type)) {
                     const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
                     const sortedArr = [...(parent as GroupShape).childs].sort((a, b) => {
                         if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
@@ -873,6 +872,17 @@ export class PageEditor {
             // ref.frameMaskDisabled = sym.frameMaskDisabled;
         }
         return ref;
+    }
+
+    recallSymbol(refs: SymbolRefView[]) {
+        try {
+            const refMap: Map<string, SymbolRefView> = new Map();
+            for (const ref of refs) if (!refMap.has(ref.refId)) refMap.set(ref.refId, ref);
+            refs = Array.from(refMap.values());
+        } catch (e) {
+            this.__repo.rollback();
+            throw e;
+        }
     }
 
     private cloneStyle(style: Style): Style {

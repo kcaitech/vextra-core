@@ -255,8 +255,8 @@ export class ShapeEditor {
         try {
             if (p === view) {
                 // 清空当前view的variables,overrides,isCustomSize
-                const variables = (view).variables;
-                const overrides = (view).overrides;
+                const variables = view.variables;
+                const overrides = view.overrides;
                 overrides && overrides.forEach((v, k) => {
                     api.shapeRemoveOverride(this.__page, view.data, k);
                 })
@@ -273,8 +273,8 @@ export class ShapeEditor {
                 }
             } else {
                 // 清空p中与当前view相关的variables,overrides
-                const variables = (p).variables;
-                const overrides = (p).overrides;
+                const variables = p.variables;
+                const overrides = p.overrides;
 
                 const _p = p;
                 const refId = view.id.split('/').slice(1).join('/'); // 去掉首个
@@ -292,9 +292,8 @@ export class ShapeEditor {
             this.__repo.commit();
             return true;
         } catch (e) {
-            console.log(e);
             this.__repo.rollback();
-            return false;
+            throw e;
         }
     }
 
