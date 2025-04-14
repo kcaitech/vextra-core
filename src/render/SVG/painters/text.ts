@@ -1,10 +1,11 @@
 import { EL, elh, ShapeView, TextShapeView } from "../../../dataview";
-import { innerShadowId } from "../effects";
+import { innerShadowId, renderBorder } from "../effects";
 import { objectId } from "../../../basic/objectid";
 import { BlurType } from "../../../data";
 import { ViewSVGRenderer } from "./view";
 import { renderTextLayout } from "../effects/text";
 import { stroke } from "../../stroke";
+import { TextViewCache } from "../../../dataview/proxy/cache/text";
 
 export class TextSVGRenderer extends ViewSVGRenderer {
     constructor(view: ShapeView) {
@@ -18,6 +19,7 @@ export class TextSVGRenderer extends ViewSVGRenderer {
         const layout = view.getLayout();
         return renderTextLayout(elh, layout, view.frame, view.blur);
     }
+
     bleach(el: EL) {
         if (el.elattr.fill) el.elattr.fill = '#FFF';
         if (el.elattr.stroke) el.elattr.stroke = '#FFF';
@@ -40,6 +42,11 @@ export class TextSVGRenderer extends ViewSVGRenderer {
         }
 
         if (Array.isArray(el.elchilds)) el.elchilds.forEach(el => this.bleach(el));
+    }
+
+    renderBorder(): EL[] {
+        let border = this.view.getBorder();
+        return renderBorder(elh, border, this.view.frame, (this.view.cache as TextViewCache).textPath.toString(), this.view.radius, this.view.isCustomBorder);
     }
     render(): number {
         if (!this.checkAndResetDirty()) return this.m_render_version;

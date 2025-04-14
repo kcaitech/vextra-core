@@ -43,8 +43,10 @@ export function getTextWithFmt(shapetext: Text, index: number, length: number): 
 }
 
 const _NullColor = new Color(1, 0, 0, 0);
+const _NullMask = ''
 
 function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAttr | undefined, textAttr: TextAttr | undefined) {
+  
     const color = attr.color ?? (paraAttr?.color) ?? (textAttr?.color) ?? _NullColor;
     if (attrGetter.color === undefined) {
         attrGetter.color = color;
@@ -81,8 +83,16 @@ function _getSpanFormat(attr: SpanAttr, attrGetter: AttrGetter, paraAttr: ParaAt
     if (attrGetter.fontSize === undefined) {
         attrGetter.fontSize = fontSize;
     }
-    else if (fontSize === undefined || attrGetter.fontSize !== fontSize) {
-        attrGetter.fontSizeIsMulti = true;
+    else if(fontSize === undefined || attrGetter.fontSize !== fontSize){
+        attrGetter.fontSizeIsMulti=true
+    }
+
+    const textMask = attr.textMask ?? (paraAttr?.textMask) ?? (textAttr?.textMask) ?? _NullMask;
+    if (attrGetter.textMask === undefined) {
+        attrGetter.textMask = textMask;
+    }
+    else if (attrGetter.textMask !== textMask) {
+        attrGetter.textMaskIsMulti = true;
     }
 
     const highlight = attr.highlight ?? (paraAttr?.highlight) ?? (textAttr?.highlight) ?? _NullColor;
@@ -213,6 +223,9 @@ function _mergeSpanFormat(from: AttrGetter, to: AttrGetter) {
 
     if (from.gradientIsMulti) to.gradientIsMulti = true;
     else if (from.gradient) to.gradient = from.gradient;
+
+    if (from.textMaskIsMulti) to.textMaskIsMulti = true;
+    else if (from.textMask) to.textMask = from.textMask;
 }
 
 function _getParaFormat(attr: ParaAttr, attrGetter: AttrGetter, defaultAttr: TextAttr | undefined) {
@@ -409,11 +422,13 @@ export function getTextFormat(shapetext: Text, index: number, length: number, ca
     if (textfmt.highlight === _NullColor) {
         textfmt.highlight = undefined;
     }
-
+    if (textfmt.textMask === _NullMask) {
+        textfmt.textMask = undefined;
+    }
     if (cachedAttr) {
         coverFormat(textfmt, cachedAttr);
     }
-
+    
     return textfmt;
 }
 

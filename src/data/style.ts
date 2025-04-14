@@ -30,6 +30,7 @@ import {
     Shadow,
     Stop,
     WindingRule,
+    TextAttr
 } from "./baseclasses";
 import { Basic, BasicArray, BasicMap, ResourceMgr, WatchableObject } from "./basic";
 import { Color } from "./color";
@@ -330,7 +331,7 @@ export class Blur extends Basic implements classes.Blur {
 /**
  * @description 样式库管理器数据组成
  */
-export type StyleMangerMember = FillMask | ShadowMask | BlurMask | BorderMask | RadiusMask;
+export type StyleMangerMember = FillMask | ShadowMask | BlurMask | BorderMask | RadiusMask| TextMask;
 
 export class StyleSheet extends Basic implements classes.StyleSheet {
     typeId = "style-sheet"
@@ -403,6 +404,10 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                 const value = v.radius
                 const radiusmask = new RadiusMask(v.crdtidx, sheetId, v4(), v.name, v.description, value)
                 notifiable_variables.push(radiusmask)
+            }else if (v instanceof classes.TextMask) {
+                const text = v.text;
+                const textmask = new TextMask(v.crdtidx, sheetId, v4(), v.name, v.description, text);
+                notifiable_variables.push(textmask);
             }
             // 还有其他的一些类型
         }
@@ -533,5 +538,31 @@ export class RadiusMask extends WatchableObject implements classes.RadiusMask {
         this.description = description;
         this.radius = radius;
         this.disabled = disabled;
+    }
+}
+
+export class TextMask extends WatchableObject implements classes.TextMask {
+    typeId = 'text-mask-living';
+    crdtidx: BasicArray<number>;
+    id: string;
+    sheet: string;
+    name: string;
+    description: string;
+    text: TextAttr;
+    disabled?: boolean;
+
+    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, text: TextAttr, disabled?: boolean) {
+        super();
+        this.crdtidx = crdtidx;
+        this.id = id;
+        this.sheet = sheet;
+        this.name = name;
+        this.description = description;
+        this.text = text;
+        this.disabled = disabled;
+    }
+
+    notify(...args: any[]) {
+        super.notify("style-mask-change", ...args);
     }
 }

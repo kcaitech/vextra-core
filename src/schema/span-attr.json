@@ -43,6 +43,9 @@
         },
         "gradient": {
             "$ref": "./gradient.json"
+        },
+        "textMask": {
+            "type": "string"
         }
     },
     "required": [],

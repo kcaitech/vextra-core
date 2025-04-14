@@ -502,7 +502,7 @@ export class Stop extends Basic {
         this.color = color
     }
 }
-type StyleSheet_variables = BasicArray<FillMask | ShadowMask | BlurMask | BorderMask | RadiusMask>
+type StyleSheet_variables = BasicArray<FillMask | ShadowMask | BlurMask | BorderMask | RadiusMask | TextMask>
 type Style_fills = BasicArray<Fill>
 type Style_shadows = BasicArray<Shadow>
 type Style_innerShadows = BasicArray<Shadow>
@@ -842,6 +842,7 @@ export class SpanAttr extends Basic {
     placeholder?: boolean
     fillType?: FillType
     gradient?: Gradient
+    textMask?: string
 }
 /* span attr */
 export class Span extends SpanAttr {
@@ -961,11 +962,32 @@ export class TextAttr extends ParaAttr {
     textBehaviour?: TextBehaviour
     padding?: Padding
 }
+/* text mask */
+export class TextMask extends Basic {
+    typeId = "text-mask"
+    crdtidx: Crdtidx
+    sheet: string
+    id: string
+    name: string
+    description: string
+    text: TextAttr
+    disabled?: boolean
+    constructor(crdtidx: Crdtidx, sheet: string, id: string, name: string, description: string, text: TextAttr) {
+        super()
+        this.crdtidx = crdtidx
+        this.sheet = sheet
+        this.id = id
+        this.name = name
+        this.description = description
+        this.text = text
+    }
+}
 /* text */
 export class Text extends Basic {
     typeId = "text"
     paras: Text_paras
     attr?: TextAttr
+    fixed?: boolean
     constructor(paras: Text_paras) {
         super()
         this.paras = paras

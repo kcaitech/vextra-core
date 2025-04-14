@@ -82,6 +82,7 @@ export {
     CurvePoint,
     ContactForm,
     BulletNumbersType,
+    BulletNumbers,
     PageListItem,
     GuideAxis,
     BoolOp,
@@ -157,7 +158,8 @@ export {
     BorderMask,
     BorderMaskType,
     StyleSheet,
-    RadiusMask
+    RadiusMask,
+    TextMask
 } from "./data"
 export * from "./data/shapedirlist"
 export * from "./data/shapedirlist2"
@@ -212,6 +214,8 @@ export { BorderModifier } from "./editor/style/border";
 export { RadiusModifier } from "./editor/style/radius";
 export { ShadowsModifier } from "./editor/style/shadows";
 export { BlurModifier } from "./editor/style/blur";
+export { TextModifier } from "./editor/style/text";
+
 export { ScreenPrinter } from "./printscreen";
 
 export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun) {

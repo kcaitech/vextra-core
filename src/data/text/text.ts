@@ -21,7 +21,7 @@ import {
     UnderlineType
 } from "../baseclasses";
 
-import { Basic, BasicArray } from "../basic";
+import { Basic, BasicArray, ResourceMgr } from "../basic";
 
 export {
     TextVerAlign,
@@ -41,11 +41,10 @@ import { deleteText, formatPara, formatText, insertComplexText, insertSimpleText
 import { LayoutItem, TextLayout, layoutText } from "./textlayout";
 import { layoutAtDelete, layoutAtFormat, layoutAtInsert } from "./textinclayout";
 import { getSimpleText, getUsedFontNames, getTextFormat, getTextWithFmt } from "./textread";
-import { _travelTextPara } from "./texttravel";
 import { FillType, Padding } from "../baseclasses";
-import { Gradient } from "../style"
+import { Gradient, StyleMangerMember } from "../style"
 import { Color } from "../color";
-import { ShapeFrame, ShapeSize } from "../typesdefine";
+import { ShapeSize } from "../typesdefine";
 import { getNextChar } from "./basic";
 
 /*
@@ -86,6 +85,7 @@ export class SpanAttr extends Basic implements classes.SpanAttr {
     placeholder?: boolean
     fillType?: FillType
     gradient?: Gradient
+    textMask?: string
     constructor(
     ) {
         super()
@@ -140,6 +140,7 @@ export class AttrGetter extends TextAttr {
     bulletNumbersIsMulti: boolean = false;
     fillTypeIsMulti: boolean = false;
     gradientIsMulti: boolean = false;
+    textMaskIsMulti: boolean = false;
 }
 
 export class Span extends SpanAttr implements classes.Span {
@@ -243,12 +244,22 @@ export class Text extends Basic implements classes.Text {
     typeId = 'text'
     paras: BasicArray<Para>
     attr?: TextAttr
-    // isPureString?: boolean
+    fixed?: boolean
+
+    constructor(
+        paras: BasicArray<Para>
+    ) {
+        super()
+        this.paras = paras
+    }
 
     // layout与显示窗口大小有关
     // 尽量复用, layout缓存排版信息，进行update
     private __layouts: Map<string, LayoutItem> = new Map();
-
+    dropAllLayout(){
+        this.__layouts.clear();
+    }
+    
     dropLayout(token: string, owner: string) {
         let o = this.__layouts.get(token);
         if (o) {
@@ -261,7 +272,6 @@ export class Text extends Basic implements classes.Text {
     }
 
     getLayout3(frame: ShapeSize, owner: string, token: string | undefined): { token: string, layout: TextLayout } {
-
         const width = frame.width;
         const height = frame.height;
         const cur = [width, height].join(',');
@@ -283,7 +293,7 @@ export class Text extends Basic implements classes.Text {
             }
         }
 
-        let o = this.__layouts.get(cur);
+        let o = this.__layouts.get(cur);        
         if (o) {
             if (o.owners.indexOf(owner) < 0) o.owners.push(owner);
         } else {
@@ -324,13 +334,16 @@ export class Text extends Basic implements classes.Text {
         if (!this.attr) this.attr = new TextAttr();
         return this.attr.getOpTarget(path.splice(1));
     }
+    private __styleMgr?: ResourceMgr<StyleMangerMember>;
 
-    constructor(
-        paras: BasicArray<Para>
-    ) {
-        super()
-        this.paras = paras
+    setStylesMgr(styleMgr: ResourceMgr<StyleMangerMember>) {
+        this.__styleMgr = styleMgr;
     }
+
+    getStylesMgr(): ResourceMgr<StyleMangerMember> | undefined {
+        return this.__styleMgr;
+    }
+
     charAt(index: number): string {
         for (let i = 0, len = this.paras.length; i < len; i++) {
             const para = this.paras[i];
@@ -591,17 +604,15 @@ export function string2Text(text: string): Text {
         p.spans.push(new Span(s.length))
         paras.push(p)
     }
-    const text1 = new Text(paras)
-    // text1.isPureString = true;
-    return text1;
+    return new Text(paras)
 }
 
-function overrideSpan(span: Span, length: number, origin?: Span): Span {
+function overrideSpan(span: Span, length: number, origin: Span): Span {
     return new Proxy<Span>(span, {
         get: (target: Span, p: string | symbol, receiver: any): any => {
             if (p.toString() === "length") return length;
             let val = Reflect.get(target, p, receiver);
-            if (val === undefined && origin) {
+            if (val === undefined) {
                 val = Reflect.get(origin, p, receiver);
             }
             return val;
@@ -699,7 +710,7 @@ export class OverrideTextPara extends Basic implements classes.Para {
     }
 }
 
-export function overrideTextText(text: Text, origin: Text): Text {
+export function overrideText(text: Text, origin: Text): Text {
     let _paras: BasicArray<Para> | undefined
     let __layouts: Map<string, LayoutItem> = new Map();
     return new Proxy<Text>(text, {
@@ -711,7 +722,7 @@ export function overrideTextText(text: Text, origin: Text): Text {
             if (ps === "paras") {
                 if (_paras) return _paras;
                 const paras = text.paras;
-
+                
                 const ret = new BasicArray<Para>()
                 _paras = ret;
                 paras.forEach((p, i) => {

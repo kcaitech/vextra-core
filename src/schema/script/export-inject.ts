@@ -44,6 +44,17 @@ inject['Style']['after'] = `\
         if (ret.blursMask) ctx.styles.add(ret.blursMask);
     }
 `
+inject['Span'] = {};
+inject['Span']['after'] = `\
+    // inject code
+    if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
+`
+
+inject['ParaAttr'] = {};
+inject['ParaAttr']['after'] = `\
+    // inject code
+    if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
+`
 
 inject['Fill'] = {};
 inject['Fill']['after'] = `\
