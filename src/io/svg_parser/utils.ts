@@ -13,6 +13,7 @@ import { Color, Shadow, } from "../../data"
 import { BaseCreator } from "./creator/base"
 import { Line, LineThrough0, Transform } from "../../basic/transform";
 import { NumberArray2D } from "../../basic/number_array";
+import { Path } from "@kcdesign/path";
 
 type RectBox = { // 矩形包围盒
     lt: { x: number, y: number }, // 左上角坐标
@@ -483,21 +484,13 @@ export type Attributes = { // 保存元素的一些属性
     useTargetCreator?: BaseCreator,
 }
 
-const hiddenSvgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-hiddenSvgElement.setAttribute("width", "100%")
-hiddenSvgElement.setAttribute("height", "100%")
-hiddenSvgElement.setAttribute("style", "position:absolute;top:-100%;left:-100%;visibility:hidden")
-
-function getHiddenSvgElement() {
-    if (!document.contains(hiddenSvgElement)) document.body.appendChild(hiddenSvgElement);
-    if (hiddenSvgElement.childElementCount > 100) hiddenSvgElement.innerHTML = "";
-    return hiddenSvgElement
-}
-
 export function getPathBoxFromD(d: string) {
-    const svg = getHiddenSvgElement()
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path")
-    path.setAttribute("d", d)
-    svg.appendChild(path)
-    return path.getBBox()
+    const path = new Path(d)
+    const bbox = path.bbox()
+    return {
+        x: bbox.x,
+        y: bbox.y,
+        width: bbox.w,
+        height: bbox.h
+    }
 }
