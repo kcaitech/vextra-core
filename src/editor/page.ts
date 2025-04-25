@@ -186,7 +186,8 @@ export interface SVGParseResult {
 
 export interface UploadAssets {
     ref: string,
-    buff: Uint8Array
+    buff: Uint8Array;
+    base64: string;
 }
 
 export function getHorizontalRadians(A: {
@@ -3594,7 +3595,7 @@ export class PageEditor {
                     const __s = api.shapeInsert(document, page, parent, shape, targetIndex);
                     if (__s) {
                         ids.push(__s.id);
-                        imageShapes.push({ shape: __s, upload: [{ ref, buff }] });
+                        imageShapes.push({ shape: __s, upload: [{ ref, buff, base64 }] });
                     }
                 } else {
                     const shape = (item.pack as SVGParseResult).shape;
@@ -3612,7 +3613,7 @@ export class PageEditor {
                         ids.push(__s.id);
                         const upload: UploadAssets[] = [];
                         (item.pack as SVGParseResult).mediaResourceMgr.forEach((v, k) => {
-                            upload.push({ ref: k, buff: v.buff });
+                            upload.push({ ref: k, buff: v.buff, base64: v.base64 });
                         })
                         imageShapes.push({ shape: __s, upload });
                     }
