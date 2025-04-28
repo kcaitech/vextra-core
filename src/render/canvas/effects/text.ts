@@ -133,7 +133,7 @@ export function renderTextLayout(props: Props, ctx: CanvasRenderingContext2D, te
                 if (gText.length > 0) {
                     if (span && span.gradient && span.fillType === FillType.Gradient && frame) {
                         if (span.gradient.gradientType === GradientType.Radial) {
-                            const dpr = Math.ceil(window.devicePixelRatio || 1);
+                            const dpr = typeof window !== "undefined" ? Math.ceil(window.devicePixelRatio || 1) : 1;
                             const offscreen = new OffscreenCanvas(frame.width * dpr, frame.height * dpr);
                             const offctx = offscreen.getContext("2d")!;
                             offctx.scale(dpr, dpr);
@@ -150,7 +150,7 @@ export function renderTextLayout(props: Props, ctx: CanvasRenderingContext2D, te
                         } else {
                             gradient = renderGradient(ctx, span.gradient as Gradient, frame);
                             ctx.fillStyle = gradient;
-                            for (let i = 0; i < gX.length; i++) { 
+                            for (let i = 0; i < gX.length; i++) {
                                 const x = gX[i];
                                 ctx.fillText(gText[i], x, baseY);
                             }

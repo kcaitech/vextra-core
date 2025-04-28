@@ -118,7 +118,7 @@ export class DViewCtx extends EventEmitter {
     constructor(gl?: GraphicsLibrary) {
         super();
         this.gl = gl ?? "SVG"; // 默认用SVG渲染
-        this.dpr = Math.ceil(window.devicePixelRatio || 1);
+        this.dpr = typeof window !== "undefined" ? Math.ceil(window.devicePixelRatio || 1) : 1;
     }
     // 选区
     // 缩放监听
@@ -152,7 +152,7 @@ export class DViewCtx extends EventEmitter {
         return this.is_document;
     }
 
-    setReLayout(v: DataView) {        
+    setReLayout(v: DataView) {
         this.relayoutset.set(objectId(v), v);
         this.continueLoop();
     }
