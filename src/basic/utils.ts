@@ -45,5 +45,6 @@ export function base64ToDataUrl(format: string, base64: string) {
 }
 
 export function base64Encode(data: string): string {
-    return typeof window !== "undefined" ? window.btoa(data) : Buffer.from(data).toString("base64")
+    // return typeof window !== "undefined" ? window.btoa(data) : Buffer.from(data).toString("base64")
+    return Buffer.from(data).toString("base64")
 }

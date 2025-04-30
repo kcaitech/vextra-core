@@ -20,6 +20,7 @@
     "check-circular(need install magde on DEV)": "madge --circular --extensions ts src/"
   },
   "dependencies": {
+    "@figma/rest-api-spec": "^0.29.0",
     "@kcdesign/path": "0.0.17",
     "fzstd": "^0.1.1",
     "kiwi-schema": "^0.5.0",

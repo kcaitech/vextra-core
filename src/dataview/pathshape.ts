@@ -7,7 +7,7 @@
  * For more information about the AGPL-3.0 license, please visit:
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
-import { OvalShape, PathShape, ShapeFrame, ShapeType } from "../data";
+import { OvalShape, PathShape } from "../data";
 import { ShapeView } from "./shape";
 import { PathSegment } from "../data/typesdefine";
 import { DViewCtx, PropsType } from "./viewctx";
