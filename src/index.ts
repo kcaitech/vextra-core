@@ -218,7 +218,7 @@ export { TextModifier } from "./editor/style/text";
 
 export { ScreenPrinter } from "./printscreen";
 
-export { convertGetFileResponse } from "./figmcpconvert";
+export { convertGetFileResponse } from "./figmcpconvert/index";
 
 export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun) {
     gPal.text.textMeasure = textMeasure
