@@ -21,7 +21,7 @@ import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop";
 import { TidyUpAlign, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";
-import { MossError } from "../../../basic/error";
+import { BasicError } from "../../../basic/error";
 import { assign } from "../creator";
 
 export type TranslateUnit = {
@@ -148,7 +148,7 @@ export class Transporter extends AsyncApiCaller {
         const targetParent = adapt2Shape(target) as GroupShape
         const shape = adapt2Shape(view)
         const error = unable_to_migrate(targetParent, shape);
-        if (error) throw new MossError(`error type ${error}`);
+        if (error) throw new BasicError(`error type ${error}`);
 
         const viewparent: ShapeView = view.parent!;
         const origin = adapt2Shape(viewparent) as GroupShape
