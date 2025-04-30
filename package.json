@@ -20,7 +20,6 @@
     "check-circular(need install magde on DEV)": "madge --circular --extensions ts src/"
   },
   "dependencies": {
-    "@figma/rest-api-spec": "^0.29.0",
     "@kcdesign/path": "0.0.17",
     "fzstd": "^0.1.1",
     "kiwi-schema": "^0.5.0",
@@ -52,9 +51,9 @@
     "rollup": "^4.18.0",
     "rollup-plugin-clear": "^2.0.7",
     "ts-jest": "^29.0.5",
-    "tslib": "^2.6.2",
+    "tslib": "^2.8.1",
     "tsx": "^4.11.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.8.3"
   },
   "browserslist": [
     "> 1%",
