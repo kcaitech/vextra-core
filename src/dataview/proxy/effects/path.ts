@@ -10,9 +10,9 @@ export class PathShapeViewModifyEffect extends ViewModifyEffect {
         [key: string]: string[];
     } = {
         ...ViewModifyEffect.cacheMap,
-        pathsegs: ['m_path', 'm_pathstr'],
-        radiusMask: ['m_path', 'm_pathstr'],
-        variables: ['m_path', 'm_pathstr', 'm_fills', 'm_border', 'm_is_border_shape'],
+        pathsegs: ['m_path', 'm_pathstr', 'm_border_path', 'm_border_path_box'],
+        radiusMask: ['m_path', 'm_pathstr', 'm_border_path', 'm_border_path_box'],
+        variables: ['m_path', 'm_pathstr', 'm_fills', 'm_border', 'm_is_border_shape', 'm_border_path', 'm_border_path_box'],
         fills: ['m_fills', 'm_is_border_shape', 'm_border_path', 'm_border_path_box'],
         borders: ['m_border', 'm_is_border_shape', 'm_border_path', 'm_border_path_box'],
         fillsMask: ['m_fills', 'm_is_border_shape', 'm_border_path', 'm_border_path_box'],
