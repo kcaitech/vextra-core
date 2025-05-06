@@ -575,17 +575,14 @@ export class PageEditor {
                 const index = (shape0.parent as GroupShape).indexOfChild(shape0);
                 symbolShape.frameMaskDisabled = true;
                 sym = group(document, page, shapes, symbolShape, shape0.parent as GroupShape, index, api);
-
-                for (let i = 0; i < shapes.length; i++) {
-                    const __shape = shapes[i];
-
-                    const old_rc = __shape.resizingConstraint === undefined
+                const groupFrame = FrameCpt.frames2RootBound(views);
+                api.shapeModifyWH(page, sym, groupFrame.width, groupFrame.height);
+                for (const shape of shapes) {
+                    const old_rc = shape.resizingConstraint === undefined
                         ? ResizingConstraints2.Mask
-                        : __shape.resizingConstraint;
-
+                        : shape.resizingConstraint;
                     const new_rc = ResizingConstraints2.setToScaleByHeight(ResizingConstraints2.setToScaleByWidth(old_rc));
-
-                    api.shapeModifyResizingConstraint(page, __shape, new_rc);
+                    api.shapeModifyResizingConstraint(page, shape, new_rc);
                 }
             }
 
@@ -594,17 +591,17 @@ export class PageEditor {
 
             const innerSymbols: Shape[] = [];
 
-            function _find(group: GroupShape) {
+            function find(group: GroupShape) {
                 for (const child of group.childs) {
                     if (child instanceof SymbolShape || child instanceof SymbolUnionShape) {
                         innerSymbols.push(child);
                         continue;
                     }
-                    if (child instanceof GroupShape) _find(child);
+                    if (child instanceof GroupShape) find(child);
                 }
             }
 
-            _find(sym);
+            find(sym);
 
             if (innerSymbols.length) { // replace
                 const offset = sym.boundingBox().width + 24;
@@ -627,7 +624,6 @@ export class PageEditor {
                         rt.m01 = st.m01;
                         rt.m10 = st.m10;
                         rt.m11 = st.m11;
-                        // ref.frameMaskDisabled = (symbol as SymbolShape).frameMaskDisabled;
                     }
                     const parent = symbol.parent as GroupShape;
                     api.shapeInsert(document, page, parent, ref, parent.indexOfChild(symbol));
@@ -638,8 +634,7 @@ export class PageEditor {
                     api.shapeMove(page, parent, parent.indexOfChild(symbol), page, page.childs.length);
                     api.shapeModifyTransform(page, symbol, ((om)));
 
-                    const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-                    if (_types.includes(parent.type)) {
+                    if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(parent.type)) {
                         const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
                         const sortedArr = [...parent.childs].sort((a, b) => {
                             if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
@@ -793,9 +788,9 @@ export class PageEditor {
      */
     extractSymbol(shapes: ShapeView[]) {
         const actions: {
-            parent: Shape,
-            self: Shape,
-            insertIndex: number
+            parent: Shape;
+            self: Shape;
+            insertIndex: number;
         }[] = []
         const _this = this;
         const ctx: IImportContext = new class implements IImportContext {
@@ -838,8 +833,7 @@ export class PageEditor {
                 const ret = api.shapeInsert(this.__document, this.page, parent as GroupShape, self, insertIndex);
                 api.shapeDelete(this.__document, this.page, parent as GroupShape, insertIndex + 1);
 
-                const _types = [ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef];
-                if (_types.includes(parent.type)) {
+                if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(parent.type)) {
                     const Fixed = ScrollBehavior.FIXEDWHENCHILDOFSCROLLINGFRAME;
                     const sortedArr = [...(parent as GroupShape).childs].sort((a, b) => {
                         if (a.scrollBehavior !== Fixed && b.scrollBehavior === Fixed) {
@@ -879,6 +873,17 @@ export class PageEditor {
             // ref.frameMaskDisabled = sym.frameMaskDisabled;
         }
         return ref;
+    }
+
+    recallSymbol(refs: SymbolRefView[]) {
+        try {
+            const refMap: Map<string, SymbolRefView> = new Map();
+            for (const ref of refs) if (!refMap.has(ref.refId)) refMap.set(ref.refId, ref);
+            refs = Array.from(refMap.values());
+        } catch (e) {
+            this.__repo.rollback();
+            throw e;
+        }
     }
 
     private cloneStyle(style: Style): Style {
@@ -3625,64 +3630,6 @@ export class PageEditor {
             this.__repo.rollback();
             console.error('insertImagesToPage:', e);
             return false;
-        }
-    }
-
-    flattenSelection(shapes: ShapeView[], name?: string) {
-        // 先把所有可以参与拼合的图层整理出来
-        // 确定一组属性，包括边框、填充、蒙版、约束等
-        try {
-            if (!shapes.length) return;
-            let virtualSelection = false;
-            const __shapes = (function deep(shapes: ShapeView[]) {
-                const result: ShapeView[] = [];
-                for (const view of shapes) {
-                    if (view.isVirtualShape) {
-                        virtualSelection = true;
-                        break;
-                    }
-                    if (view instanceof ArtboardView || view instanceof SymbolView || view.type === ShapeType.Group) {
-                        result.push(...deep(view.childs));
-                        continue;
-                    }
-                    result.push(view);
-                }
-                return result;
-            })(shapes);
-            if (virtualSelection || !__shapes.length) return;
-
-            for (const view of __shapes) {
-
-            }
-            // if (shapes.length > 1) {
-            //     return this.flattenShapes(shapes);
-            // } else if (shapes.length === 1) {
-            //     const __flatten = (view: ShapeView) => {
-            //         const res: ShapeView[] = [];
-            //         if (view instanceof PathShapeView) {
-            //             res.push(view);
-            //         } else {
-            //             if (view.type === ShapeType.Group || view instanceof ArtboradView) {
-            //                 res.push(...__flatten(view));
-            //             }
-            //         }
-            //         return res;
-            //     }
-            //     const __shapes = __flatten(shapes[0]);
-            //     if (__shapes.length > 1) {
-            //         return this.flattenShapes(shapes);
-            //     }
-            //     const view = __shapes[0];
-            //     const shape = adapt2Shape(view);
-            //     if (!(view instanceof PathShapeView)) return;
-            //     const api = this.__repo.start('flattenSelection');
-            //     update_frame_by_points(api, this.page, shape);
-            //     api.shapeEditPoints(this.page, shape, true);
-            //     this.__repo.commit();
-            // }
-        } catch (e) {
-            this.__repo.rollback()
-            console.error(e)
         }
     }
 
