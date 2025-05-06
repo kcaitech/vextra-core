@@ -350,10 +350,11 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
 
     private transform2notifiable(sheetId: string, variables: StyleSheet_variables) {
         const notifiable_variables = new BasicArray<StyleMangerMember>();
-        for (const v of variables) {
-            if (v instanceof classes.FillMask) {
+        for (const variable of variables) {
+            const v = variable as any;
+            if (v.typeId === 'fill-mask') {
                 const fills = new BasicArray<Fill>();
-                v.fills.forEach(s => {
+                v.fills.forEach((s: Fill) => {
                     const { crdtidx, id, isEnabled, fillType, color, contextSettings, imageRef, imageScaleMode, rotation, scale, originalImageWidth, originalImageHeight, paintFilter, transform } = s;
                     const new_fill = new Fill(crdtidx, id, isEnabled, fillType, new Color(color.alpha, color.red, color.green, color.blue))
                     if (s.gradient) {
@@ -375,41 +376,40 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                     s.contextSettings = contextSettings;
                     fills.push(new_fill)
                 })
-                const fillMask = new FillMask(v.crdtidx, sheetId, v4(), v.name, v.description, fills);
+                const fillMask = new FillMask(v.crdtidx, sheetId, v.id, v.name, v.description, fills);
                 notifiable_variables.push(fillMask);
-            } else if (v instanceof classes.ShadowMask) {
+            } else if (v.typeId === 'shadow-mask') {
                 const shadows = new BasicArray<Shadow>();
-                v.shadows.forEach(i => {
+                v.shadows.forEach((i: Shadow) => {
                     const { crdtidx, id, isEnabled, blurRadius, color, offsetX, offsetY, spread, position, contextSettings } = i
                     const new_shadow = new Shadow(crdtidx, id, isEnabled, blurRadius, new Color(color.alpha, color.red, color.green, color.blue), offsetX, offsetY, spread, position)
                     new_shadow.contextSettings = contextSettings
                     shadows.push(new_shadow)
                 })
-                const shadowMask = new ShadowMask(v.crdtidx, sheetId, v4(), v.name, v.description, shadows);
+                const shadowMask = new ShadowMask(v.crdtidx, sheetId, v.id, v.name, v.description, shadows);
                 notifiable_variables.push(shadowMask);
-            } else if (v instanceof classes.BlurMask) {
+            } else if (v.typeId === 'blur-mask') {
                 const { isEnabled, center, saturation, type } = v.blur;
                 const blur = new Blur(isEnabled, center, saturation, type);
                 blur.motionAngle = v.blur.motionAngle;
                 blur.radius = v.blur.radius;
-                const blurmask = new BlurMask(v.crdtidx, sheetId, v4(), v.name, v.description, blur);
+                const blurmask = new BlurMask(v.crdtidx, sheetId, v.id, v.name, v.description, blur);
                 notifiable_variables.push(blurmask);
-            } else if (v instanceof classes.BorderMask) {
+            } else if (v.typeId === 'border-mask') {
                 const { position, sideSetting } = v.border;
                 const side = new BorderSideSetting(sideSetting.sideType, sideSetting.thicknessTop, sideSetting.thicknessLeft, sideSetting.thicknessBottom, sideSetting.thicknessRight);
                 const border = new BorderMaskType(position, side);
-                const borderMask = new BorderMask(v.crdtidx, sheetId, v4(), v.name, v.description, border);
+                const borderMask = new BorderMask(v.crdtidx, sheetId, v.id, v.name, v.description, border);
                 notifiable_variables.push(borderMask);
-            } else if (v instanceof classes.RadiusMask) {
+            } else if (v.typeId === 'radius-mask') {
                 const value = v.radius
-                const radiusmask = new RadiusMask(v.crdtidx, sheetId, v4(), v.name, v.description, value)
+                const radiusmask = new RadiusMask(v.crdtidx, sheetId, v.id, v.name, v.description, value)
                 notifiable_variables.push(radiusmask)
-            }else if (v instanceof classes.TextMask) {
+            } else if (v.typeId === 'text-mask') {
                 const text = v.text;
-                const textmask = new TextMask(v.crdtidx, sheetId, v4(), v.name, v.description, text);
+                const textmask = new TextMask(v.crdtidx, sheetId, v.id, v.name, v.description, text);
                 notifiable_variables.push(textmask);
             }
-            // 还有其他的一些类型
         }
         return notifiable_variables;
     }

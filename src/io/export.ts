@@ -15,27 +15,14 @@
 [uuid]/freesymbols.json // 文档内引用的,未在page里的symbol
 */
 
-import { Document } from "../data/document";
-import { Border, BorderSideSetting, BorderStyle, Fill, Page, Shadow, Style } from "../data/classes";
+import { Document, Page } from "../data";
 import * as types from "../data/typesdefine"
 import { exportDocumentMeta, exportPage, IExportContext } from "../data/baseexport";
-import { BasicArray } from "../data/basic";
-import { StyleSheet } from "../data/typesdefine";
-
-export function newStyle(): Style {
-    const side = new BorderSideSetting(types.SideType.Normal, 1, 1, 1, 1);
-    const strokePaints = new BasicArray<Fill>();
-    const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
-    const fills = new BasicArray<Fill>();
-    const shadows = new BasicArray<Shadow>();
-    return new Style(fills, shadows, border);
-}
 
 export interface ExFromJson {
     document_meta: types.DocumentMeta,
     pages: types.Page[],
-    media_names: string[],
-    style_lib: StyleSheet[]
+    media_names: string[]
 }
 
 class ExfContext implements IExportContext {
@@ -90,7 +77,6 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
     return {
         document_meta,
         pages,
-        media_names,
-        style_lib: document.stylelib || []
+        media_names
     }
 }

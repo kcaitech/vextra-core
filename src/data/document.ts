@@ -143,6 +143,11 @@ export class Document extends DocumentMeta {
         this.__styles = new ResourceMgr<StyleMangerMember>([id, 'styles']);
         this.freesymbols = freesymbols;
         this.stylelib = source?.stylelib;
+        if (this.stylelib?.length) this.stylelib.forEach((v, i) => {
+            v.variables.forEach((v) => {
+                this.stylesMgr.add(v.id, v as StyleMangerMember);
+            })
+        })
         return guard.guard(this);
     }
 

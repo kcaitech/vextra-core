@@ -318,7 +318,7 @@ export class ShapeView extends DataView {
     constructor(ctx: DViewCtx, props: PropsType) {
         super(ctx, props);
         const t = props.data.transform;
-        this.transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12)
+        this.transform = new Transform(t.m00, t.m01, t.m02, t.m10, t.m11, t.m12);
 
         this.frameProxy = new FrameProxy(this);
         this.cache = new ViewCache(this);
