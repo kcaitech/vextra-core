@@ -74,7 +74,7 @@ import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_st
 import { is_circular_ref2 } from "./utils/ref_check";
 import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPositionType, PrototypeActions, PrototypeConnectionType, PrototypeEasingBezier, PrototypeEasingType, PrototypeEvent, PrototypeEvents, PrototypeInterAction, PrototypeNavigationType, PrototypeStartingPoint, PrototypeTransitionType, ScrollBehavior, ScrollDirection, Shadow } from "../data/baseclasses";
 import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
-import { modify_shapes_height, modify_shapes_width } from "./utils/common";
+import { adapt_for_artboard, modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { Operator, PaddingDir, TextShapeLike } from "../coop/recordop";
 import { unable_to_migrate } from "./utils/migrate";
@@ -3890,6 +3890,21 @@ export class PageEditor {
         } catch (e) {
             console.error(e);
             this.__repo.rollback();
+        }
+    }
+
+    // 容器自适应大小
+    adapt(views: ShapeView[]) {
+        try {
+            const api = this.__repo.start('adapt');
+            for (const view of views) {
+                if (!(view instanceof ArtboardView)) continue;
+                adapt_for_artboard(api, this.page, view);
+            }
+            this.__repo.commit();
+        } catch (error) {
+            this.__repo.rollback();
+            throw error;
         }
     }
 }
