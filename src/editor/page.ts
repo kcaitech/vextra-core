@@ -65,15 +65,86 @@ import { uuid } from "../basic/uuid";
 import { TextShapeEditor } from "./textshape";
 import { set_childs_id, transform_data } from "../io/cilpboard";
 import { deleteEmptyGroupShape, expandBounds, group, ungroup } from "./group";
-import { IImportContext, importArtboard, importAutoLayout, importBlur, importBorder, importCornerRadius, importFill, importGradient, importMarkerType, importOverlayBackgroundAppearance, importOverlayPosition, importPrototypeInterAction, importPrototypeStartingPoint, importShadow, importStop, importStyle, importSymbolShape, importText, importTransform } from "../data/baseimport";
+import {
+    IImportContext,
+    importArtboard,
+    importAutoLayout,
+    importBlur,
+    importBorder,
+    importCornerRadius,
+    importFill,
+    importGradient,
+    importMarkerType,
+    importOverlayBackgroundAppearance,
+    importOverlayPosition,
+    importPrototypeInterAction,
+    importPrototypeStartingPoint,
+    importShadow,
+    importStop,
+    importStyle,
+    importSymbolShape,
+    importText,
+    importTransform
+} from "../data/baseimport";
 import { TableEditor } from "./table";
 import { exportGradient, exportSymbolShape } from "../data/baseexport";
-import { after_remove, clear_binds_effect, find_state_space, fixTextShapeFrameByLayout, get_symbol_by_layer, init_state, make_union, modify_frame_after_inset_state, modify_index } from "./utils/other";
+import {
+    after_remove,
+    clear_binds_effect,
+    find_state_space,
+    fixTextShapeFrameByLayout,
+    get_symbol_by_layer,
+    init_state,
+    make_union,
+    modify_frame_after_inset_state,
+    modify_index
+} from "./utils/other";
 import { v4 } from "uuid";
-import { is_exist_invalid_shape2, is_part_of_symbol, is_part_of_symbolref, is_state, modify_variable_with_api, shape4border, shape4cornerRadius, shape4fill, shape4shadow, shape4contextSettings, shape4blur, RefUnbind, _ov, shape4Autolayout } from "./symbol";
+import {
+    is_exist_invalid_shape2,
+    is_part_of_symbol,
+    is_part_of_symbolref,
+    is_state,
+    modify_variable_with_api,
+    shape4border,
+    shape4cornerRadius,
+    shape4fill,
+    shape4shadow,
+    shape4contextSettings,
+    shape4blur,
+    RefUnbind,
+    _ov,
+    shape4Autolayout
+} from "./symbol";
 import { is_circular_ref2 } from "./utils/ref_check";
-import { AutoLayout, BorderSideSetting, BorderStyle, ExportFormat, OverlayBackgroundAppearance, OverlayBackgroundInteraction, OverlayPositionType, PrototypeActions, PrototypeConnectionType, PrototypeEasingBezier, PrototypeEasingType, PrototypeEvent, PrototypeEvents, PrototypeInterAction, PrototypeNavigationType, PrototypeStartingPoint, PrototypeTransitionType, ScrollBehavior, ScrollDirection, Shadow } from "../data/baseclasses";
-import { calculateInnerAnglePosition, getPolygonPoints, getPolygonVertices, update_frame_by_points } from "./utils/path";
+import {
+    AutoLayout,
+    BorderSideSetting,
+    BorderStyle,
+    ExportFormat,
+    OverlayBackgroundAppearance,
+    OverlayBackgroundInteraction,
+    OverlayPositionType,
+    PrototypeActions,
+    PrototypeConnectionType,
+    PrototypeEasingBezier,
+    PrototypeEasingType,
+    PrototypeEvent,
+    PrototypeEvents,
+    PrototypeInterAction,
+    PrototypeNavigationType,
+    PrototypeStartingPoint,
+    PrototypeTransitionType,
+    ScrollBehavior,
+    ScrollDirection,
+    Shadow
+} from "../data/baseclasses";
+import {
+    calculateInnerAnglePosition,
+    getPolygonPoints,
+    getPolygonVertices,
+    update_frame_by_points
+} from "./utils/path";
 import { adapt_for_artboard, modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
 import { Operator, PaddingDir, TextShapeLike } from "../coop/recordop";
@@ -104,13 +175,6 @@ import { Path } from "@kcdesign/path";
 import { prepareVar } from "./symbol_utils";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 import { stroke } from "../render/stroke";
-
-// 用于批量操作的单个操作类型
-export interface PositionAdjust { // 涉及属性：frame.x、frame.y
-    target: Shape
-    transX: number
-    transY: number
-}
 
 export interface BatchAction { // target,index,value
     target: ShapeView
@@ -1903,7 +1967,7 @@ export class PageEditor {
         }
     }
 
-    arrange(actions: PositionAdjust[]) {
+    arrange(actions: { target: Shape, transX: number; transY: number }[]) {
         try {
             const api = this.__repo.start('arrange');
             const page = this.page;
@@ -3566,7 +3630,11 @@ export class PageEditor {
         }
     }
 
-    insertImages(images: { pack: ImagePack | SVGParseResult; transform: Transform; targetEnv: GroupShapeView; }[], fixed: boolean) {
+    insertImages(images: {
+        pack: ImagePack | SVGParseResult;
+        transform: Transform;
+        targetEnv: GroupShapeView;
+    }[], fixed: boolean) {
         try {
             const ids: string[] = [];
             const imageShapes: { shape: Shape, upload: UploadAssets[] }[] = [];
@@ -3912,18 +3980,23 @@ export class PageEditor {
 function getFillMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
 }
+
 function getBorderFillMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.BorderFillsMask, OverrideType.BorderFillsMask, () => value, view, page, api);
 }
+
 function getBorderMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, api);
 }
+
 function getRadiusMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
 }
+
 function getShadowMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.ShadowsMask, OverrideType.ShadowsMask, () => value, view, page, api);
 }
+
 function getBlurMaskVariable(api: Operator, page: PageView, view: ShapeView, value: any) {
     return _ov(VariableType.BlursMask, OverrideType.BlursMask, () => value, view, page, api);
 }
