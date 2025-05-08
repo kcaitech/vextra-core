@@ -8,22 +8,35 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Document, OvalShape, Fill, Blur, Variable } from "../../data";
+import { Document, OvalShape, Fill, Blur, Variable, StackSizing } from "../../data";
 import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
-import { Artboard, Border, BorderSideSetting, Color, FillType, OverrideType, PathShape, Shadow, Shape, ShapeType, SideType, SymbolRefShape, Transform, VariableType } from "../../data/classes";
-import { RadiusType } from "../../data/consts";
+import {
+    Artboard,
+    Border,
+    BorderSideSetting,
+    Color,
+    FillType,
+    OverrideType,
+    PathShape,
+    Shadow,
+    Shape,
+    ShapeType,
+    SideType,
+    SymbolRefShape,
+    Transform,
+    VariableType
+} from "../../data";
 import { _ov, override_variable, shape4Autolayout, shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
-import { GroupShape, PathShape2, SymbolShape, TextShape } from "../../data/shape";
+import { GroupShape, PathShape2, SymbolShape, TextShape, RadiusType, importGradient } from "../../data";
 import { BatchAction, BatchAction5, PageEditor } from "../page";
-import { importGradient, } from "../../data/baseimport";
-import { exportGradient, } from "../../data/baseexport";
 import { TableEditor } from "../table";
 import { TidyUpAlign, tidyUpLayout } from "../utils/auto_layout";
 import { TextShapeEditor } from "../textshape";
+import { PaddingDir } from "../../coop/recordop";
 
 /**
  * @description 合并同类型API，适用于键盘的连续动作，相较于asyncapi，linearapi是自动启停，所以无法跟asyncapi一样控制启停时机
@@ -875,7 +888,7 @@ export class LinearApi {
     }
 
     modifyTextCharSpacingMulti(shapes: (TextShapeView | TableCellView)[], kerning: number) {
-        this.execute('modify-text-char-spacing-mulit', () => {
+        this.execute('modify-text-char-spacing-multi', () => {
             const api = this.api!;
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
@@ -887,6 +900,49 @@ export class LinearApi {
                 const text_length = text.length;
                 api.textModifyKerning(page, shape, kerning, 0, text_length);
                 editor4text.fixFrameByLayout2(api, shape);
+            }
+        })
+    }
+
+    modifyAutoLayoutSpace(views: ShapeView[], direction: PaddingDir, value: number) {
+        this.execute('modify-auto-layout-space', () => {
+            const api = this.api!;
+            const page = this.page;
+            const space = Math.round(value);
+            for (const view of views) {
+                const shape = shape4Autolayout(api, view, this._page);
+                api.shapeModifyAutoLayoutSpace(page, shape, space, direction);
+                api.shapeModifyAutoLayoutGapSizing(page, shape, StackSizing.Fixed, direction);
+            }
+        })
+    }
+    modifyAutoLayoutPadding(views: ShapeView[], direction: PaddingDir, value: number) {
+        this.execute('modify-auto-layout-hor-padding', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (const view of views) {
+                const shape = shape4Autolayout(api, view, this._page);
+                api.shapeModifyAutoLayoutPadding(page, shape, value, direction);
+            }
+        })
+    }
+    modifyAutoLayoutHorPadding(views: ShapeView[], left: number, right: number) {
+        this.execute('modify-auto-layout-hor-padding', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (const view of views) {
+                const shape = shape4Autolayout(api, view, this._page);
+                api.shapeModifyAutoLayoutHorPadding(page, shape, left, right);
+            }
+        })
+    }
+    modifyAutoLayoutVerPadding(views: ShapeView[], top: number, bottom: number) {
+        this.execute('modify-auto-layout-ver-padding', () => {
+            const api = this.api!;
+            const page = this.page;
+            for (const view of views) {
+                const shape = shape4Autolayout(api, view, this._page);
+                api.shapeModifyAutoLayoutVerPadding(page, shape, top, bottom);
             }
         })
     }

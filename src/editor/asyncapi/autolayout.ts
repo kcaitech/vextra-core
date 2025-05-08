@@ -103,7 +103,7 @@ export class AutoLayoutModify extends AsyncApiCaller {
             this.updateView();
         } catch (e) {
             this.exception = true;
-            console.log('AutoLayoutModify.executeSpace', e);
+            console.error(e);
         }
     }
 
