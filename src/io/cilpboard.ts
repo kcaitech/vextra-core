@@ -9,14 +9,14 @@
  */
 
 import {
-    Artboard,
     BlurMask,
     BorderMask,
     FillMask,
     GroupShape, ShadowMask,
     Shape,
     ShapeFrame,
-    ShapeType, StyleMangerMember, SymbolShape,
+    ShapeType,
+    StyleMangerMember,
     SymbolUnionShape,
     TextMask,
     TextShape
@@ -240,10 +240,37 @@ function match_for_contact(source: Shape[]) {
 /**
  * @description 导入之前匹配原型
  */
-function match_for_proto(source: (Artboard | SymbolShape)[]) {
+function match_for_proto(source: Shape[]) {
+    const modifiedSet = new Set<string>();
     for (const shape of source) {
-        if (shape.prototypeInteractions) {}
+        if (!shape.prototypeInteractions?.length) continue;
+        for (const interaction of shape.prototypeInteractions) {
+            if (!interaction.actions.targetNodeID) continue;
+            const __shape = finder(source, interaction.actions.targetNodeID);
+            if (!__shape) continue;
+            const newId = v4();
+            interaction.actions.targetNodeID = __shape.id = newId;
+            modifiedSet.add(newId);
+        }
     }
+    return modifiedSet;
+
+    function finder(source: Shape[], id: string): Shape | undefined {
+        for (const shape of source) {
+            if (shape.id === id) return shape;
+            if ((shape as GroupShape).childs.length) {
+                const __shape = finder((shape as GroupShape).childs, id);
+                if (__shape) return __shape;
+            }
+        }
+    }
+}
+
+function match(source: Shape[]) {
+    return new Set([
+        ...match_for_contact(source),
+        ...match_for_proto(source)
+    ]);
 }
 
 // 从剪切板导入图形
@@ -255,7 +282,7 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
     };
     const result: Shape[] = [];
 
-    const matched = match_for_contact(source);
+    const matched = match(source);
 
     for (let i = 0, len = source.length; i < len; i++) {
         const _s = source[i];
