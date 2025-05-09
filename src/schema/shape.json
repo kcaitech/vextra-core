@@ -77,7 +77,7 @@
         "prototypeInteractions": {
             "type": "array",
             "items": {
-                "$ref": "./prototype-inter-action.json"
+                "$ref": "./prototype-interaction.json"
             }
         },
         "overlayPosition": {

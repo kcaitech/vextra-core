@@ -48,7 +48,7 @@
                                 "$ref": "./shadow.json"
                             },
                             {
-                                "$ref": "./prototype-inter-action.json"
+                                "$ref": "./prototype-interaction.json"
                             }
                         ]
                     }

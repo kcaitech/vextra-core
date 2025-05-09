@@ -28,9 +28,9 @@ type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
 type PathShape2_pathsegs = BasicArray<impl.PathSegment>
-type PrototypeInterAction_crdtidx = BasicArray<number>
+type PrototypeInteraction_crdtidx = BasicArray<number>
 type ShadowMask_shadows = BasicArray<impl.Shadow>
-type Shape_prototypeInteractions = BasicArray<impl.PrototypeInterAction>
+type Shape_prototypeInteractions = BasicArray<impl.PrototypeInteraction>
 type StyleSheet_variables = BasicArray<impl.FillMask | impl.ShadowMask | impl.BlurMask | impl.BorderMask | impl.RadiusMask | impl.TextMask>
 type Style_fills = BasicArray<impl.Fill>
 type Style_shadows = BasicArray<impl.Shadow>
@@ -42,7 +42,7 @@ type TableShape_colWidths = BasicArray<impl.CrdtNumber>
 type TableShape2_rowHeights = BasicArray<impl.CrdtNumber>
 type TableShape2_colWidths = BasicArray<impl.CrdtNumber>
 type Text_paras = BasicArray<impl.Para>
-type Variable_0 = BasicArray<impl.Fill | impl.Shadow | impl.PrototypeInterAction>
+type Variable_0 = BasicArray<impl.Fill | impl.Shadow | impl.PrototypeInteraction>
 export function importArtboard_guides(source: types.Artboard_guides, ctx?: IImportContext): Artboard_guides {
     const ret: Artboard_guides = new BasicArray()
     source.forEach((source, i) => {
@@ -567,8 +567,8 @@ export function importPrototypeEasingType(source: types.PrototypeEasingType, ctx
 export function importPrototypeEvents(source: types.PrototypeEvents, ctx?: IImportContext): impl.PrototypeEvents {
     return source
 }
-export function importPrototypeInterAction_crdtidx(source: types.PrototypeInterAction_crdtidx, ctx?: IImportContext): PrototypeInterAction_crdtidx {
-    const ret: PrototypeInterAction_crdtidx = new BasicArray()
+export function importPrototypeInteraction_crdtidx(source: types.PrototypeInteraction_crdtidx, ctx?: IImportContext): PrototypeInteraction_crdtidx {
+    const ret: PrototypeInteraction_crdtidx = new BasicArray()
     source.forEach((source, i) => {
         ret.push(source)
     })
@@ -665,7 +665,7 @@ export function importShapeType(source: types.ShapeType, ctx?: IImportContext): 
 export function importShape_prototypeInteractions(source: types.Shape_prototypeInteractions, ctx?: IImportContext): Shape_prototypeInteractions {
     const ret: Shape_prototypeInteractions = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importPrototypeInterAction(source, ctx))
+        ret.push(importPrototypeInteraction(source, ctx))
     })
     return ret
 }
@@ -901,8 +901,8 @@ export function importVariable_0(source: types.Variable_0, ctx?: IImportContext)
                 if (!source.crdtidx) source.crdtidx = [i]
                 return importShadow(source as types.Shadow, ctx)
             }
-            if (source.typeId === "prototype-inter-action") {
-                return importPrototypeInterAction(source as types.PrototypeInterAction, ctx)
+            if (source.typeId === "prototype-interaction") {
+                return importPrototypeInteraction(source as types.PrototypeInteraction, ctx)
             }
             throw new Error("unknow typeId: " + source.typeId)
         })())
@@ -1069,17 +1069,17 @@ export function importPrototypeEvent(source: types.PrototypeEvent, ctx?: IImport
     return ret
 }
 /* prototypeInteraction */
-function importPrototypeInterActionOptional(tar: impl.PrototypeInterAction, source: types.PrototypeInterAction, ctx?: IImportContext) {
+function importPrototypeInteractionOptional(tar: impl.PrototypeInteraction, source: types.PrototypeInteraction, ctx?: IImportContext) {
     if (source.typeId !== undefined) tar.typeId = source.typeId
     if (source.isDeleted !== undefined) tar.isDeleted = source.isDeleted
 }
-export function importPrototypeInterAction(source: types.PrototypeInterAction, ctx?: IImportContext): impl.PrototypeInterAction {
-    const ret: impl.PrototypeInterAction = new impl.PrototypeInterAction (
-        importPrototypeInterAction_crdtidx(source.crdtidx, ctx),
+export function importPrototypeInteraction(source: types.PrototypeInteraction, ctx?: IImportContext): impl.PrototypeInteraction {
+    const ret: impl.PrototypeInteraction = new impl.PrototypeInteraction (
+        importPrototypeInteraction_crdtidx(source.crdtidx, ctx),
         source.id,
         importPrototypeEvent(source.event, ctx),
         importPrototypeActions(source.actions, ctx))
-    importPrototypeInterActionOptional(ret, source, ctx)
+    importPrototypeInteractionOptional(ret, source, ctx)
     return ret
 }
 /* radius mask */

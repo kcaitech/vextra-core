@@ -23,7 +23,7 @@ import {
     OverlayBackgroundInteraction,
     OverlayPosition,
     OverrideType,
-    PrototypeInterAction,
+    PrototypeInteraction,
     PrototypeStartingPoint,
     ResizingConstraints2,
     ScrollBehavior,
@@ -643,15 +643,15 @@ export class ShapeView extends DataView {
         return this.m_data.prototypeStartingPoint;
     }
 
-    get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
+    get prototypeInteractions(): BasicArray<PrototypeInteraction> | undefined {
         const v = this._findOVAll(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
         if (!v) {
             return this.m_data.prototypeInteractions;
         }
         // 需要做合并 合并vars
-        const overrides = new BasicArray<PrototypeInterAction>();
+        const overrides = new BasicArray<PrototypeInteraction>();
         v.reverse().forEach(v => {
-            const o = (v.value as BasicArray<PrototypeInterAction>).slice(0).reverse();
+            const o = (v.value as BasicArray<PrototypeInteraction>).slice(0).reverse();
             o.forEach(o => {
                 if (!overrides.find(o1 => o1.id === o.id)) overrides.push(o);
             })
@@ -660,7 +660,7 @@ export class ShapeView extends DataView {
 
         const deleted = overrides.filter((v) => !!v.isDeleted);
         const inherit = this.m_data.prototypeInteractions || [];
-        const ret = new BasicArray<PrototypeInterAction>();
+        const ret = new BasicArray<PrototypeInteraction>();
         inherit.forEach(v => {
             if (v.isDeleted) return;
             if (deleted.find(v1 => v1.id === v.id)) return;

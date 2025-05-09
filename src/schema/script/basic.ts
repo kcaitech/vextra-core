@@ -398,8 +398,7 @@ export function loadSchemas(schemadir: string, schemaext = '.json'): Map<string,
                 const ref = schema.allOf[0]['$ref']
                 if (ref.endsWith(schemaext)) {
                     const filename = getFileName(ref) // ref.substring(0, ref.length - schemaext.length)
-                    const name = toPascalCase(filename);
-                    node.extend = name;
+                    node.extend = toPascalCase(filename);
                 }
             }
         }

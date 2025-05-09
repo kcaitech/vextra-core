@@ -23,7 +23,7 @@ import {
     ShapeFrame,
     ShapeType,
     ShapeSize,
-    PrototypeInterAction,
+    PrototypeInteraction,
     OverlayPosition,
     OverlayPositionType,
     OverlayBackgroundAppearance,
@@ -109,7 +109,7 @@ export class Shape extends Basic implements classes.Shape {
         if (id0 === 'varbinds' && !this.varbinds) this.varbinds = new BasicMap();
         if (id0 === "exportOptions" && !this.exportOptions) this.exportOptions = new ExportOptions(new BasicArray(), 0, false, false, false, false);
         if (id0 === "prototypeInteractions" && !this.prototypeInteractions) {
-            this.prototypeInteractions = new BasicArray<PrototypeInterAction>();
+            this.prototypeInteractions = new BasicArray<PrototypeInteraction>();
         }
         if (id0 === "overlayPosition" && !this.overlayPosition) {
             this.overlayPosition = new OverlayPosition(OverlayPositionType.CENTER, new OverlayMargin())
@@ -142,7 +142,7 @@ export class Shape extends Basic implements classes.Shape {
     varbinds?: BasicMap<string, string>
     haveEdit?: boolean | undefined
     prototypeStartingPoint?: classes.PrototypeStartingPoint;
-    prototypeInteractions?: BasicArray<PrototypeInterAction>;
+    prototypeInteractions?: BasicArray<PrototypeInteraction>;
     overlayPosition?: classes.OverlayPosition;
     overlayBackgroundInteraction?: classes.OverlayBackgroundInteraction;
     overlayBackgroundAppearance?: classes.OverlayBackgroundAppearance;

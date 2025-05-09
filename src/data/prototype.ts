@@ -17,7 +17,7 @@ export {
     PrototypeTransitionType,
     PrototypeEvent,
     PrototypeStartingPoint,
-    PrototypeInterAction,
+    PrototypeInteraction,
     Point2D,
     OverlayBackgroundAppearance,
     OverlayBackgroundInteraction,
@@ -41,7 +41,7 @@ type PrototypeInterAction_crdtidx = BasicArray<number>
 //     }
 // }
 
-// export class PrototypeInterAction extends classes.PrototypeInterAction {
+// export class PrototypeInteraction extends classes.PrototypeInteraction {
 //     constructor(crdtidx: PrototypeInterAction_crdtidx, event: PrototypeEvent) {
 //         super(crdtidx,event)
 //     }

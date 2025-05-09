@@ -9,13 +9,14 @@
  */
 
 import {
+    Artboard,
     BlurMask,
     BorderMask,
     FillMask,
     GroupShape, ShadowMask,
     Shape,
     ShapeFrame,
-    ShapeType, StyleMangerMember,
+    ShapeType, StyleMangerMember, SymbolShape,
     SymbolUnionShape,
     TextMask,
     TextShape
@@ -74,15 +75,9 @@ import { Page } from "../data";
 import { FMT_VER_latest } from "../data/fmtver";
 
 export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
-    for (let i = 0, len = shapes.length; i < len; i++) {
-        const shape = shapes[i] as GroupShape;
-        if (!shape) {
-            continue;
-        }
-        if (!matched?.has(shape.id)) {
-            shape.id = v4();
-        }
-
+    for (const shape of shapes as GroupShape[]) {
+        if (!shape) continue;
+        if (!matched?.has(shape.id)) shape.id = v4();
         if (shape.childs && shape.childs.length) {
             set_childs_id(shape.childs, matched);
         }
@@ -242,6 +237,15 @@ function match_for_contact(source: Shape[]) {
     }
 }
 
+/**
+ * @description 导入之前匹配原型
+ */
+function match_for_proto(source: (Artboard | SymbolShape)[]) {
+    for (const shape of source) {
+        if (shape.prototypeInteractions) {}
+    }
+}
+
 // 从剪切板导入图形
 export function import_shape_from_clipboard(document: Document, page: Page, source: Shape[], medias?: any) {
     const ctx: IImportContext = new class implements IImportContext {
@@ -284,15 +288,12 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
                 rt.m01 = st.m01;
                 rt.m10 = st.m10;
                 rt.m11 = st.m11;
-                // (r as SymbolRefShape).frameMaskDisabled = (_s as SymbolShape).frameMaskDisabled;
                 result.push(r);
             }
             continue;
         }
 
-        if (!matched.has(_s.id)) {
-            _s.id = v4();
-        }
+        if (!matched.has(_s.id)) _s.id = v4();
 
         if (type === ShapeType.Rectangle) {
             r = importRectShape(_s as any as types.RectShape, ctx);
@@ -353,7 +354,9 @@ export function import_shape_from_clipboard(document: Document, page: Page, sour
         }
         if (r) result.push(r);
     }
-    after_paster(document, medias);
+
+    afterImport(document, medias);
+
     return result;
 }
 
@@ -419,7 +422,7 @@ export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
     return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
 }
 
-export function after_paster(document: Document, media: any) {
+export function afterImport(document: Document, media: any) {
     if (!media) {
         return;
     }

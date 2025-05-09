@@ -405,7 +405,7 @@ export class PrototypeEasingBezier extends Basic {
         this.y2 = y2
     }
 }
-type PrototypeInterAction_crdtidx = BasicArray<number>
+type PrototypeInteraction_crdtidx = BasicArray<number>
 /* prototypeStartingPoint */
 export class PrototypeStartingPoint extends Basic {
     typeId = "prototype-starting-point"
@@ -475,7 +475,7 @@ export class ShapeSize extends Basic {
         this.height = height
     }
 }
-type Shape_prototypeInteractions = BasicArray<PrototypeInterAction>
+type Shape_prototypeInteractions = BasicArray<PrototypeInteraction>
 /* stack size */
 export class StackSize extends Basic {
     typeId = "stack-size"
@@ -551,7 +551,7 @@ export class UserInfo extends Basic {
         this.avatar = avatar
     }
 }
-type Variable_0 = BasicArray<Fill | Shadow | PrototypeInterAction>
+type Variable_0 = BasicArray<Fill | Shadow | PrototypeInteraction>
 /* auto layout */
 export class AutoLayout extends Basic {
     typeId = "auto-layout"
@@ -770,14 +770,14 @@ export class PrototypeEvent extends Basic {
     }
 }
 /* prototypeInteraction */
-export class PrototypeInterAction extends Basic {
-    typeId = "prototype-inter-action"
-    crdtidx: PrototypeInterAction_crdtidx
+export class PrototypeInteraction extends Basic {
+    typeId = "prototype-interaction"
+    crdtidx: PrototypeInteraction_crdtidx
     id: string
     event: PrototypeEvent
     actions: PrototypeActions
     isDeleted?: boolean
-    constructor(crdtidx: PrototypeInterAction_crdtidx, id: string, event: PrototypeEvent, actions: PrototypeActions) {
+    constructor(crdtidx: PrototypeInteraction_crdtidx, id: string, event: PrototypeEvent, actions: PrototypeActions) {
         super()
         this.crdtidx = crdtidx
         this.id = id

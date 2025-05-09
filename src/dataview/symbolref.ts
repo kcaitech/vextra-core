@@ -9,7 +9,7 @@
  */
 
 import {
-    AutoLayout, ContextSettings, CornerRadius, MarkerType, OverrideType, PrototypeInterAction,
+    AutoLayout, ContextSettings, CornerRadius, MarkerType, OverrideType, PrototypeInteraction,
     Shape, SymbolRefShape, SymbolShape, SymbolUnionShape, Variable, VariableType,
     BasicArray, SideType
 } from "../data";
@@ -217,7 +217,7 @@ export class SymbolRefView extends ShapeView {
         return this.m_sym?.cornerRadius;
     }
 
-    get prototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
+    get prototypeInteractions(): BasicArray<PrototypeInteraction> | undefined {
         // 三个合并
         const v = this._findOV2All(OverrideType.ProtoInteractions, VariableType.ProtoInteractions);
         if (!v) {
@@ -225,9 +225,9 @@ export class SymbolRefView extends ShapeView {
         }
         // 需要做合并
         // 合并vars
-        const overrides = new BasicArray<PrototypeInterAction>();
+        const overrides = new BasicArray<PrototypeInteraction>();
         v.reverse().forEach(v => {
-            const o = (v.value as BasicArray<PrototypeInterAction>).slice(0).reverse();
+            const o = (v.value as BasicArray<PrototypeInteraction>).slice(0).reverse();
             o.forEach(o => {
                 if (!overrides.find(o1 => o1.id === o.id)) overrides.push(o);
             })
@@ -235,8 +235,8 @@ export class SymbolRefView extends ShapeView {
         overrides.reverse();
 
         const deleted = overrides.filter((v) => !!v.isDeleted);
-        const inherit = (this.inheritPrototypeInterActions || []) as BasicArray<PrototypeInterAction>;
-        const ret = new BasicArray<PrototypeInterAction>();
+        const inherit = (this.inheritPrototypeInterActions || []) as BasicArray<PrototypeInteraction>;
+        const ret = new BasicArray<PrototypeInteraction>();
         inherit.forEach(v => {
             if (v.isDeleted) return;
             if (deleted.find(v1 => v1.id === v.id)) return;
@@ -251,9 +251,9 @@ export class SymbolRefView extends ShapeView {
         return ret;
     }
 
-    get inheritPrototypeInterActions(): BasicArray<PrototypeInterAction> | undefined {
+    get inheritPrototypeInterActions(): BasicArray<PrototypeInteraction> | undefined {
         if (this.m_data.prototypeInteractions) {
-            return this.m_data.prototypeInteractions.slice(0).concat(...(this.m_sym?.prototypeInteractions || [])) as BasicArray<PrototypeInterAction>
+            return this.m_data.prototypeInteractions.slice(0).concat(...(this.m_sym?.prototypeInteractions || [])) as BasicArray<PrototypeInteraction>
         }
         return this.m_sym?.prototypeInteractions;
     }

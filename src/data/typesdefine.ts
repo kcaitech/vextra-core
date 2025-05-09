@@ -406,7 +406,7 @@ export enum PrototypeEvents {
     MOUSEUP = "MOUSE_UP",
     AFTERTIMEOUT = "AFTER_TIMEOUT",
 }
-export type PrototypeInterAction_crdtidx = Array<number>
+export type PrototypeInteraction_crdtidx = Array<number>
 /* navigationType */
 export enum PrototypeNavigationType {
     NAVIGATE = "NAVIGATE",
@@ -530,7 +530,7 @@ export enum ShapeType {
     BoolShape = "bool-shape",
     Table2 = "table2",
 }
-export type Shape_prototypeInteractions = Array<PrototypeInterAction>
+export type Shape_prototypeInteractions = Array<PrototypeInteraction>
 /* side type */
 export enum SideType {
     Normal = "normal",
@@ -704,7 +704,7 @@ export enum VariableType {
     RadiusMask = "radiusMask",
     TextMask = "textMask",
 }
-export type Variable_0 = Array<Fill | Shadow | PrototypeInterAction>
+export type Variable_0 = Array<Fill | Shadow | PrototypeInteraction>
 /* winding rule */
 export enum WindingRule {
     NonZero = "non-zero",
@@ -832,8 +832,8 @@ export type PrototypeEvent = {
     transitionTimeout?: number,
 }
 /* prototypeInteraction */
-export type PrototypeInterAction = {
-    crdtidx: PrototypeInterAction_crdtidx,
+export type PrototypeInteraction = {
+    crdtidx: PrototypeInteraction_crdtidx,
     id: string,
     event: PrototypeEvent,
     actions: PrototypeActions,

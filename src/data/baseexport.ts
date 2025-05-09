@@ -484,8 +484,8 @@ export function exportPrototypeEasingType(source: types.PrototypeEasingType, ctx
 export function exportPrototypeEvents(source: types.PrototypeEvents, ctx?: IExportContext): types.PrototypeEvents {
     return source
 }
-export function exportPrototypeInterAction_crdtidx(source: types.PrototypeInterAction_crdtidx, ctx?: IExportContext): types.PrototypeInterAction_crdtidx {
-    const ret: types.PrototypeInterAction_crdtidx = []
+export function exportPrototypeInteraction_crdtidx(source: types.PrototypeInteraction_crdtidx, ctx?: IExportContext): types.PrototypeInteraction_crdtidx {
+    const ret: types.PrototypeInteraction_crdtidx = []
     source.forEach((source) => {
         ret.push(source)
     })
@@ -582,7 +582,7 @@ export function exportShapeType(source: types.ShapeType, ctx?: IExportContext): 
 export function exportShape_prototypeInteractions(source: types.Shape_prototypeInteractions, ctx?: IExportContext): types.Shape_prototypeInteractions {
     const ret: types.Shape_prototypeInteractions = []
     source.forEach((source) => {
-        ret.push(exportPrototypeInterAction(source, ctx))
+        ret.push(exportPrototypeInteraction(source, ctx))
     })
     return ret
 }
@@ -809,8 +809,8 @@ export function exportVariable_0(source: types.Variable_0, ctx?: IExportContext)
             if (source.typeId === "shadow") {
                 return exportShadow(source as types.Shadow, ctx)
             }
-            if (source.typeId === "prototype-inter-action") {
-                return exportPrototypeInterAction(source as types.PrototypeInterAction, ctx)
+            if (source.typeId === "prototype-interaction") {
+                return exportPrototypeInteraction(source as types.PrototypeInteraction, ctx)
             }
             throw new Error("unknow typeId: " + source.typeId)
         })())
@@ -976,9 +976,9 @@ export function exportPrototypeEvent(source: types.PrototypeEvent, ctx?: IExport
     return ret
 }
 /* prototypeInteraction */
-export function exportPrototypeInterAction(source: types.PrototypeInterAction, ctx?: IExportContext): types.PrototypeInterAction {
-    const ret: types.PrototypeInterAction = {} as types.PrototypeInterAction
-    ret.crdtidx = exportPrototypeInterAction_crdtidx(source.crdtidx, ctx)
+export function exportPrototypeInteraction(source: types.PrototypeInteraction, ctx?: IExportContext): types.PrototypeInteraction {
+    const ret: types.PrototypeInteraction = {} as types.PrototypeInteraction
+    ret.crdtidx = exportPrototypeInteraction_crdtidx(source.crdtidx, ctx)
     ret.id = source.id
     ret.event = exportPrototypeEvent(source.event, ctx)
     ret.actions = exportPrototypeActions(source.actions, ctx)

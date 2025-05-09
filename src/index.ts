@@ -133,7 +133,7 @@ export {
     OverlayBackgroundAppearance,
 
     PrototypeStartingPoint,
-    PrototypeInterAction,
+    PrototypeInteraction,
     PrototypeConnectionType,
     PrototypeEasingType,
     PrototypeActions,
