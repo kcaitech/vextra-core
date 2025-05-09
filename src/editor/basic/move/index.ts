@@ -10,9 +10,9 @@
 
 import { ShapeView, GroupShapeView, adapt2Shape, TextShapeView, SymbolRefView, ArtboardView } from "../../../dataview";
 import { Api } from "../../../coop";
-import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape, Transform } from "../../../data";
-import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInterAction, importAutoLayout } from "../../../data/baseimport";
-import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInterAction, exportAutoLayout } from "../../../data/baseexport";
+import { GroupShape, Page, SymbolShape, MarkerType, BlendMode, Artboard, ShapeType, TextShape, Shape } from "../../../data";
+import { importFill, importBorder, importShadow, importExportOptions, importBlur, importPrototypeInteraction, importAutoLayout } from "../../../data/baseimport";
+import { exportFill, exportBorder, exportShadow, exportExportOptions, exportBlur, exportPrototypeInteraction, exportAutoLayout } from "../../../data/baseexport";
 import { CircleChecker } from "./circle";
 
 /**
@@ -111,8 +111,8 @@ export class ShapePorter {
             if (blur) api.addBlur(shape.style, blur);
             else if (shape.style.blur) api.deleteBlur(shape.style);
         }
-        const protoInteractions = view.prototypeInterActions
-            ? view.prototypeInterActions.map(i => importPrototypeInterAction(exportPrototypeInterAction(i)))
+        const protoInteractions = view.prototypeInteractions
+            ? view.prototypeInteractions.map(i => importPrototypeInteraction(exportPrototypeInteraction(i)))
             : undefined;
         {
             if (shape.prototypeInteractions?.length) shape.prototypeInteractions.forEach(i => api.deleteShapePrototypeInteractions(page, shape, i.id));

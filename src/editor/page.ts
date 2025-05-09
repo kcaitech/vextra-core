@@ -77,7 +77,7 @@ import {
     importMarkerType,
     importOverlayBackgroundAppearance,
     importOverlayPosition,
-    importPrototypeInterAction,
+    importPrototypeInteraction,
     importPrototypeStartingPoint,
     importShadow,
     importStop,
@@ -131,7 +131,7 @@ import {
     PrototypeEasingType,
     PrototypeEvent,
     PrototypeEvents,
-    PrototypeInterAction,
+    PrototypeInteraction,
     PrototypeNavigationType,
     PrototypeStartingPoint,
     PrototypeTransitionType,
@@ -605,7 +605,7 @@ export class PageEditor {
                 if (shape0.prototypeInteractions) {
                     symbolShape.prototypeInteractions = new BasicArray();
                     shape0.prototypeInteractions.forEach(v => {
-                        symbolShape.prototypeInteractions?.push(importPrototypeInterAction(v));
+                        symbolShape.prototypeInteractions?.push(importPrototypeInteraction(v));
                     })
                 }
                 if (shape0.prototypeStartingPoint) symbolShape.prototypeStartingPoint = importPrototypeStartingPoint(shape0.prototypeStartingPoint);
@@ -2646,24 +2646,24 @@ export class PageEditor {
         const _var = prepareVar(api, this.view, shape, OverrideType.ProtoInteractions, VariableType.ProtoInteractions, (_var) => {
             const ret = new BasicArray();
             if (id) {
-                const actions = shape.prototypeInterActions;
-                const a = ((actions || []) as PrototypeInterAction[]).find(v => v.id === id);
-                if (a) ret.push(importPrototypeInterAction(a));
+                const actions = shape.prototypeInteractions;
+                const a = ((actions || []) as PrototypeInteraction[]).find(v => v.id === id);
+                if (a) ret.push(importPrototypeInteraction(a));
             }
             return ret;
         })
-        if (_var && id && !(_var.var.value as PrototypeInterAction[]).find(v => v.id === id)) {
-            const inherit = shape.prototypeInterActions;
+        if (_var && id && !(_var.var.value as PrototypeInteraction[]).find(v => v.id === id)) {
+            const inherit = shape.prototypeInteractions;
             const i = inherit && inherit.find(v => v.id === id);
             if (i) {
-                const a = new PrototypeInterAction(new BasicArray(), id, new PrototypeEvent(i.event.interactionType), new PrototypeActions(i.actions.connectionType, true))
+                const a = new PrototypeInteraction(new BasicArray(), id, new PrototypeEvent(i.event.interactionType), new PrototypeActions(i.actions.connectionType, true))
                 api.insertShapeprototypeInteractions(this.page, _var.var, a);
             }
         }
         return _var?.var || shape.data;
     }
 
-    insertPrototypeAction(shape: ShapeView, action: PrototypeInterAction) {
+    insertPrototypeAction(shape: ShapeView, action: PrototypeInteraction) {
         try {
             const api = this.__repo.start('insertPrototypeAction');
             const _shape = this.shape4protoActions(api, shape, undefined);
@@ -2719,8 +2719,8 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setPrototypeActionConnectionType');
             const __shape = this.shape4protoActions(api, shape, id);
-            const transitionType = shape.prototypeInterActions?.find(i => i.id === id)?.actions.transitionType
-            const old_nav = shape.prototypeInterActions?.find(i => i.id === id)?.actions.navigationType
+            const transitionType = shape.prototypeInteractions?.find(i => i.id === id)?.actions.transitionType
+            const old_nav = shape.prototypeInteractions?.find(i => i.id === id)?.actions.navigationType
             api.shapeModifyPrototypeActionConnNav(this.page, __shape, id, conn, nav);
 
             if (nav === PrototypeNavigationType.SCROLLTO && old_nav !== PrototypeNavigationType.SCROLLTO) {
@@ -2800,7 +2800,7 @@ export class PageEditor {
         try {
             const api = this.__repo.start('setPrototypeActionEasingType');
             const __shape = this.shape4protoActions(api, shape, id);
-            const prototypeInteractions: BasicArray<PrototypeInterAction> | undefined = shape.prototypeInterActions;
+            const prototypeInteractions: BasicArray<PrototypeInteraction> | undefined = shape.prototypeInteractions;
             if (!prototypeInteractions) return;
             const action = prototypeInteractions?.find(i => i.id === id)?.actions;
             if (!action) return;
