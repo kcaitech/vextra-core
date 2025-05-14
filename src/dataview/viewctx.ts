@@ -15,6 +15,7 @@ import { EventEmitter } from "../basic/event";
 import { objectId } from "../basic/objectid";
 import { Notifiable } from "../data/basic";
 import { ShapeSize } from "../data/baseclasses";
+import { ViewLayout } from "./proxy/layout/view";
 
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
 
@@ -98,7 +99,8 @@ export function updateViewsFrame(updates: DataView[]) {
         // 从下往上更新
         afterTravel(root, (next: Node) => {
             const needupdate = next.needupdate;
-            const changed = needupdate && next.view.updateFrames();
+            // const changed = needupdate && next.view.updateFrames();
+            const changed = needupdate && (next.view as any).layoutProxy.updateFrames();
             if (changed && next.parent) next.parent.needupdate = true;
         })
     }

@@ -46,6 +46,7 @@ export class GroupFrameProxy extends FrameProxy {
             this._save_frame.width !== this.m_frame.width || this._save_frame.height !== this.m_frame.height;
 
         if (updateFrame(this.m_frame, contentbounds.minx, contentbounds.miny, contentbounds.maxx - contentbounds.minx, contentbounds.maxy - contentbounds.miny)) {
+            this.view.cache.clearCacheByKeys(['m_pathstr', 'm_path']);
             changed = true;
         }
         {
