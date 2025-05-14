@@ -8,14 +8,12 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-
 import { Shape, ShapeType, SymbolShape } from "../data/shape";
 import { SymbolRefShape } from "../data/classes";
 import { EventEmitter } from "../basic/event";
 import { objectId } from "../basic/objectid";
 import { Notifiable } from "../data/basic";
 import { ShapeSize } from "../data/baseclasses";
-import { ViewLayout } from "./proxy/layout/view";
 
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
 
@@ -31,8 +29,8 @@ interface DataView extends Notifiable {
     layout(props?: PropsType): void;
     asyncRender(): number;
     parent?: DataView;
-    updateFrames(): boolean;
     emit(name: string, ...args: any[]): void;
+    layoutProxy: { updateFrames: () => boolean; };
 }
 
 export type GraphicsLibrary = 'SVG' | 'Canvas' | 'H5';
@@ -43,26 +41,26 @@ export interface ViewType {
 
 export function updateViewsFrame(updates: DataView[]) {
     if (updates.length === 0) return;
-    type Node = { view: DataView, childs: Node[], needupdate: boolean, parent: Node | undefined, visited: boolean }
-    const updatetree: Map<number, Node> = new Map();
+    type Node = { view: DataView, childs: Node[], needUpdate: boolean, parent: Node | undefined, visited: boolean }
+    const updateTree: Map<number, Node> = new Map();
     updates.forEach((_s) => {
         const s = _s.parent;
         if (!s) return;
-        let n: Node | undefined = updatetree.get(objectId(s));
+        let n: Node | undefined = updateTree.get(objectId(s));
         if (n) {
-            n.needupdate = true;
+            n.needUpdate = true;
             return;
         }
-        n = { view: s, childs: [], needupdate: true, parent: undefined, visited: false }
-        updatetree.set(objectId(s), n);
+        n = { view: s, childs: [], needUpdate: true, parent: undefined, visited: false }
+        updateTree.set(objectId(s), n);
 
         let cn = n;
         let p = s.parent;
         while (p) {
-            let pn: Node | undefined = updatetree.get(objectId(p));
+            let pn: Node | undefined = updateTree.get(objectId(p));
             if (!pn) {
-                pn = { view: p, childs: [], needupdate: false, parent: undefined, visited: false }
-                updatetree.set(objectId(p), pn);
+                pn = { view: p, childs: [], needUpdate: false, parent: undefined, visited: false }
+                updateTree.set(objectId(p), pn);
             }
 
             pn.childs.push(cn);
@@ -90,7 +88,7 @@ export function updateViewsFrame(updates: DataView[]) {
     }
 
     const roots: Node[] = [];
-    for (let n of updatetree.values()) {
+    for (let n of updateTree.values()) {
         if (!n.parent) roots.push(n);
     }
 
@@ -98,10 +96,9 @@ export function updateViewsFrame(updates: DataView[]) {
         const root = roots[i];
         // 从下往上更新
         afterTravel(root, (next: Node) => {
-            const needupdate = next.needupdate;
-            // const changed = needupdate && next.view.updateFrames();
-            const changed = needupdate && (next.view as any).layoutProxy.updateFrames();
-            if (changed && next.parent) next.parent.needupdate = true;
+            const needUpdate = next.needUpdate;
+            const changed = needUpdate && next.view.layoutProxy.updateFrames();
+            if (changed && next.parent) next.parent.needUpdate = true;
         })
     }
 }

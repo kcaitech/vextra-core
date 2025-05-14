@@ -107,7 +107,6 @@ export class DataView extends EventEL {
         this.m_isVirtual = props.isVirtual;
 
         this._data_watcher = this._data_watcher.bind(this);
-        // watch data & varsContainer
         this.m_data.watch(this._data_watcher);
         this.varsContainer = (props.varsContainer);
 
@@ -210,7 +209,7 @@ export class DataView extends EventEL {
         throw new Error('not implemented');
     }
 
-    updateFrames() { return false; }
+    layoutProxy = { updateFrames: () => false };
 
     render(): number {
         return 0;
