@@ -1021,6 +1021,17 @@ export class OvalShape extends PathShape implements classes.OvalShape {
         )
         this.ellipse = ellipse;
     }
+
+    get radiusType(): RadiusType {
+        if (
+            !this.startingAngle &&
+            !this.innerRadius &&
+            (this.endingAngle === undefined || this.endingAngle === Math.PI * 2)
+        ) {
+            return RadiusType.None;
+        }
+        return RadiusType.Fixed;
+    }
 }
 
 export class LineShape extends PathShape implements classes.LineShape {
