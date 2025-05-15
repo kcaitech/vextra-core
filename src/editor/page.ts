@@ -3922,7 +3922,11 @@ export class PageEditor {
         const api = this.__repo.start("modifyAutoLayoutGapSizing");
         try {
             for (let i = 0, len = shapes.length; i < len; i++) {
-                const shape = shape4Autolayout(api, shapes[i], this.view);
+                const view = shapes[i];
+                const shape = shape4Autolayout(api, view, this.view);
+                const w = view.frame.width;
+                const h = view.frame.height;
+                expandTo(api, this.__document, this.page, adapt2Shape(view), w, h);
                 api.shapeModifyAutoLayoutGapSizing(this.page, shape, sizing, direction);
                 api.shapeModifyAutoLayoutSizing(this.page, shape, types.StackSizing.Fixed, direction);
             }
