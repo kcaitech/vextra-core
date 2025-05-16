@@ -488,7 +488,7 @@ function nextGraphy(iter: ParaIter, lineArray: LineArray, preBulletNumbers: Bull
 
 export function layoutLines(_text: Text, para: Para, width: number, preBulletNumbers: BulletNumbersLayout[]): LineArray {
 
-    const paraCharSpace = para.attr?.kerning ?? 0;
+    const paraCharSpace = para.attr?.kerning ? para.attr.kerning / 100 * (para.attr.fontSize || 14) : 0;
     const indent = (para.attr?.indent || 0) * INDENT_WIDTH;
     const lineArray: LineArray = [];
     const iter = para.iter();
@@ -499,7 +499,8 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
     const assignGraphysX = (graphys: GraphArray[], curX: number) => {
         graphys.forEach(arr => arr.forEach(g => {
             g.x = curX;
-            curX += g.cw + (arr.attr?.kerning ?? paraCharSpace);
+            const kerning = arr.attr?.kerning ? arr.attr.kerning / 100 * (arr.attr.fontSize || 14) : paraCharSpace;
+            curX += g.cw + kerning;
         }))
     }
 
@@ -516,8 +517,13 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
             continue;
         }
 
-        const lastKerning = graphys[graphys.length - 1].attr?.kerning ?? paraCharSpace;
-        const cw = graphys.reduce((p, v0) => p + v0.reduce((p, g) => p + g.cw + (v0.attr?.kerning ?? paraCharSpace), 0), 0) - lastKerning; // todo字间距不对？
+        const lastSpan = graphys[graphys.length - 1];
+        const lastKerning = lastSpan.attr?.kerning ? lastSpan.attr.kerning / 100 * (lastSpan.attr.fontSize || 14) : paraCharSpace;
+        const cw = graphys.reduce((p, v0) => {
+            const spanKerning = v0.attr?.kerning ? v0.attr.kerning / 100 * (v0.attr.fontSize || 14) : paraCharSpace;
+            return p + v0.reduce((p, g) => p + g.cw + spanKerning, 0)
+        }, 0) - lastKerning;
+
         if (next.type === 'bn') {
             // 调整startX
             startX += cw + lastKerning;
