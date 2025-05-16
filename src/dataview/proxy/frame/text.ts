@@ -3,11 +3,13 @@ import { TextShapeView } from "../../textshape";
 import { ShapeSize } from "../../../data";
 
 export class TextFrameProxy extends FrameProxy {
+    __origin_frame: ShapeSize;
+
     constructor(protected view: TextShapeView) {
         super(view);
+        this.__origin_frame = new ShapeSize(view.data.size.width, view.data.size.height);
     }
 
-    __origin_frame: ShapeSize = new ShapeSize();
 
     forceUpdateOriginFrame() {
         const frame = this.view.data.size;
