@@ -457,4 +457,14 @@ export class DocEditor {
         return true;
     }
 
+    modifyThumbnailViewId(thumbnailViewId: string) {
+        try {
+            const api = this.__repo.start('modifyThumbnailViewId');
+            api.modifyThumbnailViewId(this.__document, thumbnailViewId);
+            this.__repo.commit();
+        } catch (e) {
+            this.__repo.rollback();
+            throw e;
+        }
+    }
 }
