@@ -50,6 +50,9 @@
         },
         "fmtVer": {
             "type": "string"
+        },
+        "thumbnailViewId": {
+            "type": "string"
         }
     },
     "required": [

@@ -168,10 +168,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
         return loader.loadMedia(ctx, id)
     });
 
-    return {
-        document: document,
-        loader: loader,
-    };
+    return { document, loader };
 }
 
 export class LocalDataLoader extends DataLoader {

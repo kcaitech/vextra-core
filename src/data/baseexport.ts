@@ -1560,6 +1560,7 @@ export function exportDocumentMeta(source: types.DocumentMeta, ctx?: IExportCont
         return ret
     })()
     if (source.stylelib !== undefined) ret.stylelib = exportDocumentMeta_stylelib(source.stylelib, ctx)
+    if (source.thumbnailViewId !== undefined) ret.thumbnailViewId = source.thumbnailViewId
     return ret
 }
 /* group shape */

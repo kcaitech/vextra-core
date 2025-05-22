@@ -1180,6 +1180,7 @@ export type DocumentMeta = {
     symbolregist: Map<string, string>,
     freesymbols?: Map<string, SymbolShape | SymbolUnionShape>,
     stylelib?: DocumentMeta_stylelib,
+    thumbnailViewId?: string,
 }
 /* group shape */
 export type GroupShape = Shape & {

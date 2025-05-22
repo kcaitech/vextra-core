@@ -2246,6 +2246,7 @@ function importDocumentMetaOptional(tar: impl.DocumentMeta, source: types.Docume
         return ret
     })()
     if (source.stylelib !== undefined) tar.stylelib = importDocumentMeta_stylelib(source.stylelib, ctx)
+    if (source.thumbnailViewId !== undefined) tar.thumbnailViewId = source.thumbnailViewId
 }
 export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
         // inject code

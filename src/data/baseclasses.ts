@@ -1401,6 +1401,7 @@ export class DocumentMeta extends Basic {
     symbolregist: BasicMap<string, string>
     freesymbols?: BasicMap<string, SymbolShape | SymbolUnionShape>
     stylelib?: DocumentMeta_stylelib
+    thumbnailViewId?: string
     constructor(id: string, name: string, fmtVer: string, pagesList: DocumentMeta_pagesList, lastCmdVer: number, symbolregist: BasicMap<string, string>) {
         super()
         this.id = id
