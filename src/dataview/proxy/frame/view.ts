@@ -25,7 +25,6 @@ export class FrameProxy {
             this._save_frame.width = this.m_frame.width;
             this._save_frame.height = this.m_frame.height;
         }
-
         const border = this.view.getBorder();
         let maxtopborder = 0;
         let maxleftborder = 0;
