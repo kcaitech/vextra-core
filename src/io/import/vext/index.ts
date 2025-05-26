@@ -21,6 +21,7 @@ import {
 import { uuid } from "../../../basic/uuid";
 import { IImportContext, importPage, importDocumentMeta } from "../../../data/baseimport";
 import { base64Encode, base64ToDataUrl } from "../../../basic/utils";
+import JSZip from "jszip";
 
 function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Document) {
     document.mediasMgr.setLoader(id => loadMedia(id));
@@ -82,4 +83,46 @@ export function importDocument(name: string, mdd: { [p: string]: string | Uint8A
     });
     setLoader(mdd, document);
     return document;
+}
+
+
+
+function getFiles(filePack: File) {
+    const reader = new FileReader();
+    reader.readAsArrayBuffer(filePack);
+    return new Promise((resolve, reject) => {
+        reader.onload = (event) => {
+            const buff = event.target!.result as ArrayBuffer;
+            if (!buff) reject(new Error('无法获取文档内容'));
+            const zip = new JSZip();
+            zip.loadAsync(buff).then(res => {
+                resolve(res.files)
+            });
+        }
+    });
+}
+
+export async function importDocumentZip(filePack: File, repo: IDataGuard) {
+    const __files = await getFiles(filePack) as {
+        [p: string]: JSZip.JSZipObject
+    };
+    const names = Object.keys(__files);
+    const __doc: {
+        [p: string]: string | Uint8Array | ArrayBuffer;
+    } = {};
+    for (let name of names) {
+        const file = __files[name];
+        if (file.dir) continue;
+        let type: 'string' | 'arraybuffer' = 'string';
+        if (name.startsWith('images')) type = 'arraybuffer';
+        let content: string | Uint8Array | ArrayBuffer = await file.async(type);
+        if (type === "arraybuffer") {
+            content = new Uint8Array(content as ArrayBuffer);
+        }
+        if (name.startsWith('pages')) name = name.replace('.json', '');
+        __doc[name.replace(/images\/|pages\//, '')] = content;
+    }
+
+    return importDocument(filePack.name.replace(/\.(moss|vext)$/i, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
+
 }

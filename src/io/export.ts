@@ -18,6 +18,7 @@
 import { Document, Page } from "../data";
 import * as types from "../data/typesdefine"
 import { exportDocumentMeta, exportPage, IExportContext } from "../data/baseexport";
+import JSZip from "jszip";
 
 export interface ExFromJson {
     document_meta: types.DocumentMeta,
@@ -79,4 +80,32 @@ export async function exportExForm(document: Document): Promise<ExFromJson> {
         pages,
         media_names
     }
+}
+
+export async function exportDocumentZip(__data: Document, type: 'blob' | 'arraybuffer' | 'uint8array' = 'blob'): Promise<Blob | ArrayBuffer | Uint8Array> {
+    const data = await exportExForm(__data)
+        .catch((error) => {
+            throw error
+        });
+    if (!data) throw new Error('invalid data');
+    function packPages(folder: JSZip) {
+        for (const page of data.pages) {
+            const blob = new Blob([JSON.stringify(page)]);
+            folder.file(page.id + '.json', blob);
+        }
+    }
+    async function packImages(folder: JSZip) {
+        if (!data.media_names.length) return;
+        const manager = __data.mediasMgr;
+        for (const ref of data.media_names) {
+            const media = await manager.get(ref);
+            if (!media) continue;
+            folder.file(ref, media.buff);
+        }
+    }
+    const zip = new JSZip();
+    zip.file('document-meta.json', new Blob([JSON.stringify(data.document_meta)]));
+    packPages(zip.folder('pages')!);
+    await packImages(zip.folder('images')!);
+    return await zip.generateAsync({ type });
 }

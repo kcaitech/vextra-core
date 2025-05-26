@@ -15,6 +15,8 @@ import { Document, PageListItem } from "../../../data/document";
 import { LzData } from "./lzdata";
 import { IJSON } from "./basic";
 import { startLoader } from "./loader";
+import { LzDataLocal } from "./lzdatalocal";
+import { Zip } from "src/io/import/sketch/zip";
 
 async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicArray<PageListItem>> {
     const metaJson: IJSON = await lzData.loadJson('meta.json');
@@ -60,4 +62,9 @@ export async function importDocument(name: string, lzData: LzData, gurad: IDataG
     startLoader(lzData, document);
 
     return document;
+}
+
+export async function importDocumentZip(file: File, gurad: IDataGuard): Promise<Document> {
+    const lzdata = new LzDataLocal(new Zip(file));
+    return importDocument(file.name.replace(/.sketch$/, ''), lzdata, gurad);
 }

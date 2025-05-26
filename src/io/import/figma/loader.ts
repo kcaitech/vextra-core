@@ -23,8 +23,8 @@ import {
     importSymbolRef,
     importTextShape,
 } from "./shapeio";
-import { UZIPFiles } from "uzip";
 import { base64Encode } from "../../../basic/utils";
+import JSZip from "jszip";
 
 const __handler: { [ket: string]: (ctx: LoadContext, data: IJSON, i: number) => Shape } = {}
 
@@ -62,7 +62,7 @@ __handler['INSTANCE'] = (ctx: LoadContext, data: IJSON, i: number) => {
 __handler['SLICE'] = (ctx: LoadContext, data: IJSON, i: number) => importSlice(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
 __handler['BOOLEAN_OPERATION'] = (ctx: LoadContext, data: IJSON, i: number) => importGroup(ctx, data, importer, i, _nodeChangesMap, _nodeKeyMap);
 
-export function startLoader(file: IJSON, pages: IJSON[], document: Document, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>, ctx: LoadContext, unzipped: UZIPFiles) {
+export function startLoader(file: IJSON, pages: IJSON[], document: Document, nodeChangesMap: Map<string, IJSON>, nodeKeyMap: Map<string, IJSON>, ctx: LoadContext, unzipped: JSZip) {
     symbolsSet.clear();
     _nodeChangesMap = nodeChangesMap;
     _nodeKeyMap = nodeKeyMap;
@@ -87,7 +87,7 @@ export function startLoader(file: IJSON, pages: IJSON[], document: Document, nod
         const idWithoutExt = extIndex !== -1 ? id.slice(0, extIndex) : id;
         const ext = extIndex !== -1 ? id.substring(extIndex + 1) : '';
 
-        const buffer = unzipped[`images/${idWithoutExt}`];
+        const buffer = await unzipped.file(`images/${idWithoutExt}`)?.async("uint8array") as Uint8Array | undefined;
         if (!buffer) return { buff: new Uint8Array(), base64: "" };
 
         const uInt8Array = buffer;

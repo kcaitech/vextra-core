@@ -13,8 +13,8 @@ import { BasicArray, BasicMap, IDataGuard, Document, PageListItem } from "../../
 import { IJSON, LoadContext } from "./basic";
 import { figToJson } from "./fig2json";
 import { importer, startLoader } from "./loader";
-import * as UZIP from "uzip";
 import { importStylesFromId, importSymbol, importSymbolUnion, toStrId } from "./shapeio";
+import JSZip from "jszip";
 
 function compare(l: string, r: string) {
     if (l === r) return 0;
@@ -65,8 +65,8 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
 
     const buffer = await file.arrayBuffer();
 
-    const json = figToJson((buffer)) as IJSON;
-    const unzipped = UZIP.parse(buffer);
+    const json = await figToJson((buffer)) as IJSON;
+    const unzipped = await JSZip.loadAsync(buffer);
 
     const nodeChanges = json['nodeChanges'];
     if (!nodeChanges || !Array.isArray(nodeChanges)) throw new Error("data error");
