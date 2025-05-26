@@ -16,7 +16,7 @@ import { LzData } from "./lzdata";
 import { IJSON } from "./basic";
 import { startLoader } from "./loader";
 import { LzDataLocal } from "./lzdatalocal";
-import { Zip } from "src/io/import/sketch/zip";
+import { Zip } from "./zip";
 
 async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicArray<PageListItem>> {
     const metaJson: IJSON = await lzData.loadJson('meta.json');
