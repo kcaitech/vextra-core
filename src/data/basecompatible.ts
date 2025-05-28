@@ -14,7 +14,6 @@ import { lessThan, FMT_VER_transfrom } from "./fmtver"
 import { Matrix } from "../basic/matrix"
 export interface IImportContext {
     document: impl.Document
-    curPage: string
     fmtVer: string
 }
 

@@ -17,7 +17,6 @@ import { compatibleOldData } from "./basecompatible"
 import { is_mac } from "./utils"
 export interface IImportContext {
     document: impl.Document
-    curPage: string
     fmtVer: string
 }
 function objkeys(obj: any) {
@@ -2366,7 +2365,7 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
     importSymbolShapeOptional(ret, source, ctx)
         // inject code
     if (ctx?.document) {
-        const registed = ctx.document.symbolregist.get(ret.id);
+        // const registed = ctx.document.symbolregist.get(ret.id);
         // if (!registed || registed === 'freesymbols' || registed === ctx.curPage) {
         ctx.document.symbolsMgr.add(ret.id, ret);
         // }

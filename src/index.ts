@@ -175,6 +175,8 @@ export * from "./dataview"
 export * from "./io"
 export * from "./io/import"
 export * from "./io/export"
+export { exportSvg } from "./io/export/svg";
+export { exportImg } from "./io/export/img";
 // export * from "./io/import/sketch/lzdata"
 export * from "./io/cilpboard"
 // export
@@ -215,8 +217,6 @@ export { RadiusModifier } from "./editor/style/radius";
 export { ShadowsModifier } from "./editor/style/shadows";
 export { BlurModifier } from "./editor/style/blur";
 export { TextModifier } from "./editor/style/text";
-
-export { ScreenPrinter } from "./printscreen";
 
 export { convertGetFileResponse } from "./figmcpconvert/index";
 

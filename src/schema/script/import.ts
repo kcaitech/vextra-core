@@ -294,7 +294,6 @@ export function gen(allNodes: Map<string, Node>, out: string) {
 
     $.nl('export interface IImportContext ').sub(() => {
         $.nl('document: impl.Document')
-        $.nl('curPage: string')
         $.nl('fmtVer: string')
     })
 
