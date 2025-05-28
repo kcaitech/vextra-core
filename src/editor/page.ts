@@ -1942,7 +1942,7 @@ export class PageEditor {
                 if (!del_res) throw new Error('delete failed');
 
                 // replacement的原版数据只能使用一次，使用一次之后的替换应该使用replacement的副本数据，并确保每一份副本数据中不存在共同对象引用
-                const copy: Shape[] = i < 1 ? replacement : transform_data(document, this.page, replacement);
+                const copy: Shape[] = i < 1 ? replacement : transform_data(document, replacement);
                 for (let r_i = 0; r_i < len; r_i++) { // 逐个插入replacement中的图形
                     let r = copy[r_i];
                     r.id = uuid();

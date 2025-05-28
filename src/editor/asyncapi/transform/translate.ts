@@ -214,7 +214,7 @@ export class Transporter extends AsyncApiCaller {
             const layoutSet = this.need_layout_shape;
             const assignSet = this.need_assign;
             const shapes = views.map(v => adapt2Shape(v))
-            const copy = transform_data(document, page, shapes);
+            const copy = transform_data(document, shapes);
             for (let i = 0; i < views.length; i++) {
                 const view = views[i];
                 const shape = shapes[i];
