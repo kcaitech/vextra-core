@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
@@ -25,9 +25,9 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
-],
-"exclude": [
+    "src/**/*.tsx"
+  ],
+  "exclude": [
     "node_modules",
     "tests/**/*.ts",
     "tests/**/*.tsx",
