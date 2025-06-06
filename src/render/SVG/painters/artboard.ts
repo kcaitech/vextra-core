@@ -41,7 +41,8 @@ export class ArtboardSVGRenderer extends ViewSVGRenderer {
         if (view.autoLayout && view.autoLayout.stackReverseZIndex) childs.reverse();
         const borders = this.renderBorder();
 
-        const svgprops = this.getProps();
+        const svgprops: any = {}; // ??? 很大的疑惑，可能不是这里的问题
+
         const filterId = `${objectId(view)}`;
         const shadows = this.renderShadows(filterId);
 
