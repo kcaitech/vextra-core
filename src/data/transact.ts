@@ -71,12 +71,17 @@ function swapCached(context: TContext, target: object, propertyKey: PropertyKey)
 
 class ProxyHandler {
     protected __context: TContext;
+    private __getter?: (target: object, propertyKey: PropertyKey, receiver?: any) => any
     constructor(context: TContext) {
         this.__context = context;
     }
     set(target: object, propertyKey: PropertyKey, value: any, receiver?: any) {
 
         if (propertyKey.toString().startsWith('__')) {
+            if (propertyKey === '__getter') {
+                this.__getter = value
+                return true
+            }
             return Reflect.set(target, propertyKey, value, receiver);
         }
         if (this.__context.transact === undefined) {
@@ -120,8 +125,8 @@ class ProxyHandler {
                 const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
                 this.__context.transact.push(r);
 
-                checkSetParent(value, target, this, propertyKey);
-                value = deepProxy(value, this);
+                checkSetParent(value, target, this.__context, propertyKey);
+                value = deepProxy(value, this.__context);
 
                 const ret = Reflect.set(target, propertyKey, value, receiver);
 
@@ -138,8 +143,8 @@ class ProxyHandler {
             }
         }
 
-        checkSetParent(value, target, this, propertyKey);
-        value = deepProxy(value, this);
+        checkSetParent(value, target, this.__context, propertyKey);
+        value = deepProxy(value, this.__context);
 
         const ret = Reflect.set(target, propertyKey, value, receiver);
         if (needNotify) {
@@ -171,6 +176,9 @@ class ProxyHandler {
             if (val === undefined && propertyKey === "__isProxy") {
                 return true;
             }
+            if (this.__getter) {
+                return this.__getter(target, propertyKey, receiver)
+            }
             return val;
         }
 
@@ -184,7 +192,7 @@ class ProxyHandler {
             if (this.__context.settrap) {
                 throw new Error(`NOT inside Api: set '${propertyKey.toString()}'`);
             }
-            return Reflect.get(this.sub(this.__context, target, this), propertyKey);
+            return Reflect.get(this.sub(this.__context, target, this.__context), propertyKey);
         } else if (propertyKey === 'size') { // map对象上唯一的一个可访问属性
             return target.size;
         } else if (propertyKey === 'clear') { // todo clear操作为批量删除，也需要进入事务
@@ -208,7 +216,7 @@ class ProxyHandler {
         const val = Reflect.has(target, propertyKey);
         return val;
     }
-    sub(_con: TContext, target: Map<any, any>, h: ProxyHandler) {
+    sub(_con: TContext, target: Map<any, any>, context: TContext) {
         return {
             get(key: any) {
                 const get = Map.prototype.get.bind(target);
@@ -217,8 +225,8 @@ class ProxyHandler {
             set(key: any, value: any) {
                 const set_inner = Map.prototype.set.bind(target);
 
-                checkSetParent(value, target, h, key);
-                value = deepProxy(value, h);
+                checkSetParent(value, target, context, key);
+                value = deepProxy(value, context);
                 set_inner(key, value);
                 const map_rec: MapRec = { isContentExist: true, content: value, key };
                 const r = new Rec(target, 'set', map_rec);
@@ -241,10 +249,10 @@ class ProxyHandler {
 
 export const isProxy = (obj: any): boolean => obj && obj["__isProxy"];
 
-function checkSetParent(value: any, parent: any, ph: ProxyHandler, propertyKey: PropertyKey) {
+function checkSetParent(value: any, parent: any, context: TContext, propertyKey: PropertyKey) {
     if (typeof value === 'object' && isDataBasicType(parent)) {
         // parent 也需要proxy上, 否则数据变动时不会触发通知
-        value.__parent = isProxy(parent) ? parent : new Proxy(parent, ph);
+        value.__parent = isProxy(parent) ? parent : new Proxy(parent, new ProxyHandler(context));
         value.__propKey = propertyKey; // 这有个问题是，数组
     }
 }
@@ -258,7 +266,7 @@ class Rec {
         this.__propertyKey = propertyKey
         this.__value = value
     }
-    swap(ctx: TContext, ph: ProxyHandler) {
+    swap(ctx: TContext) {
         if (this.__target instanceof Map) {
             if (this.__propertyKey === 'set' || this.__propertyKey === 'delete') {
                 if (this.__value.isContentExist) {
@@ -277,11 +285,11 @@ class Rec {
                     // 不影响length
                     Reflect.deleteProperty(this.__target, this.__propertyKey);
                 } else {
-                    checkSetParent(this.__value, this.__target, ph, this.__propertyKey);
+                    checkSetParent(this.__value, this.__target, ctx, this.__propertyKey);
                     Reflect.set(this.__target, this.__propertyKey, this.__value);
                 }
             } else {
-                checkSetParent(this.__value, this.__target, ph, this.__propertyKey);
+                checkSetParent(this.__value, this.__target, ctx, this.__propertyKey);
                 Reflect.set(this.__target, this.__propertyKey, this.__value);
             }
             this.__value = v;
@@ -322,10 +330,10 @@ class ArrayRec extends Rec {
         }
     }
 
-    swap(ctx: TContext, ph: ProxyHandler): void {
+    swap(ctx: TContext): void {
         const len = Reflect.get(this.target, "length")
         for (let i = 0, l = this.__recs.length; i < l; i++) {
-            this.__recs[i].swap(ctx, ph);
+            this.__recs[i].swap(ctx);
         }
         if (this.__haslen) {
             Reflect.set(this.target, "length", this.__len);
@@ -344,22 +352,22 @@ class Transact extends Array<Rec> {
     get name () {
         return this.__name;
     }
-    exec(ctx: TContext, ph: ProxyHandler): void {
+    exec(ctx: TContext): void {
         for (let i = 0, len = this.length; i < len; i++) {
             const r = this[i];
-            r.swap(ctx, ph);
+            r.swap(ctx);
         }
     }
-    unexec(ctx: TContext, ph: ProxyHandler): void {
+    unexec(ctx: TContext): void {
         for (let i = this.length - 1; i >= 0; i--) {
             const r = this[i];
-            r.swap(ctx, ph);
+            r.swap(ctx);
         }
     }
-    rollback(ctx: TContext, ph: ProxyHandler, from: string): void {
+    rollback(ctx: TContext, from: string): void {
         for (let i = this.length - 1; i >= 0; i--) {
             const r = this[i];
-            r.swap(ctx, ph);
+            r.swap(ctx);
             const rb = castRollbackable(r.target);
             if (rb) {
                 rb.onRollback(from);
@@ -388,7 +396,7 @@ class Transact extends Array<Rec> {
 
 export class TransactDataGuard extends WatchableObject implements IDataGuard {
     private __context: TContext;
-    private __ph: ProxyHandler;
+    // private __ph: ProxyHandler;
     private __trans: Transact[] = [];
     private __index: number = 0;
     private __needundo: boolean;
@@ -396,7 +404,7 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
     constructor(props?: { settrap?: boolean, needundo?: boolean }) {
         super();
         this.__context = new TContext();
-        this.__ph = new ProxyHandler(this.__context);
+        // this.__ph = new ProxyHandler(this.__context);
         this.__context.settrap = props ? (props.settrap ?? true) : true; // default true
         this.__needundo = props ? (props.needundo ?? false) : false; // default false
     }
@@ -410,7 +418,7 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
         }
         this.__index--;
         this.__context.optiNotify = true;
-        this.__trans[this.__index].unexec(this.__context, this.__ph);
+        this.__trans[this.__index].unexec(this.__context);
         this.__context.fireNotify();
         this.notify();
     }
@@ -420,7 +428,7 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
             return;
         }
         this.__context.optiNotify = true;
-        this.__trans[this.__index].exec(this.__context, this.__ph);
+        this.__trans[this.__index].exec(this.__context);
         this.__index++;
         this.__context.fireNotify();
         this.notify();
@@ -479,7 +487,7 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
             throw new Error();
         }
         this.__context.cache.clear();
-        this.__context.transact.rollback(this.__context, this.__ph, from);
+        this.__context.transact.rollback(this.__context, from);
         this.__context.transact = undefined;
         this.__context.fireNotify();
     }
@@ -489,14 +497,14 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
     }
 
     guard(data: any): any {
-        return deepProxy(data, this.__ph);
+        return deepProxy(data, this.__context);
     }
     isGuarded(data: any): boolean {
         return typeof data === 'object' && isProxy(data);
     }
 }
 
-function deepProxy(data: any, h: ProxyHandler): any {
+function deepProxy(data: any, context: TContext): any {
     if (typeof data !== 'object' || isProxy(data)) {
         return data;
     }
@@ -505,7 +513,7 @@ function deepProxy(data: any, h: ProxyHandler): any {
         const d = stack.pop();
         let parent: any = undefined;
         if (isDataBasicType(d)) { // 当一个map对象为BasicMap对象时，其才能成为自身values集元素的__parent;
-            parent = isProxy(d) ? d : new Proxy(d, h);
+            parent = isProxy(d) ? d : new Proxy(d, new ProxyHandler(context));
         }
         if (d instanceof Map) {
             d.forEach((v, k, m) => {
@@ -518,7 +526,7 @@ function deepProxy(data: any, h: ProxyHandler): any {
                         v.__propKey = k;
                     }
                     if (!isProxy(v)) {
-                        m.set(k, new Proxy(v, h));
+                        m.set(k, new Proxy(v, new ProxyHandler(context)));
                         stack.push(v);
                     }
                 }
@@ -537,7 +545,7 @@ function deepProxy(data: any, h: ProxyHandler): any {
                         v.__propKey = k;
                     }
                     if (!isProxy(v)) {
-                        const p = new Proxy(v, h);
+                        const p = new Proxy(v, new ProxyHandler(context));
                         Reflect.set(d, k, p);
                         stack.push(v);
                     }
@@ -545,5 +553,5 @@ function deepProxy(data: any, h: ProxyHandler): any {
             }
         }
     }
-    return new Proxy(data, h);
+    return new Proxy(data, new ProxyHandler(context));
 }

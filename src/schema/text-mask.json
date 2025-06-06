@@ -1,0 +1,40 @@
+{
+    "description": "text mask",
+    "type": "object",
+    "properties": {
+        "crdtidx": {
+            "$ref": "./crdtidx.json"
+        },
+        "typeId": {
+            "type": "string"
+        },
+        "sheet": {
+            "type": "string"
+        },
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "text": {
+            "$ref": "./text-attr.json"
+        },
+        "disabled": {
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "crdtidx",
+        "typeId",
+        "sheet",
+        "id",
+        "name",
+        "description",
+        "text"
+    ],
+    "additionalProperties": false
+}

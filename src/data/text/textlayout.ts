@@ -544,7 +544,6 @@ export function layoutLines(_text: Text, para: Para, width: number, preBulletNum
         assignGraphysX(graphys, startX);
         line.push(...graphys);
         curX = startX + cw + lastKerning;
-        continue;
     }
 
     if (line.length > 0) {
@@ -616,7 +615,7 @@ export function layoutPara(text: Text, para: Para, layoutWidth: number, preBulle
     return paraLayout;
 }
 
-export function layoutText(text: Text, frame: ShapeSize, behavior?: TextBehaviour): TextLayout {
+export function layoutText(text: Text, frame: ShapeSize, behavior?: TextBehaviour): TextLayout {    
     const layoutWidth = ((b: TextBehaviour) => {
         switch (b) {
             case TextBehaviour.Flexible: return Number.MAX_VALUE;

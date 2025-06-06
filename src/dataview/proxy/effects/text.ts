@@ -1,4 +1,4 @@
-import { updateAutoLayout, updateAutoLayoutByBorder, updateMask, ViewModifyEffect } from "./view";
+import { updateAutoLayout, ViewModifyEffect } from "./view";
 import { TextShapeView } from "../../textshape";
 
 export class TextModifyEffect extends ViewModifyEffect {
@@ -17,12 +17,12 @@ export class TextModifyEffect extends ViewModifyEffect {
         cornerRadius: ['m_path', 'm_pathstr'],
         radiusMask: ['m_path', 'm_pathstr'],
         fixedRadius: ['m_path', 'm_pathstr'],
-        variables: ['m_path', 'm_pathstr', 'm_fills', 'm_border', 'm_border_path', 'm_border_path_box'],
+        variables: ['m_path', 'm_pathstr', 'm_fills', 'm_border', 'm_border_path', 'm_border_path_box', 'm_text'],
         fills: ['m_fills', 'm_is_border_shape', 'm_border_path', 'm_border_path_box'],
         borders: ['m_border', 'm_is_border_shape'],
         fillsMask: ['m_fills', 'm_is_border_shape'],
         bordersMask: ['m_border', 'm_border_path',],
-        text: ['__str'],
+        text: ['m_text'],
     }
 
    protected static effectMap: {
@@ -42,7 +42,6 @@ export class TextModifyEffect extends ViewModifyEffect {
         this.view.cache.clearCacheByKeys(Array.from(task));
     }
 
-
     emit(taskIds: string[]) {
         const task: Set<Function> = new Set();
         taskIds.forEach((id: string) => {
@@ -50,5 +49,6 @@ export class TextModifyEffect extends ViewModifyEffect {
             target && target.forEach(t => task.add(t))
         });
         Array.from(task).forEach(t => t(this.view));
+        this.view.getText().dropAllLayout();
     }
 }

@@ -28,6 +28,7 @@
         "bordersMask",
         "shadowsMask",
         "blursMask",
-        "radiusMask"
+        "radiusMask",
+        "textMask"
     ]
 }

@@ -399,6 +399,11 @@ inject['RadiusMask']['after'] = `\
     // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
 `
+inject['TextMask'] = {};
+inject['TextMask']['after'] = `\
+    // inject code
+    if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
+`
 
 inject['Style'] = {};
 inject['Style']['before'] = `\
@@ -454,6 +459,11 @@ inject['Style']['before'] = `\
     }
 `
 inject['Style']['after'] = `\
+    // inject code
+    if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
+`
+inject['Text'] = {};
+inject['Text']['after'] = `\
     // inject code
     if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
 `

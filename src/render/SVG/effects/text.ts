@@ -11,17 +11,12 @@
 
 
 import { DefaultColor, randomId } from "../../basic";
-import { Color, FillType, Gradient, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../../../data/classes';
+import { Color, FillType, Gradient, UnderlineType, StrikethroughType, Blur, BlurType, SpanAttr, ShapeSize } from '../../../data';
 import { GraphArray, TextLayout } from "../../../data/text/textlayout";
 import { gPal } from "../../../basic/pal";
 import { render as renderGradient } from "./gradient";
 import { objectId } from "../../../basic/objectid";
 import { Path } from "@kcdesign/path";
-
-// function toRGBA(color: Color): string {
-//     // return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
-//     // return color.toRGBA();
-// }
 
 function isBlankChar(charCode: number) {
     switch (charCode) {
@@ -78,8 +73,7 @@ function collectDecorateRange(garr: GraphArray, decorateRange: { start: number, 
         const last = decorateRange[decorateRange.length - 1];
         if ((last.color.equals(color))) {
             const endGraph = garr[garr.length - 1];
-            const end = endGraph.x + endGraph.cw;
-            last.end = end;
+            last.end = endGraph.x + endGraph.cw;
             return;
         }
     }
@@ -279,9 +273,5 @@ export function renderTextLayout(h: Function, textlayout: TextLayout, frame?: Sh
 
 const is_alpha = (span: SpanAttr) => {
     if (span.highlight && span.highlight.alpha === 1) return false;
-    if (span.color && span.color.alpha > 0 && span.color.alpha < 1) {
-        return true;
-    } else {
-        return false;
-    }
+    return !!(span.color && span.color.alpha > 0 && span.color.alpha < 1);
 };

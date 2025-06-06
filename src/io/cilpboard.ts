@@ -17,6 +17,7 @@ import {
     ShapeFrame,
     ShapeType, StyleMangerMember,
     SymbolUnionShape,
+    TextMask,
     TextShape
 } from "../data";
 import {
@@ -38,6 +39,7 @@ import {
     exportSymbolUnionShape,
     exportTableShape,
     exportText,
+    exportTextMask,
     exportTextShape,
     IExportContext
 } from "../data/baseexport";
@@ -99,6 +101,7 @@ export function exportMask(mask: StyleMangerMember) {
     else if (mask instanceof BorderMask) return exportBorderMask(mask);
     else if (mask instanceof BlurMask) return exportBlurMask(mask);
     else if (mask instanceof ShadowMask) return exportShadowMask(mask);
+    else if (mask instanceof TextMask) return exportTextMask(mask);
     else return exportRadiusMask(mask);
 }
 

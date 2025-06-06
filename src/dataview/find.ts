@@ -202,7 +202,7 @@ function unable_area(view: ShapeView) {
 }
 
 function is_fixed_board(view: ShapeView, level: number) {
-    return view.type === ShapeType.Artboard && !!view.childs.length && level === 1;
+    return (view.type === ShapeType.Artboard || view.type === ShapeType.SymbolUnion) && !!view.childs.length && level === 1;
 }
 
 function __find(view: ShapeView, skewrect: {

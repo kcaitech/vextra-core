@@ -23,7 +23,7 @@ export class TextCreator extends BaseCreator {
         const fontStyleAttr = this.attributes.styleAttributes?.font
         const fill = this.attributes.textFill
 
-        const textShape = shapeCreator.newTextShape("文本", new ShapeFrame(x, y, 0, 0))
+        const textShape = shapeCreator.newTextShape("文本", this.context.styleMgr, new ShapeFrame(x, y, 0, 0))
         textShape.text.insertText(text, 0)
 
         this.shape = textShape
