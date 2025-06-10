@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Path } from "@kcdesign/path"
+import { Path } from "@kcaitech/path"
 import { gPal, MeasureFun, TextPathFun } from "./basic/pal"
 
 // basic
@@ -209,7 +209,7 @@ export { LinearApi } from './editor/linearapi/linearapi';
 
 export { CircleChecker } from "./editor/basic/move/circle";
 
-export { Path } from '@kcdesign/path'
+export { Path } from '@kcaitech/path'
 
 export { FillModifier } from "./editor/style/fill";
 export { BorderModifier } from "./editor/style/border";

@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 import { CurvePoint, parsePath, RadiusMask, RadiusType, ShapeFrame } from "../../../data";
 import { PathShapeView } from "../../pathshape";
 import { importCurvePoint } from "../../../data/baseimport";

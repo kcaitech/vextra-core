@@ -20,7 +20,7 @@ import {
     VariableType
 } from "../../../data";
 import { ShapeView } from "../../shape";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 
 export class ViewCache {
     protected m_fills: BasicArray<Fill> | undefined;

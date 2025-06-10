@@ -16,7 +16,7 @@ import {Shape, Transform, ShapeSize} from "./shape";
 import { Text, TextAttr } from "./text/text"
 import { PathType } from "./consts";
 import { newTableCellText } from "./text/textutils";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 export { TableLayout, TableGridItem } from "./tablelayout";
 export { TableCellType } from "./baseclasses";
 export { CrdtNumber } from "./baseclasses";

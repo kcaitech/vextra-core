@@ -13,7 +13,7 @@ import { Color, Shadow, } from "../../data"
 import { BaseCreator } from "./creator/base"
 import { Line, LineThrough0, Transform } from "../../basic/transform";
 import { NumberArray2D } from "../../basic/number_array";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 
 type RectBox = { // 矩形包围盒
     lt: { x: number, y: number }, // 左上角坐标

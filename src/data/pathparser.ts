@@ -10,7 +10,7 @@
 
 import { CurvePoint } from "./baseclasses";
 import { Point2D } from "./typesdefine"
-import { Path, PathBuilder } from "@kcdesign/path"
+import { Path, PathBuilder } from "@kcaitech/path"
 
 /**
  * @description 在t的位置切割曲线，得到两根曲线，这两根曲线若拼接会与原曲线轨迹一致
