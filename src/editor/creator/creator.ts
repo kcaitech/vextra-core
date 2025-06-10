@@ -85,7 +85,7 @@ import { SymbolMgr } from "../../data/symbolmgr";
 import { newText } from "../../data/text/textutils";
 import { getPolygonPoints, getPolygonVertices } from "../utils/path";
 import { is_mac } from "../../data/utils";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 import { convertPath2CurvePoints } from "../../data/pathconvert";
 
 function _checkNum(num: number) {

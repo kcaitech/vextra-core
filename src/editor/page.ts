@@ -171,7 +171,7 @@ import { TidyUpAlign, tidyUpLayout } from "./utils/auto_layout";
 
 import { getFormatFromBase64 } from "../basic/utils";
 import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit, assign } from "./asyncapi";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 import { prepareVar } from "./symbol_utils";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 import { stroke } from "../render/stroke";
