@@ -27,7 +27,7 @@ export * from "./dataview"
 export * as IO from "./io"
 
 // 编辑器模块导出
-export * as Editor from "./editor"
+export * from "./editor"
 
 // 协作模块导出
 export * as Coop from "./coop"
