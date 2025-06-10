@@ -24,6 +24,7 @@ import {
     GroupShape,
     MarkerType,
     OverrideType,
+    PaddingDir,
     Page,
     PathShape,
     PathShape2,
@@ -147,7 +148,7 @@ import {
 } from "./utils/path";
 import { adapt_for_artboard, modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
-import { Operator, PaddingDir, TextShapeLike } from "../coop/recordop";
+import { Operator, TextShapeLike } from "../coop/recordop";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,

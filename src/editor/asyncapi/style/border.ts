@@ -13,7 +13,6 @@ import { PageView, ShapeView } from "../../../dataview";
 import {
     Color,
     Fill,
-    importGradient,
     BasicArray,
     Stop,
     Point2D,
@@ -21,7 +20,7 @@ import {
 } from "../../../data";
 import { override_variable } from "../../symbol";
 import { exportGradient } from "../../../data/baseexport";
-import { importBorder, importStop } from "../../../data/baseimport";
+import { importBorder, importGradient, importStop } from "../../../data/baseimport";
 import * as types from "../../../data/typesdefine";
 import { Matrix } from "../../../basic/matrix";
 import { Api } from "../../../coop";

@@ -13,13 +13,13 @@ import {
     BasicArray,
     Color,
     Fill, Gradient, GradientType,
-    importGradient, OverrideType,
+    OverrideType,
     Point2D,
     Stop,
     VariableType
 } from "../../../data";
 import { exportGradient } from "../../../data/baseexport";
-import { importFill, importStop } from "../../../data/baseimport";
+import { importFill, importGradient, importStop } from "../../../data/baseimport";
 import { Api } from "../../../coop";
 import { PageView, ShapeView } from "../../../dataview";
 import { override_variable } from "../../symbol";

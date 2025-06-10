@@ -9,14 +9,12 @@
  */
 
 import { Operator } from "../../coop/recordop";
-import { BorderPosition, ContactForm, CurveMode, ShapeType } from "../../data/typesdefine";
+import { BorderPosition, CurveMode, ShapeType } from "../../data/typesdefine";
 import { CurvePoint, PathShape, PathShape2, Point2D, Shape } from "../../data/shape";
 import { Page } from "../../data/page";
 import { v4 } from "uuid";
 import { uuid } from "../../basic/uuid";
 import { BasicArray } from "../../data/basic";
-import { ContactShape } from "../../data/contact";
-import { get_box_pagexy, get_nearest_border_point } from "../../data/utils";
 import { PathType } from "../../data/consts";
 import { importCurvePoint } from "../../data/baseimport";
 import { Border } from "../../data";

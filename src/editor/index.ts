@@ -34,3 +34,9 @@ export * from "./creator/creator"
 
 // 编辑器样式功能
 export * from "./style"
+
+// creator
+export * as creator from "./creator/creator"
+
+// linearapi
+export * from "./linearapi/linearapi"

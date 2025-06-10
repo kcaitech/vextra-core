@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Document, OvalShape, Fill, Blur, Variable, StackSizing } from "../../data";
+import { Document, OvalShape, Fill, Blur, Variable, StackSizing, PaddingDir } from "../../data";
 import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
 import { Api, CoopRepository } from "../../coop";
@@ -31,12 +31,12 @@ import {
 } from "../../data";
 import { _ov, override_variable, shape4Autolayout, shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
-import { GroupShape, PathShape2, SymbolShape, TextShape, RadiusType, importGradient } from "../../data";
+import { GroupShape, PathShape2, SymbolShape, TextShape, RadiusType } from "../../data";
 import { BatchAction, BatchAction5, PageEditor } from "../page";
 import { TableEditor } from "../table";
 import { TidyUpAlign, tidyUpLayout } from "../utils/auto_layout";
 import { TextShapeEditor } from "../textshape";
-import { PaddingDir } from "../../coop/recordop";
+import { importGradient } from "../../data/baseimport";
 
 /**
  * @description 合并同类型API，适用于键盘的连续动作，相较于asyncapi，linearapi是自动启停，所以无法跟asyncapi一样控制启停时机

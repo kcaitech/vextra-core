@@ -14,7 +14,7 @@ import {
     Color,
     Gradient, GradientType,
     GroupShape,
-    importGradient, OverrideType,
+    OverrideType,
     Point2D,
     Shape,
     Stop,
@@ -26,7 +26,7 @@ import {
     VariableType
 } from "../../../data";
 import { exportGradient } from "../../../data/baseexport";
-import { importStop, importText } from "../../../data/baseimport";
+import { importGradient, importStop, importText } from "../../../data/baseimport";
 import { Api } from "../../../coop";
 import { ShapeView, TextShapeView } from "../../../dataview";
 import { varParent } from "../../symbol";

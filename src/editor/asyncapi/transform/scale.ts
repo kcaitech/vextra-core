@@ -40,8 +40,8 @@ import {
 import { Operator, TextShapeLike } from "../../../coop/recordop";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { ColVector3D } from "../../../basic/matrix2";
-import { XYsBounding } from "../../../io/cilpboard";
 import { shape4Autolayout } from "../../symbol";
+import { XYsBounding } from "../../../data/utils";
 
 export type RangeRecorder = Map<string, {
     toRight?: number,

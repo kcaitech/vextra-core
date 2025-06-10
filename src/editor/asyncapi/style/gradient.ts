@@ -9,10 +9,10 @@
  */
 
 import { CoopRepository, Api } from "../../../coop";
-import { BasicArray, Fill, importGradient, OverrideType, VariableType } from "../../../data";
+import { BasicArray, Fill, OverrideType, VariableType } from "../../../data";
 import { PageView, ShapeView } from "../../../dataview";
 import { override_variable } from "../../symbol";
-import { importBorder, importFill, importStop } from "../../../data/baseimport";
+import { importBorder, importFill, importGradient, importStop } from "../../../data/baseimport";
 
 export class GradientEditor {
     private __repo: CoopRepository;
