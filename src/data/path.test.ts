@@ -10,7 +10,7 @@
 
 import * as chai from 'chai'
 import { parsePath } from './pathparser';
-import { Path } from '@kcdesign/path';
+import { Path } from '@kcaitech/path';
 import { convertPath2CurvePoints } from './pathconvert';
 
 const assert = chai.assert;

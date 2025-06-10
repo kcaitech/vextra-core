@@ -12,7 +12,7 @@ import { CurveMode, CurvePoint } from "./baseclasses";
 import { float_accuracy } from "../basic/consts";
 import { BasicArray } from "./basic";
 import { uuid } from "../basic/uuid";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 
 // path -> curvpoint[]
 // ----------------------------------------------------------------------------------

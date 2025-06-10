@@ -15,3 +15,7 @@ export {importDocument as importMoss} from "./import/vext";
 export {importDocument as importRemote, importLocalDocument as importLocal} from "./import";
 export * from "./storage";
 export {exportExForm, exportDocumentZip as exportVext} from "./export";
+// export * as Import from "./import"
+// export * as Export from "./export"
+export * as Clipboard from "./cilpboard"
+export * as SvgParser from "./svg_parser"

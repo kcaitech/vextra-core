@@ -36,7 +36,7 @@ import { parsePath } from "./pathparser";
 import { PathType, RadiusType, RECT_POINTS } from "./consts";
 import { Variable } from "./variable";
 import { Transform } from "./transform";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 import { v4 } from "uuid";
 
 export { Transform } from "./transform";

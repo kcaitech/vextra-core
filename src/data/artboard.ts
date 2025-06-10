@@ -27,7 +27,7 @@ import * as classes from "./baseclasses";
 import { BasicArray } from "./basic";
 import { RadiusType } from "./consts";
 import { Guide } from "./baseclasses";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 export {
     StackAlign,
     StackMode,

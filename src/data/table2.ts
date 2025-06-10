@@ -15,7 +15,7 @@ import { ShapeType, CrdtNumber, ShapeFrame, TableCellAttr } from "./baseclasses"
 import {Shape, Transform, ShapeSize} from "./shape";
 import { TextAttr } from "./text/text"
 import { PathType } from "./consts";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 import { Artboard } from "./baseclasses";
 export { CrdtNumber } from "./baseclasses";
 

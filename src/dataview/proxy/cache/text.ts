@@ -11,7 +11,7 @@
 
 import { ViewCache } from "./view";
 import { TextShapeView } from "../../textshape";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 import { renderText2Path } from "../../../render/SVG/effects/text";
 import {
     overrideText,

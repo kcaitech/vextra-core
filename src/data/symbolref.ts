@@ -21,7 +21,7 @@ import { Variable } from "./variable";
 import { SymbolMgr } from "./symbolmgr";
 import { PathType, RadiusType } from "./consts";
 import { exportSymbolRefShape } from "./baseexport";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 
 function genRefId(refId: string, type: OverrideType) {
     if (type === OverrideType.Variable || type === OverrideType.TableCell) return refId;

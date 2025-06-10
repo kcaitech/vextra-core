@@ -11,7 +11,7 @@
 import { Border, BorderPosition, Fill, FillType, Shadow, ShadowPosition } from "../../../data";
 import { ArtboardView, BoolShapeView, ShapeView, SymbolRefView, SymbolView, TextShapeView } from "../../../dataview";
 import { ViewCanvasRenderer, Props } from "../painters/view";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 import { stroke } from "../../stroke";
 
 export function render(renderer: ViewCanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], border: Border, fills: Fill[]): Function | undefined {

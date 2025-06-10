@@ -13,22 +13,18 @@ export { Path } from "@kcdesign/path"
 import { gPal, MeasureFun, TextPathFun } from "./basic/pal"
 
 // 基础模块导出
-export * as Basic from "./basic/index"
-export * as Matrix from "./basic/matrix"
-// export * as Utils from "./basic/utils"
-export * as Event from "./basic/event"
-export * as Error from "./basic/error"
+export * from "./basic/index"
+// export * as Matrix from "./basic/matrix"
+// // export * as Utils from "./basic/utils"
+// export * as Event from "./basic/event"
+// export * as Error from "./basic/error"
 
 // 数据模块导出
-export * as Data from "./data"
-export * as DataView from "./dataview"
+export * from "./data"
+export * from "./dataview"
 
 // IO模块导出
 export * as IO from "./io"
-export * as Import from "./io/import"
-export * as Export from "./io/export"
-export * as Clipboard from "./io/cilpboard"
-export * as SvgParser from "./io/svg_parser"
 
 // 编辑器模块导出
 export * as Editor from "./editor"
@@ -37,8 +33,8 @@ export * as Editor from "./editor"
 export * as Coop from "./coop"
 
 // 工具函数导出
-export { exportBorder, exportFill, exportShadow, exportBlur, exportContextSettings } from './data/baseexport'
-export { convertGetFileResponse } from "./figmcpconvert/index"
+// export { exportBorder, exportFill, exportShadow, exportBlur, exportContextSettings } from './data/baseexport'
+export * as FigmaConvert from "./figmcpconvert"
 
 // 初始化函数
 export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun) {

@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Cap, Join, Path } from "@kcdesign/path";
+import { Cap, Join, Path } from "@kcaitech/path";
 import { Matrix } from "../basic/matrix";
 import { CornerType, MarkerType, BorderPosition, CurvePoint } from "../data/typesdefine";
 import { ContactLineView, PathShapeView, ShapeView } from "../dataview";

@@ -19,7 +19,7 @@ import { newTableCellText } from "../data/text/textutils";
 import { objectId } from "../basic/objectid";
 import { TableView } from "./table";
 import { innerShadowId } from "../render/SVG/effects";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 
 export class TableCellView extends ShapeView {
 

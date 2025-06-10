@@ -16,7 +16,7 @@ import { GraphArray, TextLayout } from "../../../data/text/textlayout";
 import { gPal } from "../../../basic/pal";
 import { render as renderGradient } from "./gradient";
 import { objectId } from "../../../basic/objectid";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 
 function isBlankChar(charCode: number) {
     switch (charCode) {
