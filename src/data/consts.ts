@@ -11,6 +11,8 @@
 import { CurveMode, CurvePoint } from "./baseclasses";
 import { BasicArray } from "./basic";
 
+export type PaddingDir = 'ver' | 'hor' | 'top' | 'right' | 'bottom' | 'left';
+
 function hasSetBit(val: number, mask: number): boolean {
     return !(val & mask);
 }

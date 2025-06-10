@@ -8,8 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Path } from "@kcdesign/path"
-export { Path } from "@kcdesign/path"
+import { Path } from "@kcaitech/path"
+export { Path } from "@kcaitech/path"
 import { gPal, MeasureFun, TextPathFun } from "./basic/pal"
 
 // 基础模块导出

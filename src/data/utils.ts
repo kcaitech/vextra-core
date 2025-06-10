@@ -11,7 +11,7 @@
 import { v4 } from "uuid";
 import { CurvePoint } from "./shape";
 import { ContactType, CurveMode } from "./typesdefine";
-import { Page } from "./page";
+// import { Page } from "./page";
 import { importPolygonShape, importStarShape } from "./baseimport";
 import { importArtboard, importContactShape, importBoolShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
 import * as types from "./typesdefine"
@@ -29,10 +29,10 @@ export function gen_matrix1(shape: Shape, prem?: Transform) {
     m = m.getInverse();
     return m;
 }
-interface PageXY {
-    x: number
-    y: number
-}
+// interface XY {
+//     x: number
+//     y: number
+// }
 interface XY {
     x: number
     y: number
@@ -40,7 +40,7 @@ interface XY {
 /**
  * @description 根据连接类型获取页面坐标系上的连接点
  */
-function get_pagexy(shape: Shape, type: ContactType, m2r: Transform) {
+function get_XY(shape: Shape, type: ContactType, m2r: Transform) {
     const f = shape.size;
     switch (type) {
         case ContactType.Top: return m2r.computeCoord2(f.width / 2, 0);
@@ -50,7 +50,7 @@ function get_pagexy(shape: Shape, type: ContactType, m2r: Transform) {
         default: return false
     }
 }
-export function get_box_pagexy(shape: Shape) {
+export function get_box_XY(shape: Shape) {
     const p = shape.parent;
     if (!p) return false;
     const p2r = p.matrix2Root();
@@ -59,11 +59,11 @@ export function get_box_pagexy(shape: Shape) {
     const xy2 = p2r.computeCoord2(box.x + box.width, box.y + box.height);
     return { xy1, xy2 }
 }
-export function get_nearest_border_point(shape: Shape, contactType: ContactType, m2r: Transform, xy1: PageXY, xy2: PageXY) { // 寻找距离外围最近的一个点
+export function get_nearest_border_point(shape: Shape, contactType: ContactType, m2r: Transform, xy1: XY, xy2: XY) { // 寻找距离外围最近的一个点
     const box = { left: xy1.x, right: xy2.x, top: xy1.y, bottom: xy2.y };
     const offset = AStar.OFFSET;
     box.left -= offset, box.right += offset, box.top -= offset, box.bottom += offset;
-    let op = get_pagexy(shape, contactType, m2r);
+    let op = get_XY(shape, contactType, m2r);
     if (op) {
         const d1 = Math.abs(op.y - box.top);
         const d2 = Math.abs(op.x - box.right);
@@ -86,7 +86,22 @@ export function get_nearest_border_point(shape: Shape, contactType: ContactType,
         return op;
     }
 }
-function XYsBoundingPoints(points: PageXY[]) {
+
+export function XYsBounding(points: { x: number, y: number }[]) {
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+        xs.push(points[i].x);
+        ys.push(points[i].y);
+    }
+    const top = Math.min(...ys);
+    const bottom = Math.max(...ys);
+    const left = Math.min(...xs);
+    const right = Math.max(...xs);
+    return { top, bottom, left, right };
+}
+
+export function XYsBoundingPoints(points: XY[]) {
     const xs: number[] = [];
     const ys: number[] = [];
     for (let i = 0; i < points.length; i++) {
@@ -113,7 +128,7 @@ function isEqu(a: number, b: number) {
 /**
  * @description 获取两条线的焦点
  */
-function get_intersection(line1: [PageXY, PageXY], line2: [PageXY, PageXY]) {
+function get_intersection(line1: [XY, XY], line2: [XY, XY]) {
     if (isEqu(line1[0].x, line1[1].x) && isEqu(line2[0].x, line2[1].x)) return false;
     if (isEqu(line1[0].y, line1[1].y) && isEqu(line2[0].y, line2[1].y)) return false;
     if (isEqu(line1[0].y, line1[1].y) && isEqu(line2[0].x, line2[1].x)) return { x: line2[0].x, y: line1[0].y };
@@ -122,8 +137,8 @@ function get_intersection(line1: [PageXY, PageXY], line2: [PageXY, PageXY]) {
 /**
  * @description 去除重复点
  */
-function remove_duplicate_point(points: PageXY[]) {
-    const result: PageXY[] = [], cache: any = {};
+function remove_duplicate_point(points: XY[]) {
+    const result: XY[] = [], cache: any = {};
     for (let i = 0, len = points.length; i < len; i++) {
         const { x, y } = points[i];
         if (cache[`${x}_${y}`]) {
@@ -149,9 +164,9 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
     const s2w = s2xy2.x - s2xy1.x, s2h = s2xy2.y - s2xy1.y;
     const ff1 = { x: s1xy1.x, y: s1xy1.y, width: s1w, height: s1h };
     const ff2 = { x: s2xy1.x, y: s2xy1.y, width: s2w, height: s2h };
-    const start_point = get_pagexy(shape1, type1, m1), end_point = get_pagexy(shape2, type2, m2);
+    const start_point = get_XY(shape1, type1, m1), end_point = get_XY(shape2, type2, m2);
     if (!start_point || !end_point) return false;
-    let preparation_point: PageXY[] = [];
+    let preparation_point: XY[] = [];
     const b_start_point = get_nearest_border_point(shape1, type1, m1, s1xy1, s1xy2);
     const b_end_point = get_nearest_border_point(shape2, type2, m2, s2xy1, s2xy2);
     if (!b_start_point || !b_end_point) return false;
@@ -196,12 +211,12 @@ export function gen_baisc_params(shape1: Shape, type1: ContactType, shape2: Shap
 /**
  * @description 一定范围误差内，判定ab为同一个点
  */
-function check_is_same_point(a: PageXY, b: PageXY) {
+function check_is_same_point(a: XY, b: XY) {
     return isEqu(a.x, b.x) && isEqu(a.y, b.y);
 }
 interface AP {
     id: string
-    point: PageXY
+    point: XY
     cost: number
     parent: AP | null
 }
@@ -214,14 +229,14 @@ interface ShapeFrameLike {
 // A*
 class AStar {
     static OFFSET = 20;
-    startPoint: PageXY;
-    endPoint: PageXY;
-    pointList: PageXY[];
+    startPoint: XY;
+    endPoint: XY;
+    pointList: XY[];
     openList: AP[];
     closeList: AP[];
     shapeFrame1: ShapeFrameLike
     shapeFrame2: ShapeFrameLike
-    constructor(f1: ShapeFrameLike, f2: ShapeFrameLike, sp: PageXY, ep: PageXY, ps: PageXY[]) {
+    constructor(f1: ShapeFrameLike, f2: ShapeFrameLike, sp: XY, ep: XY, ps: XY[]) {
         this.startPoint = sp;
         this.endPoint = ep;
         this.pointList = ps;
@@ -247,7 +262,7 @@ class AStar {
             } else {
                 this.remove_from_openlist(point); // 先将point从openList中删除，并推入closeList
                 this.closeList.push(point);
-                const nextPoints: PageXY[] = this.next_points(point.point, this.pointList) as PageXY[]; // 寻找下一个点
+                const nextPoints: XY[] = this.next_points(point.point, this.pointList) as XY[]; // 寻找下一个点
                 for (let i = 0; i < nextPoints.length; i++) {
                     const cur = nextPoints[i];
                     // 如果该点在closeList中，那么跳过该点
@@ -284,7 +299,7 @@ class AStar {
             } else {
                 this.remove_from_openlist(point); // 先将point从openList中删除，并推入closeList
                 this.closeList.push(point);
-                const nextPoints: PageXY[] = this.next_points2(point.point, this.pointList) as PageXY[]; // 寻找下一个点
+                const nextPoints: XY[] = this.next_points2(point.point, this.pointList) as XY[]; // 寻找下一个点
                 for (let i = 0; i < nextPoints.length; i++) {
                     const cur = nextPoints[i];
                     // 如果该点在closeList中，那么跳过该点
@@ -335,13 +350,13 @@ class AStar {
     }
 
     // 检查点是否在列表中
-    is_exist_list(point: PageXY, list: AP[]) {
+    is_exist_list(point: XY, list: AP[]) {
         return list.find((item) => check_is_same_point(item.point, point));
     }
-    next_points(point: PageXY, points: PageXY[]) {
+    next_points(point: XY, points: XY[]) {
         const { x, y } = point;
-        const xSamePoints: PageXY[] = [];
-        const ySamePoints: PageXY[] = [];
+        const xSamePoints: XY[] = [];
+        const ySamePoints: XY[] = [];
         // 找出x或y坐标相同的点
         for (let i = 0, len = points.length; i < len; i++) {
             const item = points[i];
@@ -355,10 +370,10 @@ class AStar {
         const yNextPoints = this.next_point_d(x, y, xSamePoints, "y", this.shapeFrame1, this.shapeFrame2);
         return [...xNextPoints, ...yNextPoints];
     }
-    next_points2(point: PageXY, points: PageXY[]) {
+    next_points2(point: XY, points: XY[]) {
         const { x, y } = point;
-        const xSamePoints: PageXY[] = [];
-        const ySamePoints: PageXY[] = [];
+        const xSamePoints: XY[] = [];
+        const ySamePoints: XY[] = [];
         // 找出x或y坐标相同的点
         for (let i = 0, len = points.length; i < len; i++) {
             const item = points[i];
@@ -372,7 +387,7 @@ class AStar {
         const yNextPoints = this.next_point_d2(x, y, xSamePoints, "y", this.shapeFrame1, this.shapeFrame2);
         return [...xNextPoints, ...yNextPoints];
     }
-    is_through(a: PageXY, b: PageXY, f1: ShapeFrameLike, f2: ShapeFrameLike) {
+    is_through(a: XY, b: XY, f1: ShapeFrameLike, f2: ShapeFrameLike) {
         let rects: ShapeFrameLike[] = [f1, f2];
         let minX = Math.min(a.x, b.x);
         let maxX = Math.max(a.x, b.x);
@@ -404,7 +419,7 @@ class AStar {
         }
         return false;
     }
-    next_point_d(x: number, y: number, list: PageXY[], dir: 'x' | 'y', f1: ShapeFrameLike, f2: ShapeFrameLike) {
+    next_point_d(x: number, y: number, list: XY[], dir: 'x' | 'y', f1: ShapeFrameLike, f2: ShapeFrameLike) {
         const value = dir === "x" ? x : y;
         let nextLeftTopPoint = null;
         let nextRIghtBottomPoint = null;
@@ -431,7 +446,7 @@ class AStar {
         }
         return [nextLeftTopPoint, nextRIghtBottomPoint].filter((point) => !!point);
     }
-    next_point_d2(x: number, y: number, list: PageXY[], dir: 'x' | 'y', f1: ShapeFrameLike, f2: ShapeFrameLike) {
+    next_point_d2(x: number, y: number, list: XY[], dir: 'x' | 'y', f1: ShapeFrameLike, f2: ShapeFrameLike) {
         const value = dir === "x" ? x : y;
         let nextLeftTopPoint = null;
         let nextRIghtBottomPoint = null;
@@ -533,7 +548,7 @@ export function slice_invalid_point(points: CurvePoint[]) {
 /**
  * @description 给两点确定两点是否同一水平或同一垂线上
  */
-export function d(a: PageXY, b: XY): 'ver' | 'hor' | false {
+export function d(a: XY, b: XY): 'ver' | 'hor' | false {
     if (Math.abs(a.x - b.x) < 0.0001) return 'ver';
     if (Math.abs(a.y - b.y) < 0.0001) return 'hor';
     return false;
@@ -650,7 +665,7 @@ export function path_for_free_contact(points: CurvePoint[], width: number, heigh
 
     __handle[direction](points, start, end, width, height);
 }
-export function path_for_free_end_contact(shape: ContactShape, points: CurvePoint[], start: PageXY | undefined) {
+export function path_for_free_end_contact(shape: ContactShape, points: CurvePoint[], start: XY | undefined) {
     if (!start) {
         const _s = points[0];
         start = { x: _s.x, y: _s.y };
@@ -665,7 +680,7 @@ export function path_for_free_end_contact(shape: ContactShape, points: CurvePoin
         points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight), end);
     }
 }
-export function path_for_free_start_contact(points: CurvePoint[], end: PageXY | undefined, width: number, height: number) {
+export function path_for_free_start_contact(points: CurvePoint[], end: XY | undefined, width: number, height: number) {
     if (!end) {
         return path_for_free_contact(points, width, height);
     }

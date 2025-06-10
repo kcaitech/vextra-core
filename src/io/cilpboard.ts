@@ -71,8 +71,9 @@ import * as types from "../data/typesdefine";
 import { v4 } from "uuid";
 import { Document } from "../data";
 import { newSymbolRefShape, newTextShapeByText } from "../editor/creator/creator";
-import { Page } from "../data";
+// import { Page } from "../data";
 import { FMT_VER_latest } from "../data/fmtver";
+import { XYsBounding } from "../data/utils";
 
 export function set_childs_id(shapes: Shape[], matched?: Set<string>) {
     for (const shape of shapes as GroupShape[]) {
@@ -416,20 +417,6 @@ export function import_text(document: Document, text: types.Text, gen?: boolean)
     return importText(text);
 }
 
-export function XYsBounding(points: { x: number, y: number }[]) {
-    const xs: number[] = [];
-    const ys: number[] = [];
-    for (let i = 0; i < points.length; i++) {
-        xs.push(points[i].x);
-        ys.push(points[i].y);
-    }
-    const top = Math.min(...ys);
-    const bottom = Math.max(...ys);
-    const left = Math.min(...xs);
-    const right = Math.max(...xs);
-    return { top, bottom, left, right };
-}
-
 export function get_frame(shapes: Shape[]): { x: number, y: number }[] {
     const points: { x: number, y: number }[] = [];
     for (let i = 0, len = shapes.length; i < len; i++) {
@@ -483,6 +470,6 @@ export function afterImport(document: Document, media: any) {
 }
 
 export function cloneGradient(g: types.Gradient) {
-    return importGradient(exportGradient(g));
+    return importGradient((g));
 }
 

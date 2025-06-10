@@ -9,8 +9,8 @@
  */
 
 import { ShapeView } from "../../shape";
-import { XYsBounding } from "../../../io/cilpboard";
 import { Shape, ShapeFrame } from "../../../data";
+import { XYsBounding } from "../../../data/utils";
 export function updateFrame(frame: ShapeFrame, x: number, y: number, w: number, h: number): boolean {
     if (frame.x !== x || frame.y !== y || frame.width !== w || frame.height !== h) {
         frame.x = x;
