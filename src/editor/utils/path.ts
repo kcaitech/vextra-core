@@ -22,7 +22,7 @@ import { importCurvePoint } from "../../data/baseimport";
 import { Border } from "../../data";
 import { ColVector3D } from "../../basic/matrix2";
 import { ShapeView } from "../../dataview";
-import { Path } from "@kcdesign/path";
+import { Path } from "@kcaitech/path";
 import { qua2cube, splitCubicBezierAtT } from "../../data/pathparser";
 import { Transform } from "../../data/transform";
 
