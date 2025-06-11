@@ -91,7 +91,7 @@ handler[BlurType.Background] = (h: Function, blur: Blur, id: string, frame: Shap
 }
 
 export function render(h: Function, blur: Blur, id: string, frame: ShapeSize, fills: Fill[], borders: Border | undefined, path: string) {
-    if (!blur || !blur.isEnabled) return [];
+    if (!blur || !blur.isEnabled || (blur.type !== BlurType.Gaussian && blur.type !== BlurType.Background)) return [];
     const el = handler[blur.type](h, blur, id, frame, fills, borders, path);
     if (!el) return [];
     return [el];

@@ -49,10 +49,9 @@ export class PathShapeViewCache extends ViewCache {
         if (this.view.radiusType === RadiusType.Rect) {
             const radius = this.radius;
             const points = this.view.segments[0].points.map(point => importCurvePoint(point));
-            points[0].radius = radius[0];
-            points[1].radius = radius[1] ?? radius[0];
-            points[2].radius = radius[2] ?? radius[0];
-            points[3].radius = radius[3] ?? radius[0];
+            points.forEach((point, index) => {
+                point.radius = radius[index] ?? radius[0];
+            });
             path = parsePath(points, true, width, height);
         } else {
             path = new Path();

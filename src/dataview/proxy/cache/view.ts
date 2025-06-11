@@ -55,6 +55,7 @@ export class ViewCache {
         const fillsMask: string | undefined = this.view.fillsMask;
         if (fillsMask) {
             const mask = this.view.style.getStylesMgr()!.getSync(fillsMask) as FillMask;
+            if (!mask) return this.view.m_data.style.fills;
             fills = mask.fills;
             this.watchFillMask(mask);
         } else {
@@ -115,9 +116,11 @@ export class ViewCache {
         const bordersMask: string | undefined = this.view.bordersMask;
         if (bordersMask) {
             const mask = mgr.getSync(bordersMask) as BorderMask
-            border.position = mask.border.position;
-            border.sideSetting = mask.border.sideSetting;
-            this.watchBorderMask(mask);
+            if (mask) {
+                border.position = mask.border.position;
+                border.sideSetting = mask.border.sideSetting;
+                this.watchBorderMask(mask);
+            }
         } else {
             this.unwatchBorderMask();
         }
@@ -125,6 +128,10 @@ export class ViewCache {
         const fillsMask: string | undefined = this.view.borderFillsMask;
         if (fillsMask) {
             const mask = mgr.getSync(fillsMask) as FillMask;
+            if (!mask) {
+                border.strokePaints = new BasicArray();
+                return this.m_border = border;
+            }
             border.strokePaints = mask.fills;
             this.watchBorderFillMask(mask);
         } else {
@@ -156,6 +163,7 @@ export class ViewCache {
         if (this.view.radiusMask) {
             const mgr = this.view.style.getStylesMgr()!;
             const mask = mgr.getSync(this.view.radiusMask) as RadiusMask
+            if (!mask) return [this.view.fixedRadius ?? 0];
             _radius = [...mask.radius];
             this.watchRadiusMask(mask);
         } else {
@@ -191,6 +199,7 @@ export class ViewCache {
             const mgr = this.view.style.getStylesMgr();
             if (!mgr) return shadows;
             const mask = mgr.getSync(this.view.shadowsMask) as ShadowMask;
+            if (!mask) return this.view.m_data.style.shadows;
             shadows = mask.shadows;
             this.watchShadowMask(mask);
         } else {
@@ -223,6 +232,7 @@ export class ViewCache {
         if (this.view.blurMask) {
             const mgr = this.view.style.getStylesMgr()!;
             const mask = mgr.getSync(this.view.blurMask) as BlurMask
+            if (!mask) return this.view.m_data.style.blur;
             blur = mask.blur;
             this.watchBlurMask(mask);
         } else {
