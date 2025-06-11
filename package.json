@@ -20,7 +20,7 @@
     "check-circular(need install magde on DEV)": "madge --circular --extensions ts src/"
   },
   "dependencies": {
-    "@kcaitech/path": "^0.1.3",
+    "@kcaitech/path": "^0.1.4",
     "fzstd": "^0.1.1",
     "jszip": "^3.10.1",
     "kiwi-schema": "^0.5.0",

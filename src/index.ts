@@ -14,10 +14,6 @@ import { gPal, MeasureFun, TextPathFun } from "./basic/pal"
 
 // 基础模块导出
 export * from "./basic/index"
-// export * as Matrix from "./basic/matrix"
-// // export * as Utils from "./basic/utils"
-// export * as Event from "./basic/event"
-// export * as Error from "./basic/error"
 
 // 数据模块导出
 export * from "./data"
@@ -31,10 +27,6 @@ export * from "./editor"
 
 // 协作模块导出
 export * as Coop from "./coop"
-
-// 工具函数导出
-// export { exportBorder, exportFill, exportShadow, exportBlur, exportContextSettings } from './data/baseexport'
-export * as FigmaConvert from "./figmcpconvert"
 
 // 初始化函数
 export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun) {
