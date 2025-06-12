@@ -36,3 +36,48 @@ export * from "./star"
 export { FrameCpt } from "./proxy/frame/basic"
 export { find4select } from "./find"
 export { hitContent, hitVisible, hitOuter } from "./hittest"
+
+import { Shape, ShapeType } from "../data";
+import { ArtboardView } from "./artboard";
+import { BoolShapeView } from "./boolshape";
+import { ContactLineView } from "./contactline";
+import { GroupShapeView } from "./groupshape";
+import { LineView } from "./line";
+import { PageView } from "./page";
+import { PathShapeView } from "./pathshape";
+import { PolygonShapeView } from "./polygon";
+import { RectShapeView } from "./rect";
+import { StarShapeView } from "./star";
+import { SymbolView } from "./symbol";
+import { SymbolRefView } from "./symbolref";
+import { TextShapeView } from "./textshape";
+import { DViewCtx, ViewType } from "./viewctx";
+import { DataView } from "./view";
+function initComsMap(comsMap: Map<ShapeType, ViewType>) {
+    comsMap.set(ShapeType.Artboard, ArtboardView);
+    comsMap.set(ShapeType.Group, GroupShapeView);
+    comsMap.set(ShapeType.Image, RectShapeView);
+    comsMap.set(ShapeType.BoolShape, BoolShapeView);
+    comsMap.set(ShapeType.Path, PathShapeView);
+    comsMap.set(ShapeType.Oval, PathShapeView);
+    comsMap.set(ShapeType.Text, TextShapeView);
+    comsMap.set(ShapeType.Symbol, SymbolView);
+    comsMap.set(ShapeType.SymbolUnion, SymbolView);
+    comsMap.set(ShapeType.SymbolRef, SymbolRefView);
+    comsMap.set(ShapeType.Line, LineView);
+    comsMap.set(ShapeType.Contact, ContactLineView);
+    comsMap.set(ShapeType.Rectangle, RectShapeView);
+    comsMap.set(ShapeType.Star, StarShapeView);
+    comsMap.set(ShapeType.Polygon, PolygonShapeView);
+    comsMap.set(ShapeType.Page, PageView);
+}
+
+export function layoutShape(shape: Shape, renderType: 'Canvas' | 'SVG' = 'SVG'): {view: DataView, ctx: DViewCtx} {
+    const ctx = new DViewCtx(renderType);
+    initComsMap(ctx.comsMap);
+    const ViewClass = ctx.comsMap.get(shape.type);
+    if (!ViewClass) throw new Error("export svg, unknow shape type : " + shape.type)
+    const view = new ViewClass(ctx, { data: shape, scale: undefined, layoutSize: undefined, varsContainer: undefined, isVirtual: undefined }) as DataView;
+    ctx.layoutAll();
+    return { view, ctx };
+}
