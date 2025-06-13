@@ -45,7 +45,7 @@ export class PathSVGRenderer extends ViewSVGRenderer {
         const fills = this.renderFills();
         let borders = view.getBorder();
         let bordersEL: EL[];
-        if ((view.segments.length === 1 && !view.segments[0].isClosed) || view.segments.length > 1) {
+        if (view.segments && ((view.segments.length === 1 && !view.segments[0].isClosed) || view.segments.length > 1)) {
             bordersEL = renderLineBorders(elh, view.data.style, borders, view.startMarkerType, view.endMarkerType, view.getPathStr(), view.data);
         } else bordersEL = renderBorder(elh, borders, view.frame, view.getPathStr(), view.radius, view.isCustomBorder);
 
