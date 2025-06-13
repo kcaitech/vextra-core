@@ -26,17 +26,18 @@ export class TextLayoutMgr extends ViewLayout {
         }
 
         function fixTransform(offsetX: number, offsetY: number, transform: Transform, s: ShapeView) {
-            const targetXY = transform.computeCoord(offsetX, offsetY)
-            const dx = targetXY.x - transform.translateX;
-            const dy = targetXY.y - transform.translateY;
+            const t = transform.clone();
+            const targetXY = t.computeCoord(offsetX, offsetY)
+            const dx = targetXY.x - t.translateX;
+            const dy = targetXY.y - t.translateY;
             if (dx || dy) {
-                transform = transform.clone().trans(dx, dy)
+                t.trans(dx, dy)
             }
             if (s.parent && s.parent.autoLayout) {
-                transform.translateX = s.transform.translateX;
-                transform.translateY = s.transform.translateY;
+                t.translateX = s.transform.translateX;
+                t.translateY = s.transform.translateY;
             }
-            return transform;
+            return t;
         }
 
         const size = view.data.size
@@ -51,7 +52,6 @@ export class TextLayoutMgr extends ViewLayout {
                 const targetHeight = Math.ceil(Math.max(fontsize, layout.contentHeight));
                 frame.height = targetHeight
                 const verAlign = text.attr?.verAlign ?? TextVerAlign.Top;
-
                 if (verAlign === TextVerAlign.Middle) {
                     this.updateLayoutArgs(fixTransform(0, (size.height - targetHeight) / 2, view.data.transform, view), frame);
                 } else if (verAlign === TextVerAlign.Bottom) {

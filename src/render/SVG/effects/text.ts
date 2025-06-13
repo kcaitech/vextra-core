@@ -58,6 +58,7 @@ export function renderText2Path(layout: TextLayout, offsetX: number, offsetY: nu
                 if (fontSize > 0) garr.forEach((g) => {
                     if (isBlankChar(g.char.charCodeAt(0))) return;
                     const pathstr = getTextPath(font, fontSize, italic, weight, g.char.charCodeAt(0))
+                    if (!pathstr) return;
                     const path = Path.fromSVGString(pathstr)
                     path.translate(g.x + lineX, baseY);
                     paths.addPath(path)

@@ -1,12 +1,13 @@
 import {
     BasicArray, Blur, BlurMask,
     Border,
-    BorderMask, CurveMode, CurvePoint,
+    BorderMask, BorderSideSetting, CurveMode, CurvePoint,
     Fill,
     FillMask,
     OverrideType, parsePath,
     RadiusMask,
     RadiusType, Shadow, ShadowMask, ShapeFrame,
+    SideType,
     VariableType
 } from "../../../data";
 import { ShapeView } from "../../shape";
@@ -105,14 +106,18 @@ export class ViewCache {
         this.m_unbind_border_fill?.();
     }
 
+    defaultSideSetting(sideSetting: BorderSideSetting): BorderSideSetting {
+        return sideSetting ?? new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+    }
+
     get border(): Border {
         if (this.m_border) return this.m_border;
         const mgr = this.view.style.getStylesMgr();
-        if (!mgr) return this.m_border ?? this.view.m_data.style.borders;
 
         const v = this.view._findOV(OverrideType.Borders, VariableType.Borders);
         const border = v ? { ...v.value } : { ...this.view.m_data.style.borders };
-
+        border.sideSetting = this.defaultSideSetting(border.sideSetting);
+        if (!mgr) return this.m_border = border;
         const bordersMask: string | undefined = this.view.bordersMask;
         if (bordersMask) {
             const mask = mgr.getSync(bordersMask) as BorderMask
