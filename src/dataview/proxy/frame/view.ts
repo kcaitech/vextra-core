@@ -99,7 +99,7 @@ export class FrameProxy {
         if (mapframe(this.m_outerFrame, this._p_outerFrame)) changed = true;
 
         if (changed) {
-            this.view.m_ctx.addNotifyLayout(this.view);
+            this.view.ctx.addNotifyLayout(this.view);
         }
 
         return changed;

@@ -14,7 +14,7 @@ import { ViewCanvasRenderer, Props } from "../painters/view";
 import { Path } from "@kcaitech/path";
 import { stroke } from "../../stroke";
 
-export function render(renderer: ViewCanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, shadows: Shadow[], border: Border, fills: Fill[]): Function | undefined {
+export function render(renderer: ViewCanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, shadows: Shadow[], border: Border, fills: Fill[]): Function | undefined {
     shadows = shadows.filter(i => i.isEnabled);
     if (!shadows.length) return;
 
@@ -44,7 +44,7 @@ export function render(renderer: ViewCanvasRenderer, view: ShapeView, props: Pro
     }
 }
 
-function frankShadow(ctx: CanvasRenderingContext2D, shadow: Shadow): Function {
+function frankShadow(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, shadow: Shadow): Function {
     ctx.save();
     const color = shadow.color;
     ctx.shadowColor = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`;
@@ -54,7 +54,7 @@ function frankShadow(ctx: CanvasRenderingContext2D, shadow: Shadow): Function {
     return ctx.restore.bind(ctx);
 }
 
-function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, outerShadows: Shadow[]) {
+function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, outerShadows: Shadow[]) {
     let pathStr = view instanceof TextShapeView ? view.getTextPath().toString() :  view.getPath().toString();
     const border = view.getBorder();
     if (border && border.position !== BorderPosition.Inner) {
@@ -78,7 +78,7 @@ function blurOutlineShadow(view: ShapeView, props: Props, ctx: CanvasRenderingCo
     ctx.restore();
 }
 
-function complexBlurOutlineShadow(renderer: ViewCanvasRenderer, props: Props, ctx: CanvasRenderingContext2D, outerShadows: Shadow[]) {
+function complexBlurOutlineShadow(renderer: ViewCanvasRenderer, props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, outerShadows: Shadow[]) {
     const path2D = renderer.flat;
     ctx.save();
     ctx.transform(...props.transform);
@@ -94,7 +94,7 @@ function complexBlurOutlineShadow(renderer: ViewCanvasRenderer, props: Props, ct
     ctx.restore();
 }
 
-function innerShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, innerShadows: Shadow[]) {
+function innerShadow(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, innerShadows: Shadow[]) {
     return () => {
         // const outline = view.outline;
         // const outlineStr = outline.toSVGString();

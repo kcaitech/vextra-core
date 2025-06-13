@@ -63,7 +63,7 @@ export class ArtboardFrameProxy extends FrameProxy {
         // update visible
         if (updateFrame(this.m_visibleFrame, this.frame.x - el, this.frame.y - et, this.frame.width + el + er, this.frame.height + et + eb)) changed = true;
 
-        const childouterbounds = this.view.m_children.map(c => (c as ShapeView).frameProxy._p_outerFrame);
+        const childouterbounds = this.view.children.map(c => (c as ShapeView).frameProxy._p_outerFrame);
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
             p.minx = Math.min(p.minx, c.x);
             p.maxx = Math.max(p.maxx, c.x + c.width);

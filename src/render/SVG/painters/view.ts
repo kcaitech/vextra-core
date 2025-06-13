@@ -120,7 +120,7 @@ export class ViewSVGRenderer extends IRenderer {
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
             if (!__s.isVisible) continue;
-            const dom = (__s.m_renderer as ViewSVGRenderer).DOM;
+            const dom = (__s.renderer as ViewSVGRenderer).DOM;
             if (!dom.elattr['style']) {
                 dom.elattr['style'] = {};
             }
@@ -197,8 +197,8 @@ export class ViewSVGRenderer extends IRenderer {
     }
 
     renderContents(): EL[] {
-        const childs = this.view.m_children;
-        childs.forEach((c) => c.render());
+        const childs = this.view.children;
+        childs.forEach((c) => c.render('SVG'));
         return childs;
     }
 
@@ -210,7 +210,7 @@ export class ViewSVGRenderer extends IRenderer {
         const masked = view.masked;
         if (masked) {
             view.reset("g");
-            masked.render();
+            masked.render('SVG');
             return ++this.m_render_version;
         }
 
@@ -268,7 +268,7 @@ export class ViewSVGRenderer extends IRenderer {
 
     asyncRender() {
         const renderContents = this.renderContents;
-        this.renderContents = () => this.view.m_children;
+        this.renderContents = () => this.view.children;
         const version = this.render();
         this.renderContents = renderContents;
         return version;

@@ -13,7 +13,7 @@ import { ShapeView } from "../../shape";
 export function updateAutoLayout(view: ShapeView) {
     let p = view.parent;
     while (p && p.autoLayout) {
-        p.m_ctx.setReLayout(p);
+        p.ctx.setReLayout(p);
         p = p.parent;
     }
 }
@@ -22,7 +22,7 @@ export function updateAutoLayoutByBorder(view: ShapeView) {
     let p = view.parent;
     while (p && p.autoLayout) {
         if (p.autoLayout?.bordersTakeSpace) {
-            p.m_ctx.setReLayout(p);
+            p.ctx.setReLayout(p);
         }
         p = p.parent;
     }

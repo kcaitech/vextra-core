@@ -197,10 +197,6 @@ export class SymbolRefView extends ShapeView {
         return v ? v.value as string : this.data.name;
     }
 
-    render(): number {
-        return this.m_renderer.render();
-    }
-
     get startMarkerType(): MarkerType | undefined {
         const v = this._findOV2(OverrideType.StartMarkerType, VariableType.MarkerType);
         return v ? v.value : this.m_sym?.style.startMarkerType;

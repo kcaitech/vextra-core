@@ -39,7 +39,7 @@ export class RefLayout extends ViewLayout {
             if (!cc.isVisible) {
                 hidden += 1;
             }
-            cc.m_ctx.setDirty(cc);
+            cc.ctx.setDirty(cc);
             cc.layoutProxy.updateLayoutArgs(newTransform, cc.frame);
             cc.layoutProxy.updateFrames();
         }
@@ -76,16 +76,16 @@ export class RefLayout extends ViewLayout {
             return true;
         }
 
-        const comsMap = view.m_ctx.comsMap;
+        const comsMap = view.ctx.comsMap;
         const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
-        cdom = new Com(view.m_ctx, props) as DataView;
+        cdom = new Com(view.ctx, props) as DataView;
         view.addChild(cdom, idx);
         return true;
     }
 
     protected layoutChilds(parentFrame: ShapeSize, scale?: { x: number, y: number }) {
         const view = this.view;
-        const varsContainer = (view.varsContainer || []).concat(view.m_data as SymbolRefShape);
+        const varsContainer = (view.varsContainer || []).concat(view.data as SymbolRefShape);
         if (view.m_sym!.parent instanceof SymbolUnionShape) {
             varsContainer.push(view.m_sym!.parent);
         }
@@ -93,7 +93,7 @@ export class RefLayout extends ViewLayout {
 
         const childs = view.getDataChilds();
         const resue: Map<string, DataView> = new Map();
-        view.m_children.forEach((c) => resue.set(c.data.id, c));
+        view.children.forEach((c) => resue.set(c.data.id, c));
         const rootView = view.getRootView();
         let changed = false;
         for (let i = 0, len = childs.length; i < len; i++) {
@@ -103,7 +103,7 @@ export class RefLayout extends ViewLayout {
         }
 
         // 删除多余的
-        if (view.m_children.length > childs.length) {
+        if (view.children.length > childs.length) {
             const removes = view.removeChilds(childs.length, Number.MAX_VALUE);
             if (rootView) rootView.addDelayDestroy(removes);
             else removes.forEach((c => c.destroy()));
@@ -123,7 +123,7 @@ export class RefLayout extends ViewLayout {
         }
         if (!view.m_sym) {
             this.updateLayoutArgs(transform, shape.frame);
-            view.removeChilds(0, view.m_children.length).forEach((c) => c.destroy());
+            view.removeChilds(0, view.children.length).forEach((c) => c.destroy());
             this.updateFrames();
             return;
         }
@@ -139,8 +139,8 @@ export class RefLayout extends ViewLayout {
         let layoutSize = new ShapeSize();
         // 调整过大小的，使用用户调整的大小，否则跟随symbol大小
         if (isCustomSize) {
-            size.width = view.m_data.size.width
-            size.height = view.m_data.size.height
+            size.width = view.data.size.width
+            size.height = view.data.size.height
         } else {
             size.width = view.m_sym.size.width
             size.height = view.m_sym.size.height
@@ -192,7 +192,7 @@ export class RefLayout extends ViewLayout {
             const __decompose_scale = transform.clearScaleSize();
             // 保持对象位置不变
             // virtual是整体缩放，位置是会变化的，不需要trans
-            if (!view.m_isVirtual) transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
+            if (!view.isVirtual) transform.trans(transform.translateX - shape.transform.translateX, transform.translateY - shape.transform.translateY);
 
             if (view.parent && (view.parent as ArtboardView).autoLayout) {
                 transform.translateX = view.transform.translateX;
@@ -223,12 +223,12 @@ export class RefLayout extends ViewLayout {
 
     layout(props?: PropsType | undefined): void {
         const view = this.view;
-        const needLayout = view.m_ctx.removeReLayout(view); // remove from changeset
+        const needLayout = view.ctx.removeReLayout(view); // remove from changeset
         if (props && !this.updateLayoutProps(props, needLayout)) return;
 
-        view.m_ctx.setDirty(view);
-        view.m_ctx.addNotifyLayout(view);
+        view.ctx.setDirty(view);
+        view.ctx.addNotifyLayout(view);
 
-        this.measure(view.m_props.layoutSize, view.m_props.scale)
+        this.measure(view.props.layoutSize, view.props.scale)
     }
 }

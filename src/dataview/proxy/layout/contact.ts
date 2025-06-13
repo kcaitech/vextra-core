@@ -19,7 +19,7 @@ export class ContactLayout extends ViewLayout {
 
     layout(props?: PropsType) {
         const view = this.view;
-        view.m_ctx.removeReLayout(view);
-        view.m_ctx.tails.add(view);
+        view.ctx.removeReLayout(view);
+        view.ctx.tails.add(view);
     }
 }

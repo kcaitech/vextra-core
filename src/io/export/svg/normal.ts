@@ -15,10 +15,10 @@ import {
 
 export function exportSvg(shape: Shape): string {
 
-    const { view, ctx } = layoutShape(shape, 'SVG');
+    const { view, ctx } = layoutShape(shape);
 
     ctx.layoutAll();
-    view.render();
+    view.render('SVG');
 
     const content = view.toSVGString();
     view.destroy();

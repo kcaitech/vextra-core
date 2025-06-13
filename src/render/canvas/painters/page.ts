@@ -18,7 +18,7 @@ export class PageCanvasRenderer extends ViewCanvasRenderer {
 
     render(): number {
         const s = Date.now();
-        const dpr = this.view.m_ctx.dpr;
+        const dpr = this.view.ctx.dpr;
         this.ctx.save();
         this.ctx.scale(dpr, dpr);
         const ver = super.render();

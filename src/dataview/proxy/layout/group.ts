@@ -43,7 +43,7 @@ export class GroupLayout extends ViewLayout {
     ) {
         let cdom: DataView | undefined = resue.get(child.id);
         const view = this.view;
-        const props = { data: child, scale, varsContainer, isVirtual: view.m_isVirtual, layoutSize: parentFrame };
+        const props = { data: child, scale, varsContainer, isVirtual: view.isVirtual, layoutSize: parentFrame };
         if (cdom) {
             view.moveChild(cdom, idx);
             return cdom.layout(props);
@@ -56,9 +56,9 @@ export class GroupLayout extends ViewLayout {
             view.addChild(cdom, idx);
             return cdom.layout(props);
         }
-        const comsMap = view.m_ctx.comsMap;
+        const comsMap = view.ctx.comsMap;
         const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
-        cdom = new Com(view.m_ctx, props) as DataView;
+        cdom = new Com(view.ctx, props) as DataView;
         view.addChild(cdom, idx);
     }
 
@@ -67,7 +67,7 @@ export class GroupLayout extends ViewLayout {
         const varsContainer = view.varsContainer;
         const childs = view.getDataChilds();
         const resue: Map<string, DataView> = new Map();
-        view.m_children.forEach((c) => resue.set(c.data.id, c));
+        view.children.forEach((c) => resue.set(c.data.id, c));
         const rootView = view.getRootView();
         for (let i = 0, len = childs.length; i < len; i++) {
             const child = childs[i];

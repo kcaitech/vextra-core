@@ -43,8 +43,8 @@ export class TextViewCache extends ViewCache {
     private _onTextMaskChange() {
         const view = this.view
         view.getText().dropAllLayout();
-        view.m_ctx.setReLayout(view);
-        view.m_ctx.setDirty(view);
+        view.ctx.setReLayout(view);
+        view.ctx.setDirty(view);
         view.notify('style', 'text', 'mask');
     }
 
@@ -73,10 +73,10 @@ export class TextViewCache extends ViewCache {
         } else {
             let origin = view.data.text;
 
-            if ((view.m_data as TextShape).varbinds?.has(OverrideType.Text)) {
+            if ((view.data as TextShape).varbinds?.has(OverrideType.Text)) {
                 let overrideVar: Text | undefined
                 const varId = view.data.varbinds?.get(OverrideType.Text)!
-                let p = view.m_data.parent;
+                let p = view.data.parent;
                 while (p) {
                     if (p instanceof SymbolShape) {
                         const variable = p.variables.get(varId)

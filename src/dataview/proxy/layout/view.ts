@@ -23,21 +23,21 @@ export class ViewLayout {
 
     protected updateLayoutProps(props: PropsType, needLayout: boolean) {
         const view = this.view;
-        if (props.data.id !== view.m_data.id) throw new Error('id not match');
-        const dataChanged = objectId(props.data) !== objectId(view.m_data);
+        if (props.data.id !== view.data.id) throw new Error('id not match');
+        const dataChanged = objectId(props.data) !== objectId(view.data);
         if (dataChanged) view.setData(props.data);
-        const diffScale = isDiffScale(props.scale, view.m_props.scale);
-        const diffLayoutSize = isDiffShapeSize(props.layoutSize, view.m_props.layoutSize);
+        const diffScale = isDiffScale(props.scale, view.props.scale);
+        const diffLayoutSize = isDiffShapeSize(props.layoutSize, view.props.layoutSize);
         const diffVars = isDiffVarsContainer(props.varsContainer, view.varsContainer);
         if (!needLayout &&
             !dataChanged &&
             !diffScale &&
             !diffVars &&
             !diffLayoutSize) return false;
-        view.m_props = props;
-        view.m_isVirtual = props.isVirtual;
+        view.props = props;
+        view.isVirtual = props.isVirtual;
         if (diffVars) {
-            view.m_ctx.removeDirty(view);
+            view.ctx.removeDirty(view);
             view.varsContainer = props.varsContainer;
         }
         return true;
@@ -141,7 +141,7 @@ export class ViewLayout {
     updateFrames() {
         const view = this.view;
         const changed = view.frameProxy.updateFrames();
-        if (changed) view.m_ctx.addNotifyLayout(view);
+        if (changed) view.ctx.addNotifyLayout(view);
         return changed;
     }
 
@@ -150,10 +150,10 @@ export class ViewLayout {
     // 父级向下更新时带props, 自身更新不带
     layout(props?: PropsType) {
         const view = this.view;
-        const needLayout = view.m_ctx.removeReLayout(view); // remove from changeset
+        const needLayout = view.ctx.removeReLayout(view); // remove from changeset
         if (props && !this.updateLayoutProps(props, needLayout)) return;
-        view.m_ctx.setDirty(view);
-        this.measure(view.m_props.layoutSize, view.m_props.scale);
-        view.m_ctx.addNotifyLayout(view);
+        view.ctx.setDirty(view);
+        this.measure(view.props.layoutSize, view.props.scale);
+        view.ctx.addNotifyLayout(view);
     }
 }

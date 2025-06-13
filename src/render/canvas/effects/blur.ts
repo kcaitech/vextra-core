@@ -25,7 +25,7 @@ export function render(view: ShapeView, props: Props): Function | null {
 
 }
 
-function backgroundBlur(ctx: CanvasRenderingContext2D, view: ShapeView, props: Props) {
+function backgroundBlur(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, view: ShapeView, props: Props) {
     const borders = view.getBorder();
     const fills = view.getFills();
     const alphaBorder = opacity(borders.strokePaints);

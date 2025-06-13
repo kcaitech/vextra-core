@@ -66,7 +66,7 @@ export class TextSVGRenderer extends ViewSVGRenderer {
         const masked = view.masked;
         if (masked) {
             view.reset("g");
-            masked.render();
+            masked.render('SVG');
             return ++this.m_render_version;
         }
 

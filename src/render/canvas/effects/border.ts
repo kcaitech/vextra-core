@@ -14,7 +14,7 @@ import { ShapeView } from "../../../dataview";
 import { render as renderGradient } from "./gradient";
 import { stroke } from "../../stroke";
 
-export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D, border: Border, fillPath: Path2D) {
+export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, border: Border, fillPath: Path2D) {
     for (const paint of border.strokePaints) {
         if (paint.isEnabled) {
             const path2D = new Path2D(stroke(view).toString());
@@ -24,9 +24,9 @@ export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContex
 }
 
 
-const painter: { [key: string]: (props: Props, ctx: CanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize, outerFrame: ShapeFrame, fillPath: Path2D) => void } = {};
+const painter: { [key: string]: (props: Props, ctx: CanvasRenderingContext2D  | OffscreenCanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize, outerFrame: ShapeFrame, fillPath: Path2D) => void } = {};
 
-painter[FillType.SolidColor] = function (props: Props, ctx: CanvasRenderingContext2D, fill: Fill, path2D: Path2D) {
+painter[FillType.SolidColor] = function (props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, fill: Fill, path2D: Path2D) {
     ctx.save();
     ctx.transform(...props.transform);
     ctx.fillStyle = `rgba(${fill.color.red}, ${fill.color.green}, ${fill.color.blue}, ${fill.color.alpha})`;
@@ -34,7 +34,7 @@ painter[FillType.SolidColor] = function (props: Props, ctx: CanvasRenderingConte
     ctx.restore();
 }
 
-painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize, outerFrame: ShapeFrame, fillPath: Path2D) {
+painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize, outerFrame: ShapeFrame, fillPath: Path2D) {
     ctx.save();
     ctx.transform(...props.transform);
     if (fill.gradient!.gradientType === GradientType.Radial) {

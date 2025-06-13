@@ -10,7 +10,6 @@
 
 import {
     adapt2Shape,
-    DViewCtx,
     layoutShape, 
     PageView, 
     ShapeView
@@ -34,7 +33,7 @@ export async function exportImg(document: Document, view: ShapeView | ShapeView[
     const data = importPage(template_page as types.Page);
     const source = transform_data(document, views.map(i => i instanceof Shape ? i : adapt2Shape(i)));
     data.childs = source as BasicArray<any>;
-    const wrapview = layoutShape(data, 'Canvas').view as PageView;
+    const wrapview = layoutShape(data).view as PageView;
     if (size === undefined) size = wrapview.size;
 
     if (size.width <= 0 || size.height <= 0) {
@@ -48,8 +47,8 @@ export async function exportImg(document: Document, view: ShapeView | ShapeView[
     const canvas = new Canvas(size.width, size.height);
     const canvasCtx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
 
-    wrapview.m_ctx.m_canvas = canvasCtx;
-    wrapview.render();
+    wrapview.ctx.setCanvas(canvasCtx);
+    wrapview.render('Canvas');
     wrapview.destroy();
     return canvasCtx.getImageData(0, 0, size.width, size.height).data.buffer as ArrayBuffer;
 }

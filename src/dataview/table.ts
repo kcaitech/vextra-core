@@ -151,7 +151,7 @@ export class TableView extends ShapeView {
 
         const reuse = new Map<string, DataView>();
         this.m_children.forEach((c) => {
-            reuse.set(c.m_data.id, c);
+            reuse.set(c.data.id, c);
         });
 
         // const shape = this.m_data as TableShape;

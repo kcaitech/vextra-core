@@ -19,12 +19,12 @@ function updateByChild(view: GroupShapeView) {
 function updateAutoLayout(view: GroupShapeView) {
     if (!(view as any).autoLayout) {
         view.childs.forEach(c => {
-            c.m_ctx.setReLayout(c);
+            c.ctx.setReLayout(c);
         });
     }
     let p = view.parent;
     while (p && p.autoLayout) {
-        p.m_ctx.setReLayout(p);
+        p.ctx.setReLayout(p);
         p = p.parent;
     }
 }

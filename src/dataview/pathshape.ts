@@ -35,10 +35,6 @@ export class PathShapeView extends ShapeView {
         this.layoutProxy = new PathLayout(this);
     }
 
-    render(): number {
-        return this.m_renderer.render();
-    }
-
     get segments() {
         return this.m_pathsegs ?? this.data.pathsegs;
     }

@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { DViewCtx, PropsType } from "./viewctx";
+import { DViewCtx, GraphicsLibrary, PropsType } from "./viewctx";
 import { Shape, SymbolRefShape, SymbolShape } from "../data";
 import { getShapeViewId, stringh } from "./basic";
 import { EL } from "./el";
@@ -86,18 +86,19 @@ export interface RootView {
 }
 
 export class DataView extends EventEL {
-    m_ctx: DViewCtx;
-    m_renderer: IRenderer;
-    m_data: Shape;
-    m_children: DataView[] = [];
-    m_parent: DataView | undefined;
-    m_props: PropsType // 缓存排版参数，用于下次直接layout
+    protected m_ctx: DViewCtx;
+    protected m_gl: GraphicsLibrary = 'SVG';
+    protected m_renderer: IRenderer;
+    protected m_data: Shape;
+    protected m_children: DataView[] = [];
+    protected m_parent: DataView | undefined;
+    protected m_props: PropsType // 缓存排版参数，用于下次直接layout
 
-    private m_varsContainer?: (SymbolRefShape | SymbolShape)[];
-    m_isVirtual?: boolean;
+    protected m_varsContainer?: (SymbolRefShape | SymbolShape)[];
+    protected m_isVirtual?: boolean;
 
-    m_is_destroyed: boolean = false;
-    m_nodeCount: number = 1;
+    protected m_is_destroyed: boolean = false;
+    protected m_nodeCount: number = 1;
 
     constructor(ctx: DViewCtx, props: PropsType) {
         super("");
@@ -113,12 +114,40 @@ export class DataView extends EventEL {
         this.m_ctx.setDirty(this);
         ctx.markRaw(this)
 
-        this.m_renderer = this.rendererBuilder();
+        this.m_renderer = this.rendererBuilder(this.m_gl);
     }
 
-    rendererBuilder(): IRenderer {
+    get ctx() {
+        return this.m_ctx;
+    }
+
+    get children() {
+        return this.m_children;
+    }
+
+    get renderer() {
+        return this.m_renderer;
+    }
+
+    get props() {
+        return this.m_props;
+    }
+
+    set props(props: PropsType) {
+        this.m_props = props;
+    }
+
+    get isVirtual(): boolean | undefined {
+        return this.m_isVirtual;
+    }
+
+    set isVirtual(isVirtual: boolean | undefined) {
+        this.m_isVirtual = isVirtual;
+    }
+
+    rendererBuilder(gl: GraphicsLibrary): IRenderer {
         const view = this as unknown as any;
-        switch (this.m_ctx.gl) {
+        switch (gl) {
             case "SVG":
                 const SVGRendererConstructor = SVGConstructorMap.get(view.type)!;
                 return new SVGRendererConstructor(view);
@@ -131,8 +160,8 @@ export class DataView extends EventEL {
         }
     }
 
-    get canvasRenderingContext2D(): CanvasRenderingContext2D {
-        return this.m_ctx.m_canvas! as CanvasRenderingContext2D;
+    get canvasRenderingContext2D(): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
+        return this.m_ctx.canvas;
     }
 
     setData(data: Shape) {
@@ -211,12 +240,20 @@ export class DataView extends EventEL {
 
     layoutProxy = { updateFrames: () => false };
 
-    render(): number {
-        return 0;
+    render(gl: GraphicsLibrary): number {
+        if (gl !== this.m_gl) {
+            this.m_gl = gl;
+            this.m_renderer = this.rendererBuilder(this.m_gl);
+        }
+        return this.m_renderer.render();
     }
 
-    asyncRender(): number {
-        return 0;
+    asyncRender(gl: GraphicsLibrary): number {
+        if (gl !== this.m_gl) {
+            this.m_gl = gl;
+            this.m_renderer = this.rendererBuilder(this.m_gl);
+        }
+        return this.m_renderer.asyncRender();
     }
 
     getRootView(): RootView | undefined {

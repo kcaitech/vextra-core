@@ -42,7 +42,7 @@ export class IRenderer {
     }
 
     checkAndResetDirty(): boolean {
-        return this.view.m_ctx.removeDirty(this.view);
+        return this.view.ctx.removeDirty(this.view);
     }
 
     m_render_version: number = 0;

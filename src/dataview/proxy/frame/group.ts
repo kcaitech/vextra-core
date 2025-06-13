@@ -20,9 +20,9 @@ export class GroupFrameProxy extends FrameProxy {
     }
 
     updateFrames() {
-        let children = this.view.m_children;
+        let children = this.view.children;
         if (this.view.maskMap.size && (this.view.type === ShapeType.Group || this.view.type === ShapeType.BoolShape)) {
-            children = this.view.m_children.filter(i => !this.view.maskMap.has(i.id));
+            children = this.view.children.filter(i => !this.view.maskMap.has(i.id));
         }
 
         children = children.filter(i => i.type !== ShapeType.Contact);

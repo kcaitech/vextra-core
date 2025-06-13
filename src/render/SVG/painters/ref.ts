@@ -54,8 +54,8 @@ export class RefSVGRenderer extends ViewSVGRenderer {
 
     renderContents(): EL[] {
         const view = this.view;
-        const childs = view.m_children;
-        childs.forEach((c) => c.render());
+        const childs = view.children;
+        childs.forEach((c) => c.render('SVG'));
 
         if (view.uniformScale) {
             return [elh('g', { transform: `scale(${view.uniformScale})` }, childs)];
@@ -82,7 +82,7 @@ export class RefSVGRenderer extends ViewSVGRenderer {
         const masked = view.masked;
         if (masked) {
             view.reset("g");
-            masked.render();
+            masked.render('SVG');
             return ++this.m_render_version;
         }
 

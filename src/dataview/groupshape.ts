@@ -53,7 +53,7 @@ export class GroupShapeView extends ShapeView {
             }
             if (map.has(child.id) !== __map.has(child.id)) needUpdate.push(child);
         }
-        needUpdate.forEach((child) => child.m_ctx.setDirty(child));
+        needUpdate.forEach((child) => child.ctx.setDirty(child));
         this.maskMap = __map;
         this.notify('mask-env-change');
     }

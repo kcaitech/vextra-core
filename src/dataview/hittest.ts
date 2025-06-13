@@ -16,8 +16,8 @@ function frameContains(frame: ShapeFrame, x: number, y: number) {
 }
 
 function _hitTest(shape: ShapeView, x: number, y: number, type: '_p_frame' | '_p_visibleFrame' | '_p_outerFrame', depth: number, ret: { shape: ShapeView, x: number, y: number }[]) {
-    for (let i = 0, len = shape.m_children.length; i < len; ++i) {
-        const child = shape.m_children[i] as ShapeView;
+    for (let i = 0, len = shape.children.length; i < len; ++i) {
+        const child = shape.children[i] as ShapeView;
         if (frameContains(child.frameProxy[type], x, y)) {
             const xy = child.transform.inverseCoord(x, y);
             ret.push({ shape: child, x: xy.x, y: xy.y })

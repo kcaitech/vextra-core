@@ -22,6 +22,7 @@ import { DViewCtx, PropsType } from "./viewctx";
 import { BoolModifyEffect } from "./proxy/effects/bool";
 import { BoolShapeViewCache } from "./proxy/cache/bool";
 import { BoolFrameProxy } from "./proxy/frame/bool";
+import { GraphicsLibrary } from "./viewctx";
 
 function opPath(bop: BoolOp, path0: Path, path1: Path, isIntersect: boolean): Path {
     switch (bop) {
@@ -87,17 +88,17 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
     }
 
     let fVisibleIdx = 0;
-    for (let i = 0; i < shape.m_children.length; ++i) {
-        if ((shape.m_children[i] as ShapeView).isVisible) {
+    for (let i = 0; i < shape.children.length; ++i) {
+        if ((shape.children[i] as ShapeView).isVisible) {
             fVisibleIdx = i;
             break;
         }
     }
 
-    const cc = shape.m_children.length;
+    const cc = shape.children.length;
     if (fVisibleIdx >= cc) return new Path();
 
-    const child0 = shape.m_children[fVisibleIdx] as ShapeView;
+    const child0 = shape.children[fVisibleIdx] as ShapeView;
     let frame0: ShapeFrame;
     let path0 = getPath(child0);
     if (!path0) return new Path();
@@ -119,7 +120,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
     grid.push(frame0);
 
     for (let i = fVisibleIdx + 1; i < cc; i++) {
-        const child1 = shape.m_children[i] as ShapeView;
+        const child1 = shape.children[i] as ShapeView;
         if (!child1.isVisible) continue;
         let frame1: ShapeFrame;
         const path1 = getPath(child1)!;
@@ -132,7 +133,7 @@ export function render2path(shape: ShapeView, defaultOp = BoolOp.None): Path {
             const bounds = path1.bbox();
             frame1 = new ShapeFrame(bounds.x, bounds.y, bounds.w, bounds.h);
         }
-        const pathop = child1.m_data.boolOp ?? defaultOp;
+        const pathop = child1.data.boolOp ?? defaultOp;
 
         if (pathop === BoolOp.None) {
             grid.push(frame1);
@@ -186,12 +187,8 @@ export class BoolShapeView extends GroupShapeView {
         this.m_ctx.setDirty(this);
     }
 
-    asyncRender() {
-        return this.render();
-    }
-
-    render() {
-        return this.m_renderer.render();
+    asyncRender(gl: GraphicsLibrary) {
+        return this.render(gl);
     }
 }
 

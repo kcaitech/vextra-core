@@ -69,10 +69,6 @@ export class ArtboardView extends GroupShapeView {
         return v ? v.value : this.data.autoLayout;
     }
 
-    render(): number {
-        return this.m_renderer.render();
-    }
-
     get guides() {
         return this.data.guides;
     }

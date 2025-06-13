@@ -41,7 +41,7 @@ function collectDecorateRange(garr: GraphArray, decorateRange: DecorateRange[], 
     decorateRange.push({ start, end, color, fontSize, gradient })
 }
 
-function renderDecorateLines(ctx: CanvasRenderingContext2D, x: number, y: number, decorateRange: DecorateRange[]) {
+function renderDecorateLines(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, x: number, y: number, decorateRange: DecorateRange[]) {
     for (let i = 0, len = decorateRange.length; i < len; i++) {
         ctx.save();
         const l = decorateRange[i];
@@ -53,7 +53,7 @@ function renderDecorateLines(ctx: CanvasRenderingContext2D, x: number, y: number
     }
 }
 
-function renderDecorateRects(ctx: CanvasRenderingContext2D, x: number, y: number, hight: number, decorateRange: { start: number, end: number, color: Color }[]) {
+function renderDecorateRects(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, x: number, y: number, hight: number, decorateRange: { start: number, end: number, color: Color }[]) {
     for (let i = 0, len = decorateRange.length; i < len; i++) {
         ctx.save();
         const l = decorateRange[i];
@@ -83,7 +83,7 @@ function isBlankChar(charCode: number) {
     }
     return false;
 }
-export function renderTextLayout(props: Props, ctx: CanvasRenderingContext2D, textlayout: TextLayout, shape: TextShapeView) {
+export function renderTextLayout(props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, textlayout: TextLayout, shape: TextShapeView) {
     const frame = shape.frame;
     const { xOffset, yOffset, paras } = textlayout;
     const pc = paras.length;

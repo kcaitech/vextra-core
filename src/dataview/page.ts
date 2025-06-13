@@ -18,11 +18,11 @@ import { DViewCtx, PropsType } from "./viewctx";
 
 function checkPath(v: ShapeView) {
     const lhs = v.getPathStr();
-    const rhs = v.m_data.getPath().toString();
+    const rhs = v.data.getPath().toString();
     if (lhs !== rhs) {
         console.error(`path not match: ${lhs} vs ${rhs}`, v.name)
     }
-    v.m_children.forEach((c) => checkPath(c as ShapeView));
+    v.children.forEach((c) => checkPath(c as ShapeView));
 }
 
 export class PageView extends GroupShapeView implements RootView {
@@ -50,7 +50,7 @@ export class PageView extends GroupShapeView implements RootView {
             this.m_views.set(v.id, v);
             if (v instanceof ArtboardView) this.m_artboards.set(v.id, v);
             if (v instanceof CutoutShapeView) this.m_cutouts.set(v.id, v);
-            v.m_children.forEach((c) => add(c as ShapeView));
+            v.children.forEach((c) => add(c as ShapeView));
         }
         if (Array.isArray(view)) view.forEach(add);
         else add(view);
@@ -63,7 +63,7 @@ export class PageView extends GroupShapeView implements RootView {
             this.m_views.delete(v.id);
             if (v instanceof ArtboardView) this.m_artboards.delete(v.id);
             if (v instanceof CutoutShapeView) this.m_cutouts.delete(v.id);
-            v.m_children.forEach((c) => remove(v, c as ShapeView));
+            v.children.forEach((c) => remove(v, c as ShapeView));
         }
         if (Array.isArray(view)) view.forEach((v) => remove(parent, v));
         else remove(parent, view);
@@ -108,10 +108,6 @@ export class PageView extends GroupShapeView implements RootView {
 
     get guides() {
         return (this.m_data as Page).guides;
-    }
-
-    render(): number {
-        return this.m_renderer.render();
     }
 
     updateMaskMap() {

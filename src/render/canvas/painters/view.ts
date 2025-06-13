@@ -86,11 +86,11 @@ export class ViewCanvasRenderer extends IRenderer {
     }
 
     renderContents() {
-        const childs = this.view.m_children;
+        const childs = this.view.children;
         if (childs.length) {
             this.ctx.save();
             this.ctx.transform(...this.props.transform);
-            childs.forEach((c) => c.render());
+            childs.forEach((c) => c.render('Canvas'));
             this.ctx.restore();
         }
     }
@@ -107,10 +107,10 @@ export class ViewCanvasRenderer extends IRenderer {
             const borderP = stroke(this.view);
             path.addPath(new Path2D(borderP.toString()));
         }
-        const childs = this.view.m_children as ShapeView[];
+        const childs = this.view.children as ShapeView[];
         if (childs.length) {
             childs.forEach((c) => {
-                const flat = (c.m_renderer as ViewCanvasRenderer).flat;
+                const flat = (c.renderer as ViewCanvasRenderer).flat;
                 const m = c.matrix2Parent().toArray();
                 path.addPath(flat, { a: m[0], b: m[1], c: m[2], d: m[3], e: m[4], f: m[5] });
             });

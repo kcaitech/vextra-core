@@ -169,7 +169,7 @@ export class TableView2 extends ShapeView {
 
         const reuse = new Map<string, DataView>();
         this.m_children.forEach((c) => {
-            reuse.set(c.m_data.id, c);
+            reuse.set(c.data.id, c);
         });
 
         const comsMap = this.m_ctx.comsMap;
@@ -205,7 +205,7 @@ export class TableView2 extends ShapeView {
                     props.data = cell;
                     // const comsMap = this.m_ctx.comsMap;
                     const Com = comsMap.get(cell.type) || comsMap.get(ShapeType.Rectangle)!;
-                    const ins = new Com(this.m_ctx, props) as DataView;
+                    const ins = new Com(this.ctx, props) as DataView;
                     this.addChild(ins, idx);
                     this.m_cells.set(ins.id, ins as ArtboardView);
                 }

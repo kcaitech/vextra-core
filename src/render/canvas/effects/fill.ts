@@ -13,15 +13,15 @@ import { Props } from "../painters/view";
 import { render as renderGradient } from "./gradient";
 import { patternRender } from "./pattern";
 
-export function render(props: Props, ctx: CanvasRenderingContext2D, fills: Fill[], path2D: Path2D, frame: ShapeSize) {
+export function render(props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, fills: Fill[], path2D: Path2D, frame: ShapeSize) {
     for (const fill of fills) {
         if (fill.isEnabled) painter[fill.fillType](props, ctx, fill, path2D, frame);
     }
 }
 
-const painter: { [key: string]: (props: Props, ctx: CanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize) => void } = {};
+const painter: { [key: string]: (props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize) => void } = {};
 
-painter[FillType.SolidColor] = function (props: Props, ctx: CanvasRenderingContext2D, fill: Fill, path2D: Path2D) {
+painter[FillType.SolidColor] = function (props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, fill: Fill, path2D: Path2D) {
     ctx.save();
     ctx.transform(...props.transform);
     ctx.fillStyle = `rgba(${fill.color.red}, ${fill.color.green}, ${fill.color.blue}, ${fill.color.alpha})`;
@@ -29,7 +29,7 @@ painter[FillType.SolidColor] = function (props: Props, ctx: CanvasRenderingConte
     ctx.restore();
 }
 
-painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize) {
+painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize) {
     ctx.save();
     ctx.transform(...props.transform);
     if(fill.gradient?.gradientType === GradientType.Radial) {
@@ -46,7 +46,7 @@ painter[FillType.Gradient] = function (props: Props, ctx: CanvasRenderingContext
     ctx.restore();
 }
 
-painter[FillType.Pattern] = function (props: Props, ctx: CanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize) {
+painter[FillType.Pattern] = function (props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, fill: Fill, path2D: Path2D, frame: ShapeSize) {
     ctx.save();
     ctx.transform(...props.transform);
     patternRender(ctx, frame, fill, path2D);

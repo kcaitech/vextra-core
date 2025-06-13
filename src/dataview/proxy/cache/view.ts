@@ -41,7 +41,7 @@ export class ViewCache {
 
     private _onFillMaskChange() {
         this.m_fills = undefined;
-        this.view.m_ctx.setDirty(this.view);
+        this.view.ctx.setDirty(this.view);
         this.view.notify('style', 'fills', 'mask');
     }
 
@@ -69,7 +69,7 @@ export class ViewCache {
             this.watchFillMask(mask);
         } else {
             const v = this.view._findOV(OverrideType.Fills, VariableType.Fills);
-            fills = v ? v.value : this.view.m_data.style.fills;
+            fills = v ? v.value : this.view.data.style.fills;
             this.unwatchFillMask();
         }
 
@@ -78,7 +78,7 @@ export class ViewCache {
 
     private _onBorderMaskChange() {
         this.m_border = undefined;
-        this.view.m_ctx.setDirty(this.view);
+        this.view.ctx.setDirty(this.view);
         this.view.notify('style', 'border', 'mask');
     }
 
@@ -97,7 +97,7 @@ export class ViewCache {
 
     private _onBorderFillMaskChange() {
         this.m_border = undefined;
-        this.view.m_ctx.setDirty(this.view);
+        this.view.ctx.setDirty(this.view);
         this.view.notify('style', 'paints', 'mask');
     }
 
@@ -117,10 +117,10 @@ export class ViewCache {
     get border(): Border {
         if (this.m_border) return this.m_border;
         const mgr = this.view.style.getStylesMgr();
-        if (!mgr) return this.m_border ?? this.view.m_data.style.borders;
+        if (!mgr) return this.m_border ?? this.view.data.style.borders;
 
         const v = this.view._findOV(OverrideType.Borders, VariableType.Borders);
-        const border = v ? { ...v.value } : { ...this.view.m_data.style.borders };
+        const border = v ? { ...v.value } : { ...this.view.data.style.borders };
 
         const bordersMask: string | undefined = this.view.bordersMask;
         if (bordersMask) {
@@ -144,7 +144,7 @@ export class ViewCache {
     }
 
     private _onRadiusMaskChange() {
-        this.view.m_ctx.setDirty(this.view);
+        this.view.ctx.setDirty(this.view);
         this.view.onUpdate('radiusMask');
         this.view.notify('radiusMask');
     }
@@ -179,7 +179,7 @@ export class ViewCache {
     }
 
     private _onShadowMaskChange() {
-        this.view.m_ctx.setDirty(this.view);
+        this.view.ctx.setDirty(this.view);
         this.view.notify('style', 'shadows', 'mask');
     }
 
@@ -205,14 +205,14 @@ export class ViewCache {
             this.watchShadowMask(mask);
         } else {
             const v = this.view._findOV(OverrideType.Shadows, VariableType.Shadows);
-            shadows = v ? v.value : this.view.m_data.style.shadows;
+            shadows = v ? v.value : this.view.data.style.shadows;
             this.unwatchShadowMask()
         }
         return shadows;
     }
 
     private _onBlurMaskChange() {
-        this.view.m_ctx.setDirty(this.view);
+        this.view.ctx.setDirty(this.view);
         this.view.notify('style', 'blur', 'mask');
     }
 
@@ -237,7 +237,7 @@ export class ViewCache {
             this.watchBlurMask(mask);
         } else {
             const v = this.view._findOV(OverrideType.Blur, VariableType.Blur);
-            blur = v ? v.value : this.view.m_data.style.blur;
+            blur = v ? v.value : this.view.data.style.blur;
             this.unwatchBlurMask();
         }
         return blur;

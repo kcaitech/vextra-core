@@ -49,7 +49,7 @@ export class BoolFrameProxy extends GroupFrameProxy {
         // update visible
         if (updateFrame(this.m_visibleFrame, this.frame.x - maxleftborder, this.frame.y - maxtopborder, this.frame.width + maxleftborder + maxrightborder, this.frame.height + maxtopborder + maxbottomborder)) changed = true;
 
-        const childouterbounds = view.m_children.map(c => (c as ShapeView).relativeOuterFrame);
+        const childouterbounds = view.children.map(c => (c as ShapeView).relativeOuterFrame);
         const reducer = (p: { minx: number, miny: number, maxx: number, maxy: number }, c: ShapeFrame, i: number) => {
             if (i === 0) {
                 p.minx = c.x;

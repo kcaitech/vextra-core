@@ -334,17 +334,9 @@ export class ShapeView extends DataView {
         this.layoutProxy.layout(props);
     }
 
-    render(): number {
-        return this.m_renderer.render();
-    }
-
     onUpdate(...args: any[]) {
         this.effect.emit(args);
         this.effect.clearCache(args);
-    }
-
-    asyncRender(): number {
-        return this.m_renderer.asyncRender();
     }
 
     staticRender() {

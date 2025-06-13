@@ -72,8 +72,8 @@ function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.Page, PageView);
 }
 
-export function layoutShape(shape: Shape, renderType: 'Canvas' | 'SVG' = 'SVG'): {view: DataView, ctx: DViewCtx} {
-    const ctx = new DViewCtx(renderType);
+export function layoutShape(shape: Shape): {view: DataView, ctx: DViewCtx} {
+    const ctx = new DViewCtx();
     initComsMap(ctx.comsMap);
     const ViewClass = ctx.comsMap.get(shape.type);
     if (!ViewClass) throw new Error("export svg, unknow shape type : " + shape.type)

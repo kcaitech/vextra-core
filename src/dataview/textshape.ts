@@ -19,7 +19,7 @@ import { TextModifyEffect } from "./proxy/effects/text";
 import { TextLayoutMgr } from "./proxy/layout/text";
 import { TextViewCache } from "./proxy/cache/text";
 import { TextFrameProxy } from "./proxy/frame/text";
-
+import { GraphicsLibrary } from "./viewctx";
 export class TextShapeView extends ShapeView {
     cache: TextViewCache;
     frameProxy: TextFrameProxy;
@@ -75,12 +75,8 @@ export class TextShapeView extends ShapeView {
         return this.cache.textPath;
     }
 
-    asyncRender() {
-        return this.render();
-    }
-
-    render(): number {
-        return this.m_renderer.render();
+    asyncRender(gl: GraphicsLibrary): number {
+        return this.render(gl);
     }
 
     onDestroy(): void {

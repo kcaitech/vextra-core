@@ -18,12 +18,12 @@ export class RefCanvasRenderer extends ViewCanvasRenderer {
 
     renderContents() {
         const view = this.view;
-        const childs = view.m_children;
+        const childs = view.children;
         if (!childs.length) return;
         this.ctx.save();
         this.ctx.transform(...this.props.transform);
         if (view.uniformScale) this.ctx.scale(view.uniformScale, view.uniformScale);
-        childs.forEach((c) => c.render());
+        childs.forEach((c) => c.render('Canvas'));
         this.ctx.restore();
     }
 

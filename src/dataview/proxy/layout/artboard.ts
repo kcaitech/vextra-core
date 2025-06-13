@@ -30,7 +30,7 @@ export class ArtboardLayout extends GroupLayout {
             newTransform.translateX = layout[index].x;
             newTransform.translateY = layout[index].y;
             if (!cc.isVisible) hidden += 1;
-            cc.m_ctx.setDirty(cc);
+            cc.ctx.setDirty(cc);
             cc.layoutProxy.updateLayoutArgs(newTransform, cc.frame);
             cc.layoutProxy.updateFrames();
         }

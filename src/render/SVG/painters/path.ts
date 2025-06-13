@@ -38,7 +38,7 @@ export class PathSVGRenderer extends ViewSVGRenderer {
         const masked = view.masked;
         if (masked) {
             view.reset("g");
-            masked.m_ctx.setDirty(masked);
+            masked.ctx.setDirty(masked);
             return ++this.m_render_version;
         }
 

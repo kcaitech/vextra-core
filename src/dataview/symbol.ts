@@ -63,7 +63,4 @@ export class SymbolView extends GroupShapeView {
         return this.getBorder().sideSetting.sideType !== SideType.Normal;
     }
 
-    render(): number {
-        return this.m_renderer.render();
-    }
 }

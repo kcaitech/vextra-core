@@ -15,6 +15,15 @@ import { objectId } from "../basic/objectid";
 import { Notifiable } from "../data/basic";
 import { ShapeSize } from "../data/baseclasses";
 
+let Canvas: typeof import('skia-canvas').Canvas;
+if (typeof window === 'undefined') {
+    // Node.js environment
+    Canvas = require('skia-canvas').Canvas;
+}
+
+export type GraphicsLibrary = 'SVG' | 'Canvas' | 'H5';
+
+
 export type VarsContainer = (SymbolRefShape | SymbolShape)[];
 
 export interface PropsType {
@@ -27,13 +36,11 @@ export interface PropsType {
 
 interface DataView extends Notifiable {
     layout(props?: PropsType): void;
-    asyncRender(): number;
+    asyncRender(gl: GraphicsLibrary): number;
     parent?: DataView;
     emit(name: string, ...args: any[]): void;
     layoutProxy: { updateFrames: () => boolean; };
 }
-
-export type GraphicsLibrary = 'SVG' | 'Canvas' | 'H5';
 
 export interface ViewType {
     new(ctx: DViewCtx, props: PropsType, shapes?: Shape[]): DataView;
@@ -106,20 +113,34 @@ export function updateViewsFrame(updates: DataView[]) {
 export class DViewCtx extends EventEmitter {
     static FRAME_TIME = 20; // 实际会有延迟
 
-    gl: GraphicsLibrary;
-    m_canvas?: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+    // gl: GraphicsLibrary;
+    private m_canvas?: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
     comsMap: Map<ShapeType, ViewType> = new Map();
 
     private is_document: boolean = false;
     dpr: number;
 
-    constructor(gl?: GraphicsLibrary) {
+    constructor() {
         super();
-        this.gl = gl ?? "SVG"; // 默认用SVG渲染
+        // this.gl = gl ?? "SVG"; // 默认用SVG渲染
         // this.dpr = typeof window !== "undefined" ? Math.ceil(window.devicePixelRatio || 1) : 1;
         this.dpr = 1;
     }
+
+    get canvas(): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
+        if (!this.m_canvas) {
+            // 判断是否是node环境
+            const canvas = new Canvas(1000, 1000);
+            this.m_canvas = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
+        }
+        return this.m_canvas;
+    }
+
+    setCanvas(canvas: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
+        this.m_canvas = canvas;
+    }
+
     // 选区
     // 缩放监听
     // 先更新数据再绘制
@@ -217,7 +238,7 @@ export class DViewCtx extends EventEmitter {
         this.tails.forEach(v => v.updateAtLast());
     }
 
-    private updateFocus() {
+    private updateFocus(gl: GraphicsLibrary) {
         if (!this.focusshape) return false;
 
         const startTime = Date.now();
@@ -249,7 +270,7 @@ export class DViewCtx extends EventEmitter {
 
         for (let i = 0, len = focusdepends.length; i < len; ++i) {
             const d = this.dirtyset.get(focusdepends[i]);
-            if (d) d.asyncRender();
+            if (d) d.asyncRender(gl);
         }
 
         this.notifyLayout();
@@ -276,13 +297,13 @@ export class DViewCtx extends EventEmitter {
     /**
      * return: if continue
      */
-    protected aloop(): boolean {
+    protected aloop(gl: GraphicsLibrary): boolean {
 
         const hasUpdate = this.relayoutset.size > 0 || this.dirtyset.size > 0;
 
         let startTime = Date.now();
         // 优先更新选中对象
-        if (this.updateFocus()) {
+        if (this.updateFocus(gl)) {
             return true;
         }
 
@@ -299,7 +320,7 @@ export class DViewCtx extends EventEmitter {
 
         // 渲染
         for (let [k, v] of this.dirtyset) {
-            v.asyncRender();
+            v.asyncRender(gl);
             const expendsTime = Date.now() - startTime;
             if (expendsTime > DViewCtx.FRAME_TIME) {
                 return true;
@@ -319,15 +340,15 @@ export class DViewCtx extends EventEmitter {
         return this.onIdle();
     }
 
-    continueLoop() {
-        if (this.__looping && !this.__inframe && this.requestAnimationFrame) this._startLoop(this.requestAnimationFrame);
+    continueLoop(gl: GraphicsLibrary = 'SVG') {
+        if (this.__looping && !this.__inframe && this.requestAnimationFrame) this._startLoop(this.requestAnimationFrame, gl);
     }
 
-    private _startLoop(requestAnimationFrame: (run: () => void) => void) {
+    private _startLoop(requestAnimationFrame: (run: () => void) => void, gl: GraphicsLibrary) {
         const run = () => {
             this.__inframe = false;
             if (!this.__looping) return;
-            if (this.aloop()) {
+            if (this.aloop(gl)) {
                 requestAnimationFrame(run);
                 this.__inframe = true;
             }
@@ -340,11 +361,11 @@ export class DViewCtx extends EventEmitter {
     private __inframe: boolean = false;
     private requestAnimationFrame?: (run: () => void) => void;
 
-    loop(requestAnimationFrame: (run: () => void) => void) {
+    loop(requestAnimationFrame: (run: () => void) => void, gl: GraphicsLibrary = 'SVG') {
         this.requestAnimationFrame = requestAnimationFrame;
         if (this.__looping) return;
         this.__looping = true;
-        this._startLoop(requestAnimationFrame);
+        this._startLoop(requestAnimationFrame, gl);
     }
 
     stopLoop() {

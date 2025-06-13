@@ -16,10 +16,6 @@ export class CutoutShapeView extends PathShapeView {
         return this.m_data as CutoutShape;
     }
 
-    render(): number {
-         return this.m_renderer.render();
-    }
-
     get isImageFill() {
         return false;
     }
