@@ -52,7 +52,7 @@ export class RefViewCache extends ViewCache {
         return this.m_fills = fills;
     }
 
-    defaultSideSetting(sideSetting: BorderSideSetting): BorderSideSetting {
+    sideSettingOrDefault(sideSetting: BorderSideSetting): BorderSideSetting {
         return sideSetting ?? new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     }
 
@@ -60,7 +60,7 @@ export class RefViewCache extends ViewCache {
         if (this.m_border) return this.m_border;
         const v = this.view._findOV2(OverrideType.Borders, VariableType.Borders);
         const border = v ? { ...v.value } : { ...this.view.m_sym?.style.borders };
-        border.sideSetting = this.defaultSideSetting(border.sideSetting);
+        border.sideSetting = this.sideSettingOrDefault(border.sideSetting);
         const bordersMask = this.view.bordersMask;
         const mgr = this.view.style.getStylesMgr();
         if (bordersMask && mgr) {
