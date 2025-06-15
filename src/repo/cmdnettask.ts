@@ -9,17 +9,17 @@
  */
 
 
-import { ICoopNet } from "./net";
+import { INet } from "./types";
 import { Cmd } from "./types";
 
 export class CmdNetTask {
 
     private pullTasks: { from: number, to?: number }[] = [];
-    private net: ICoopNet;
+    private net: INet;
     private baseVer: number;
     private lastVer: number;
     private receive: (cmds: Cmd[]) => void;
-    constructor(net: ICoopNet, baseVer: number,
+    constructor(net: INet, baseVer: number,
         lastVer: number, receive: (cmds: Cmd[]) => void
     ) {
         this.net = net;
@@ -28,7 +28,7 @@ export class CmdNetTask {
         this.receive = receive;
     }
 
-    public setNet(net: ICoopNet) {
+    public setNet(net: INet) {
         this.net = net;
     }
 

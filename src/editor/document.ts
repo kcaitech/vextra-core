@@ -22,7 +22,7 @@ import {
     importTextAttr,
 } from "../data/baseimport";
 import { newDocument } from "./creator/creator";
-import { CoopRepository } from "../repo/cooprepo";
+import { IRepository } from "../repo";
 import { TransactDataGuard } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
@@ -36,12 +36,12 @@ export function createDocument(documentName: string, repo: TransactDataGuard): D
 }
 
 export class DocEditor {
-    private __repo: CoopRepository;
+    private __repo: IRepository;
     private __document: Document;
 
-    constructor(document: Document, repo: CoopRepository) {
+    constructor(document: Document, repo: IRepository) {
         // check
-        if (!(repo instanceof CoopRepository)) throw new Error("repo wrong");
+        // if (!(repo instanceof IRepository)) throw new Error("repo wrong");
         if (!(document instanceof Document)) throw new Error("document wrong");
 
         this.__repo = repo;

@@ -8,7 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ArrayOpSelection, Op } from "../operator";
+import { TransactDataGuard, Text } from "../data";
+import { ArrayOpSelection, Op, Operator } from "../operator";
 
 export interface Cmd { // 用户的一次操作
     id: string; // cmd id
@@ -70,4 +71,86 @@ export interface LocalCmd  {
     // cmd执行完后如何更新选区。大部分操作应该是选区不变，即应用saveselection（不是不操作）
     // 需要特别处理的：对象操作（编组、组件、）、表格行列操作、文本
     selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void;
+}
+
+
+export interface INet {
+
+    /**
+     * 
+     * @returns 是否已经连接
+     */
+    hasConnected(): boolean;
+
+    /**
+     * 
+     * @param from 起始id
+     * @param to 结束id（包含）
+     */
+    pullCmds(from: number, to?: number): Promise<Cmd[]>;
+
+    /**
+     * 
+     * @param cmds 要推送的命令
+     */
+    postCmds(cmds: Cmd[], serial:(cmds: Cmd[])=> string): Promise<boolean>;
+
+    /**
+     * 监听远程cmd
+     * @param watcher 
+     */
+    watchCmds(watcher: (cmds: Cmd[]) => void): () => void;
+
+    /**
+     * 监听错误信息
+     * errorInfo的几种类型：
+     * {
+     *   type: "duplicate",
+     *   duplicateCmd: Cmd,
+     * }
+     */
+    watchError(watcher: (errorInfo: {
+        type: "duplicate",
+        duplicateCmd: Cmd,
+    }) => void): void;
+
+
+}
+
+export interface IRepository {
+    setInitingDocument(init: boolean): void;
+    onLoaded(): void;
+
+    setOnChange(onChange: Function): void;
+    lastRemoteCmdVersion(): number | undefined;
+    hasPendingSyncCmd(): boolean;
+    setNet(net: INet): void;
+    setBaseVer(baseVer: number): void;
+    setProcessCmdsTrigger(trigger: () => void): void;
+    receive(cmds: Cmd[]): void;
+    setSelection(selection: ISave4Restore): void;
+    
+    /**
+     * @deprecated
+     */
+    get repo(): TransactDataGuard;
+    
+    /**
+     * @deprecated
+     */
+    get transactCtx(): any;
+    
+    isInTransact(): boolean;
+    undo(): void;
+    redo(): void;
+    canUndo(): boolean;
+    canRedo(): boolean;
+    start(description: string, selectionupdater?: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void): Operator;
+    updateTextSelectionPath(text: Text): void;
+    updateTextSelectionRange(start: number, length: number): void;
+    isNeedCommit(): boolean;
+    commit(mergetype?: CmdMergeType): void;
+    rollback(from?: string): void;
+
+    quit(): void;
 }

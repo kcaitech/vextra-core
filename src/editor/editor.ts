@@ -3,7 +3,7 @@ import { DocEditor } from "./document";
 import { PageEditor } from "./page";
 import { ShapeEditor } from "./shape";
 import { Controller } from "./controller"; /* 逐步取消Controller */
-import { CoopRepository } from "../repo/cooprepo";
+import { IRepository } from "../repo";
 import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
 import { resizingConstraintEditor } from "./resizingConstraint";
@@ -15,12 +15,12 @@ import { Page } from "../data/page";
 export class Editor {
     private m_data: Document;
     // private m_selection: Selection;
-    private m_repo: CoopRepository;
+    private m_repo: IRepository;
     // private m_shadows: ShapeNaviShadowMgr | undefined;
     private m_docEditor: DocEditor | undefined;
     // private m_pageEditors: Map<string, PageEditor> = new Map();
 
-    constructor(data: Document, repo: CoopRepository, selection: ISave4Restore) {
+    constructor(data: Document, repo: IRepository, selection: ISave4Restore) {
         this.m_data = data;
         // this.m_selection = selection;
         this.m_repo = repo;

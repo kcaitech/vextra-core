@@ -147,7 +147,7 @@ import {
     update_frame_by_points
 } from "./utils/path";
 import { adapt_for_artboard, modify_shapes_height, modify_shapes_width } from "./utils/common";
-import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../repo";
+import { IRepository, ISave4Restore, LocalCmd, SelectionState } from "../repo";
 import { Operator, TextShapeLike } from "../operator/operator";
 import { unable_to_migrate } from "./utils/migrate";
 import {
@@ -278,7 +278,7 @@ function findUsableBorderStyle(shape: Shape | ShapeView): Style {
 }
 
 export class PageEditor {
-    private __repo: CoopRepository;
+    private __repo: IRepository;
     private __page: PageView;
     private __document: Document;
 
@@ -290,13 +290,13 @@ export class PageEditor {
         return this.__page;
     }
 
-    constructor(repo: CoopRepository, page: PageView, document: Document) {
+    constructor(repo: IRepository, page: PageView, document: Document) {
         // check
         if (!(page instanceof PageView)) {
             console.error("page wrong", page ? JSON.stringify(page, (k, v) => k.startsWith('__')) : page)
             throw new Error("page wrong");
         }
-        if (!(repo instanceof CoopRepository)) throw new Error("repo wrong");
+        // if (!(repo instanceof IRepository)) throw new Error("repo wrong");
         if (!(document instanceof Document)) throw new Error("document wrong");
 
         this.__repo = repo;

@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../repo/cooprepo";
+import { IRepository } from "../../repo";
 import { Document } from "../../data/document";
 import { adapt2Shape, PageView, PathShapeView } from "../../dataview";
 import { PathShape } from "../../data/shape";
@@ -17,7 +17,7 @@ import { update_frame_by_points } from "../utils/path";
 export class LineHandleApiCaller extends AsyncApiCaller {
     readonly line: PathShapeView;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView, lineView: PathShapeView) {
+    constructor(repo: IRepository, document: Document, page: PageView, lineView: PathShapeView) {
         super(repo, document, page)
 
         this.line = lineView;

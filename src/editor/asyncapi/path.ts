@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../repo/cooprepo";
+import { IRepository } from "../../repo";
 import {
     BasicArray,
     BorderSideSetting,
@@ -54,7 +54,7 @@ export type ModifyUnits = Map<number, {
 export class PathModifier extends AsyncApiCaller {
     private shape: Shape | undefined;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView, needStoreSelection = false) {
+    constructor(repo: IRepository, document: Document, page: PageView, needStoreSelection = false) {
         super(repo, document, page);
 
         if (needStoreSelection) {

@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository } from "../../../repo/cooprepo";
+import { IRepository } from "../../../repo";
 import { Document, Page } from "../../../data";
 import { Operator } from "../../../operator/operator";
 import { PageView, adapt2Shape } from "../../../dataview";
@@ -17,7 +17,7 @@ import { PageView, adapt2Shape } from "../../../dataview";
  * @description合并同类型API，适用于鼠标的拖拽动作
  */
 export class AsyncApiCaller {
-    __repo: CoopRepository;
+    __repo: IRepository;
     __document: Document;
     api: Operator;
     page: Page;
@@ -25,7 +25,7 @@ export class AsyncApiCaller {
 
     exception: boolean = false;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         this.__repo = repo;
         this.__document = document;
         this.pageView = page;

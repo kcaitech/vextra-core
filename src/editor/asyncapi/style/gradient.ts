@@ -8,14 +8,14 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository, Api } from "../../../repo";
+import { IRepository, Api } from "../../../repo";
 import { BasicArray, Fill, OverrideType, VariableType } from "../../../data";
 import { PageView, ShapeView } from "../../../dataview";
 import { override_variable } from "../../symbol";
 import { importBorder, importFill, importGradient, importStop } from "../../../data/baseimport";
 
 export class GradientEditor {
-    private __repo: CoopRepository;
+    private __repo: IRepository;
     private exception: boolean = false;
 
     importGradient = importGradient;
@@ -40,7 +40,7 @@ export class GradientEditor {
         }, api, view)!;
     }
 
-    constructor(repo: CoopRepository) {
+    constructor(repo: IRepository) {
         this.__repo = repo;
     }
 

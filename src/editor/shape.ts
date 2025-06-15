@@ -41,7 +41,7 @@ import {
     ShapeFrame
 } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
-import { CoopRepository } from "../repo/cooprepo";
+import { IRepository } from "../repo";
 import {
     CurveMode,
     ExportFileFormat,
@@ -75,18 +75,18 @@ import { newArtboard } from "./creator/creator";
 
 export class ShapeEditor {
     protected __shape: ShapeView;
-    protected __repo: CoopRepository;
+    protected __repo: IRepository;
     protected _page: PageView;
     protected __document: Document
 
-    constructor(shape: ShapeView, page: PageView, repo: CoopRepository, document: Document) {
+    constructor(shape: ShapeView, page: PageView, repo: IRepository, document: Document) {
         // check
         if (!(shape instanceof ShapeView)) throw new Error("shape wrong");
         if (!(page instanceof PageView)) {
             console.error("page wrong", page ? JSON.stringify(page, (k, v) => k.startsWith('__')) : page)
             throw new Error("page wrong");
         }
-        if (!(repo instanceof CoopRepository)) throw new Error("repo wrong");
+        // if (!(repo instanceof CoopRepository)) throw new Error("repo wrong");
         if (!(document instanceof Document)) throw new Error("document wrong");
         this.__shape = shape;
         this.__repo = repo;

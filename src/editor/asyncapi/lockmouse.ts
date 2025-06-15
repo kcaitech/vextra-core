@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../repo/cooprepo";
+import { IRepository } from "../../repo";
 import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { translate } from "../frame";
 import { _ov, override_variable, shape4Autolayout, shape4cornerRadius } from "../symbol";
@@ -62,7 +62,7 @@ export class LockMouseHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
     protected _page: PageView;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         super(repo, document, page);
         this._page = page;
     }

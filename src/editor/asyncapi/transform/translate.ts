@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository } from "../../../repo";
+import { IRepository } from "../../../repo";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView, TextShapeView } from "../../../dataview";
 import {
@@ -54,7 +54,7 @@ export class Transporter extends AsyncApiCaller {
     shapes: (Shape | ShapeView)[] = [];
     need_assign: Set<Shape> = new Set();
 
-    constructor(repo: CoopRepository, document: Document, page: PageView, shapes: ShapeView[]) {
+    constructor(repo: IRepository, document: Document, page: PageView, shapes: ShapeView[]) {
         super(repo, document, page)
         this.shapes = shapes;
     }

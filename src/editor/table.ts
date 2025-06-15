@@ -11,7 +11,7 @@
 import { TableCell, TableShape } from "../data/table";
 import { ShapeEditor } from "./shape";
 import { Page } from "../data/page";
-import { CoopRepository } from "../repo/cooprepo";
+import { IRepository } from "../repo";
 import { BorderPosition, BorderStyle, StrikethroughType, TableCellType, TextHorAlign, TextTransformType, TextVerAlign, UnderlineType, FillType, ImageScaleMode, BorderSideSetting, SideType, CornerType } from "../data/baseclasses";
 import { adjColum, adjRow } from "./tableadjust";
 import { Border, Fill, Gradient } from "../data/style";
@@ -32,7 +32,7 @@ const MaxRowCount = TableShape.MaxRowCount;
 
 export class TableEditor extends ShapeEditor {
 
-    constructor(shape: TableView, page: PageView, repo: CoopRepository, document: Document) {
+    constructor(shape: TableView, page: PageView, repo: IRepository, document: Document) {
         super(shape, page, repo, document)
     }
 

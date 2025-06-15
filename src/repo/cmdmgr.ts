@@ -12,7 +12,7 @@ import { Op, OpType } from "../operator";
 import { CmdMergeType, ISave4Restore, LocalCmd, Cmd, OpItem } from "./types";
 import { cloneSelectionState, isDiffStringArr } from "./utils";
 import { Document } from "../data/document";
-import { ICoopNet } from "./net";
+import { INet } from "./types";
 import { uuid } from "../basic/uuid";
 import { RepoNode, RepoNodePath } from "./base";
 import { nodecreator } from "./creator";
@@ -96,8 +96,8 @@ class CmdSync {
     repo: TransactDataGuard;
     // private selection: ISave4Restore | undefined;
     private nodecreator: (parent: RepoNodePath, op: Op) => RepoNode
-    private net: ICoopNet;
-    constructor(document: Document, repo: TransactDataGuard, net: ICoopNet) {
+    private net: INet;
+    constructor(document: Document, repo: TransactDataGuard, net: INet) {
         this.document = document;
         this.repo = repo;
         // 用于加载本地的cmds
@@ -114,7 +114,7 @@ class CmdSync {
         this.nodecreator = nodecreator(this.document, selection);
     }
 
-    public setNet(net: ICoopNet) {
+    public setNet(net: INet) {
         this.net = net;
         this.nettask.setNet(net);
         this.net.watchCmds(this.receive.bind(this));
@@ -1084,7 +1084,7 @@ export class CmdMgr {
     localcmds: LocalCmd[] = []; // 本地用户的所有cmd
     localindex: number = 0;
 
-    constructor(document: Document, repo: TransactDataGuard, net: ICoopNet) {
+    constructor(document: Document, repo: TransactDataGuard, net: INet) {
         this.cmdsync = new CmdSync(document, repo, net);
     }
     // restore(cmds: Cmd[], localcmds: LocalCmd[]) {
@@ -1197,7 +1197,7 @@ export class CmdMgr {
     hasPendingSyncCmd(): boolean {
         return this.cmdsync.hasPendingSyncCmd()
     }
-    setNet(net: ICoopNet) {
+    setNet(net: INet) {
         return this.cmdsync.setNet(net);
     }
 

@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../repo";
+import { IRepository } from "../../repo";
 import {
     Document,
     ContactForm,
@@ -96,7 +96,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
     private __params: GeneratorParams | undefined;
     private __contactXY: { x: number, y: number } | undefined;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         super(repo, document, page);
     }
 

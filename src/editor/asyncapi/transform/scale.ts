@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository } from "../../../repo";
+import { IRepository } from "../../../repo";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import {
     Artboard,
@@ -729,7 +729,7 @@ export class Scaler extends AsyncApiCaller {
     private valueRecorder: Map<string, number> = new Map();
     protected _page: PageView;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         super(repo, document, page);
         this._page = page;
     }

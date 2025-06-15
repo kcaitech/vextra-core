@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../repo/cooprepo";
+import { IRepository } from "../../repo";
 import { Document } from "../../data/document";
 import { PageView } from "../../dataview";
 import { Shape } from "../../data/shape";
@@ -18,7 +18,7 @@ import { Blur } from "../../data";
 export class blurModifyHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         super(repo, document, page);
     }
 

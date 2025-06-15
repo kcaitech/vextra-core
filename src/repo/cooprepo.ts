@@ -15,8 +15,7 @@ import { Operator } from "../operator/operator";
 import { Page } from "../data/page";
 import { cloneSelectionState, isDiffSelectionState, isDiffStringArr } from "./utils";
 import { CmdMgr } from "./cmdmgr";
-import { CmdMergeType, ISave4Restore, LocalCmd, Cmd } from "./types";
-import { ICoopNet } from "./net";
+import { CmdMergeType, ISave4Restore, LocalCmd, Cmd, IRepository, INet } from "./types";
 import { transform } from "./arrayoptransform";
 import { ArrayOp, ArrayOpSelection, IdOpRecord, Op, OpType } from "../operator";
 import { Text } from "../data/text/text";
@@ -25,7 +24,7 @@ import { uuid } from "../basic/uuid";
 import { Basic } from "../data";
 
 
-class MockNet implements ICoopNet {
+class MockNet implements INet {
     hasConnected(): boolean {
         return false;
     }
@@ -107,7 +106,7 @@ function pairOpsSimplify(ops: Op[]) {
     return simplifiedOps;
 }
 
-export class CoopRepository {
+export class CoopRepository implements IRepository {
     private __repo: TransactDataGuard;
     private __cmdmgr: CmdMgr;
     private __api: Operator;
@@ -146,7 +145,7 @@ export class CoopRepository {
         return this.__cmdmgr.hasPendingSyncCmd();
     }
 
-    public setNet(net: ICoopNet) {
+    public setNet(net: INet) {
         this.__cmdmgr.setNet(net);
     }
 

@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api, CoopRepository } from "../repo";
+import { Api, IRepository } from "../repo";
 import { adapt2Shape, ContactLineView, get_nearest_border_point, PageView, ShapeView } from "../dataview";
 import {
     BasicArray,
@@ -26,13 +26,13 @@ import { translateTo } from "./frame";
 
 export class ContactLineModifier {
     private exception: boolean = false;
-    private repo: CoopRepository;
+    private repo: IRepository;
     private view: ContactLineView;
     protected line: ContactShape;
     private pageView: PageView;
     private page: Page;
 
-    constructor(repo: CoopRepository, pageView: PageView, view: ContactLineView) {
+    constructor(repo: IRepository, pageView: PageView, view: ContactLineView) {
         this.repo = repo;
         this.view = view;
         this.line = adapt2Shape(view) as ContactShape;

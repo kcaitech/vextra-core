@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../repo/cooprepo";
+import { IRepository } from "../../repo";
 import { Artboard, BasicArray, Document, Guide, GuideAxis, Page, ShapeType } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
 import { uuid } from "../../basic/uuid";
@@ -19,7 +19,7 @@ import { exportGuide } from "../../data/baseexport";
 export class ReferHandleApiCaller extends AsyncApiCaller {
     private __recovery: boolean = true;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         super(repo, document, page)
 
     }

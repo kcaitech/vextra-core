@@ -14,7 +14,7 @@ import { v4 } from "uuid";
 import { Matrix } from "../../basic/matrix";
 import { uuid } from "../../basic/uuid";
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { Api, CoopRepository } from "../../repo";
+import { Api, IRepository } from "../../repo";
 
 export function modifySweep(api: Api, page: Page, shapes: ShapeView[], value: number) {
     const end = Math.PI * 2 * (value / 100);
@@ -367,7 +367,7 @@ export class OvalPathParser {
 export class OvalModifier extends AsyncApiCaller {
     private __delta: Map<ShapeView, number> = new Map();
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         super(repo, document, page);
     }
 

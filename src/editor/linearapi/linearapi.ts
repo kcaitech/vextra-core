@@ -11,7 +11,7 @@
 import { Document, OvalShape, Fill, Blur, Variable, StackSizing, PaddingDir } from "../../data";
 import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
-import { Api, CoopRepository } from "../../repo";
+import { Api, IRepository } from "../../repo";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
 import {
     Artboard,
@@ -42,7 +42,7 @@ import { importGradient } from "../../data/baseimport";
  * @description 合并同类型API，适用于键盘的连续动作，相较于asyncapi，linearapi是自动启停，所以无法跟asyncapi一样控制启停时机
  */
 export class LinearApi {
-    private readonly __repo: CoopRepository;
+    private readonly __repo: IRepository;
     private readonly __document: Document;
 
     private readonly _page: PageView;
@@ -51,7 +51,7 @@ export class LinearApi {
 
     private api: Api | undefined;
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         this.__repo = repo;
         this.__document = document;
 

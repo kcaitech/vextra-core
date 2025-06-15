@@ -8,12 +8,12 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api, CoopRepository } from "../../repo";
+import { Api, IRepository } from "../../repo";
 
 export class Modifier {
-    private __repo: CoopRepository;
+    private __repo: IRepository;
 
-    constructor(repo: CoopRepository) {
+    constructor(repo: IRepository) {
         this.__repo = repo;
     }
 

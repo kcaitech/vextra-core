@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository } from "../../../repo/cooprepo";
+import { IRepository } from "../../../repo";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import { Document } from "../../../data/document";
 import { PageView, ShapeView, adapt2Shape } from "../../../dataview";
@@ -22,7 +22,7 @@ export type RotateUnit = {
 }
 
 export class Rotator extends AsyncApiCaller {
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         super(repo, document, page);
     }
 

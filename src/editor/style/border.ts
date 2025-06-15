@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api, CoopRepository } from "../../repo";
+import { Api, IRepository } from "../../repo";
 import { Modifier } from "../basic/modifier";
 import {
     BasicArray,
@@ -33,7 +33,7 @@ import { importBorder, importFill } from "../../data/baseimport";
 
 export class BorderModifier extends Modifier {
     importFill = importFill;
-    constructor(repo: CoopRepository) {
+    constructor(repo: IRepository) {
         super(repo);
     }
 

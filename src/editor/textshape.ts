@@ -30,7 +30,7 @@ import {
     Variable, Document, FillType, Gradient,
     string2Text,
 } from "../data";
-import { CoopRepository, CmdMergeType } from "../repo";
+import { IRepository, CmdMergeType } from "../repo";
 import { Operator } from "../operator/operator";
 import { ShapeEditor } from "./shape";
 import { BasicArray } from "../data";
@@ -60,7 +60,7 @@ export class TextShapeEditor extends ShapeEditor {
         return this._cacheAttr;
     }
 
-    constructor(shape: TextShapeView | TableCellView, page: PageView, repo: CoopRepository, document: Document) {
+    constructor(shape: TextShapeView | TableCellView, page: PageView, repo: IRepository, document: Document) {
         super(shape, page, repo, document);
     }
     get shape(): TextShapeLike {

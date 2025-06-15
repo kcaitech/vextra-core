@@ -10,7 +10,6 @@
 
 export * from "./types"
 export * from "./serial"
-export { ICoopNet } from "./net"
 export { CoopRepository } from "./cooprepo"
 export { Operator as Api, ArrayOpSelection } from "../operator"
 export { isDiffStringArr } from "./utils"

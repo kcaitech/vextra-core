@@ -20,14 +20,14 @@ import { translate } from "../frame";
 import { PaddingDir, Page, StackSizing } from "../..//data";
 import { after_migrate, unable_to_migrate } from "../utils/migrate";
 import { get_state_name, is_state, shape4Autolayout } from "../symbol";
-import { CoopRepository } from "../../repo/cooprepo";
+import { IRepository } from "../../repo";
 import { Operator } from "../../operator/operator";
 
 export class AutoLayoutModify extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
     prototype = new Map<string, Shape>()
     protected _page: PageView;
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         super(repo, document, page);
         this._page = page;
     }

@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../repo/cooprepo";
+import { IRepository } from "../../repo";
 import { Document } from "../../data/document";
 import { adapt2Shape, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { RadiusType } from "../../data/consts";
@@ -36,7 +36,7 @@ import { Api } from "src/repo";
 export class PointModifyHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
 
-    constructor(repo: CoopRepository, document: Document, page: PageView) {
+    constructor(repo: IRepository, document: Document, page: PageView) {
         super(repo, document, page);
     }
 
