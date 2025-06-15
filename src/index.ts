@@ -13,7 +13,7 @@ export { Path } from "@kcaitech/path"
 import { gPal, MeasureFun, TextPathFun } from "./basic/pal"
 
 // 基础模块导出
-export * from "./basic/index"
+export * from "./basic"
 
 // 数据模块导出
 export * from "./data"
@@ -22,11 +22,14 @@ export * from "./dataview"
 // IO模块导出
 export * as IO from "./io"
 
-// 编辑器模块导出
-export * from "./editor"
+// 操作模块导出
+export * as Opt from "./operator"
 
 // 协作模块导出
-export * as Coop from "./coop"
+export * as Repo from "./repo"
+
+// 编辑器模块导出
+export * from "./editor"
 
 // 初始化函数
 export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun) {
