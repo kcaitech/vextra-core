@@ -21,9 +21,7 @@ import {
     importPage, importShadow,
     importTextAttr,
 } from "../data/baseimport";
-import { newDocument } from "./creator/creator";
 import { IRepository } from "../repo";
-import { TransactDataGuard } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";
 import { FillMask, ShadowMask, StyleMangerMember, BlurMask, BorderMask, RadiusMask, Blur, TextMask } from "../data/style";
@@ -31,9 +29,9 @@ import { adapt2Shape, PageView, ShapeView } from "../dataview";
 import { Fill, Shadow, BlurType, UnderlineType,StrikethroughType,TextTransformType } from "../data/classes";
 import { BasicArray, Point2D, ResourceMgr } from "../data";
 
-export function createDocument(documentName: string, repo: TransactDataGuard): Document {
-    return newDocument(documentName, repo);
-}
+// export function createDocument(documentName: string, repo: TransactDataGuard): Document {
+//     return newDocument(documentName, repo);
+// }
 
 export class DocEditor {
     private __repo: IRepository;

@@ -9,28 +9,25 @@
  */
 
 
-export * from "./utils/auto_layout"
+export { TidyUpAlign, tidyUpLayout } from "./utils/auto_layout"
 export * from "./utils/auto_layout2"
-
-export { DocEditor } from "./document";
-export { PageEditor } from "./page";
 
 export { RefUnbind } from "./symbol"
 
 export { ContactLineModifier } from "./contact";
 
-export * from "./editor"
+export { Editor } from "./editor"
 // 编辑器核心功能
-export * from "./document"
+export { DocEditor } from "./document"
 export * from "./page"
+
 export * from "./controller"
 export * from "./asyncapi"
 
 // 编辑器图形功能
-export * from "./shape"
-export * from "./textshape"
-export * from "./table"
-export * from "./creator/creator"
+export { ShapeEditor } from "./shape"
+export { AsyncTextAttrEditor, TextShapeEditor } from "./textshape"
+export { TableEditor } from "./table"
 
 // 编辑器样式功能
 export * from "./style"
@@ -39,4 +36,4 @@ export * from "./style"
 export * as creator from "./creator/creator"
 
 // linearapi
-export * from "./linearapi/linearapi"
+export { LinearApi } from "./linearapi/linearapi"
