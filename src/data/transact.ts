@@ -414,24 +414,26 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
 
     undo() {
         if (!this.canUndo()) {
-            return;
+            return false;
         }
         this.__index--;
         this.__context.optiNotify = true;
         this.__trans[this.__index].unexec(this.__context);
         this.__context.fireNotify();
         this.notify();
+        return true;
     }
 
     redo() {
         if (!this.canRedo()) {
-            return;
+            return false;
         }
         this.__context.optiNotify = true;
         this.__trans[this.__index].exec(this.__context);
         this.__index++;
         this.__context.fireNotify();
         this.notify();
+        return true;
     }
 
     canUndo() {

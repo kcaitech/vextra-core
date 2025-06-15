@@ -25,8 +25,11 @@ export * as IO from "./io"
 // 操作模块导出
 export * as Opt from "./operator"
 
-// 协作模块导出
+// 仓库模块导出
 export * as Repo from "./repo"
+
+// 协作模块导出
+export * as Coop from "./coop"
 
 // 编辑器模块导出
 export * from "./editor"
