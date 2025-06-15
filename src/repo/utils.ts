@@ -20,7 +20,9 @@ import { Document } from "../data/document";
 import { FMT_VER_latest } from "../data/fmtver";
 
 
-import { SelectionState } from "./types";
+import { Cmd, INet, ISave4Restore, LocalCmd, SelectionState } from "./types";
+import { ArrayOp, ArrayOpSelection } from "../operator";
+import { transform } from "./arrayoptransform";
 
 export function isDiffStringArr(lhs: string[], rhs: string[]): boolean {
     if (lhs.length !== rhs.length) return true;
@@ -244,5 +246,50 @@ export function exportShape(shape: Shape): Object {
         case ShapeType.Polygon: return exportPolygonShape(shape as PolygonShape);
         case ShapeType.Star: return exportStarShape(shape as StarShape);
         default: throw new Error("unknow shape type: " + shape.type)
+    }
+}
+
+
+export class MockNet implements INet {
+    hasConnected(): boolean {
+        return false;
+    }
+    async pullCmds(from: number, to: number): Promise<Cmd[]> {
+        return [];
+    }
+    async postCmds(cmds: Cmd[]): Promise<boolean> {
+        return false;
+    }
+
+    watchCmds(watcher: (cmds: Cmd[]) => void) {
+        return () => { };
+    }
+
+    watchError(watcher: (errorInfo: any) => void): void {
+
+    }
+}
+
+export function defaultSU(selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd): void {
+    if (!cmd.saveselection) return;
+    let saveselection = cmd.saveselection;
+    if (!isUndo && saveselection.text) {
+        // 需要变换
+        const selectTextOp = saveselection.text;
+        const idx = cmd.ops.indexOf(selectTextOp);
+        if (idx < 0) {
+            throw new Error(); // 出现了
+        }
+        const rhs = cmd.ops.slice(idx + 1).reduce((rhs, op) => {
+            if (!isDiffStringArr(op.path, selectTextOp.path)) rhs.push(op as ArrayOp);
+            return rhs;
+        }, [] as ArrayOp[])
+        const trans = transform([selectTextOp], rhs);
+        saveselection = cloneSelectionState(saveselection);
+        saveselection.text = trans.lhs[0] as ArrayOpSelection;
+    }
+    const cur = selection.save();
+    if (isDiffSelectionState(cur, saveselection)) {
+        selection.restore(saveselection);
     }
 }

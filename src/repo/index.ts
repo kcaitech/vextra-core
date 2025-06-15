@@ -10,6 +10,6 @@
 
 export * from "./types"
 export * from "./serial"
-export { CoopRepository } from "./cooprepo"
+export { Repo } from "./repo"
 export { Operator as Api, ArrayOpSelection } from "../operator"
-export { isDiffStringArr } from "./utils"
+export { isDiffStringArr, defaultSU, MockNet, cloneSelectionState } from "./utils"

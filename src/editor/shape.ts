@@ -86,7 +86,7 @@ export class ShapeEditor {
             console.error("page wrong", page ? JSON.stringify(page, (k, v) => k.startsWith('__')) : page)
             throw new Error("page wrong");
         }
-        // if (!(repo instanceof CoopRepository)) throw new Error("repo wrong");
+
         if (!(document instanceof Document)) throw new Error("document wrong");
         this.__shape = shape;
         this.__repo = repo;
