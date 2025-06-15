@@ -147,8 +147,8 @@ import {
     update_frame_by_points
 } from "./utils/path";
 import { adapt_for_artboard, modify_shapes_height, modify_shapes_width } from "./utils/common";
-import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../coop";
-import { Operator, TextShapeLike } from "../coop/recordop";
+import { CoopRepository, ISave4Restore, LocalCmd, SelectionState } from "../repo";
+import { Operator, TextShapeLike } from "../operator/operator";
 import { unable_to_migrate } from "./utils/migrate";
 import {
     adapt2Shape,

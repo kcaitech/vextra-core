@@ -20,7 +20,7 @@ import {
 } from "../../../data";
 import { exportGradient } from "../../../data/baseexport";
 import { importFill, importGradient, importStop } from "../../../data/baseimport";
-import { Api } from "../../../coop";
+import { Api } from "../../../repo";
 import { PageView, ShapeView } from "../../../dataview";
 import { override_variable } from "../../symbol";
 import { uuid } from "../../../basic/uuid";

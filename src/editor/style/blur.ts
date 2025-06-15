@@ -20,7 +20,7 @@ import {
     VariableType
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-import { Api } from "../../coop";
+import { Api } from "../../repo";
 import { _ov } from "../symbol";
 import { importBlur } from "../../data/baseimport";
 

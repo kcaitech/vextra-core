@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository } from "../../../coop";
+import { CoopRepository } from "../../../repo";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView, TextShapeView } from "../../../dataview";
 import {
@@ -16,8 +16,8 @@ import {
 } from "../../../data";
 import { after_migrate, unable_to_migrate } from "../../utils/migrate";
 import { get_state_name, is_state } from "../../symbol";
-import { Api } from "../../../coop";
-import { ISave4Restore, LocalCmd, SelectionState } from "../../../coop";
+import { Api } from "../../../repo";
+import { ISave4Restore, LocalCmd, SelectionState } from "../../../repo";
 import { TidyUpAlign, tidyUpLayout } from "../../utils/auto_layout";
 import { translate } from "../../frame";
 import { transform_data } from "../../../io/cilpboard";

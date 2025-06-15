@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../coop/cooprepo";
+import { CoopRepository } from "../../repo/cooprepo";
 import {
     BasicArray,
     BorderSideSetting,
@@ -35,7 +35,7 @@ import { addCommonAttr, newFlatStyle } from "../creator/creator";
 import { Border, BorderStyle, Fill, FillType, Shadow, Style } from "../../data";
 import { Color } from "../../data";
 import * as types from "../../data/typesdefine";
-import { ISave4Restore, LocalCmd, SelectionState } from "../../coop/localcmd";
+import { ISave4Restore, LocalCmd, SelectionState } from "../../repo";
 import { importStyle } from "../../data/baseimport";
 
 export type ModifyUnits = Map<number, {

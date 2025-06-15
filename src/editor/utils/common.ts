@@ -9,7 +9,7 @@
  */
 
 import { expandTo, translateTo } from "../frame";
-import { Operator } from "../../coop/recordop";
+import { Operator } from "../../operator/operator";
 import { is_straight, update_frame_by_points } from "./path";
 import { getHorizontalRadians } from "../page";
 import { Artboard, Document, PathShape, ShapeFrame, Page } from "../../data";

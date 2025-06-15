@@ -11,7 +11,7 @@
 import { TableView } from "../dataview";
 import { Page } from "../data/page";
 import { TableShape } from "../data/table";
-import { Operator } from "../coop/recordop";
+import { Operator } from "../operator/operator";
 
 const MinCellSize = TableShape.MinCellSize;
 

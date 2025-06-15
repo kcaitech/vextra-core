@@ -23,7 +23,7 @@ import { exportGradient } from "../../../data/baseexport";
 import { importBorder, importGradient, importStop } from "../../../data/baseimport";
 import * as types from "../../../data/typesdefine";
 import { Matrix } from "../../../basic/matrix";
-import { Api } from "../../../coop";
+import { Api } from "../../../repo";
 import { uuid } from "../../../basic/uuid";
 
 export class BorderPaintsAsyncApi extends AsyncApiCaller {

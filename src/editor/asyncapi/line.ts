@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../coop/cooprepo";
+import { CoopRepository } from "../../repo/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, PageView, PathShapeView } from "../../dataview";
 import { PathShape } from "../../data/shape";

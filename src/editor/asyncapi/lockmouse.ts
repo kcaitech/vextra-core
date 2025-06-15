@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../coop/cooprepo";
+import { CoopRepository } from "../../repo/cooprepo";
 import { adapt2Shape, ArtboardView, GroupShapeView, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { translate } from "../frame";
 import { _ov, override_variable, shape4Autolayout, shape4cornerRadius } from "../symbol";
@@ -50,7 +50,7 @@ import {
 import { fixTextShapeFrameByLayout } from "../utils/other";
 import { TidyUpAlign, tidyUpLayout } from "../utils/auto_layout";
 import { modifyPathByArc } from "./arc";
-import { Api } from "../../coop";
+import { Api } from "../../repo";
 import { importBorder } from "../../data/baseimport";
 
 export class LockMouseHandler extends AsyncApiCaller {

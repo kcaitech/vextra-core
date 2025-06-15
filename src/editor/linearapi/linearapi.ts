@@ -11,7 +11,7 @@
 import { Document, OvalShape, Fill, Blur, Variable, StackSizing, PaddingDir } from "../../data";
 import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
-import { Api, CoopRepository } from "../../coop";
+import { Api, CoopRepository } from "../../repo";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
 import {
     Artboard,

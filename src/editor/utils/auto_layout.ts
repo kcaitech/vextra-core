@@ -10,7 +10,7 @@
 
 import { Page, ShapeType } from "../../data";
 import { adapt2Shape, ShapeView } from "../../dataview";
-import { Api } from "../../coop";
+import { Api } from "../../repo";
 
 export type TidyUpAlign = 'center' | 'start' | 'end';
 export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean, align: TidyUpAlign, start?: { x: number, y: number }) => {

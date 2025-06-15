@@ -13,7 +13,7 @@ import { Document, TextMask, Text, StyleMangerMember } from "../../data";
 import { PageView, TextShapeView } from "../../dataview";
 import { importText, importTextAttr } from "../../data/baseimport";
 import { TextShapeEditor } from "../textshape";
-import { Operator } from "../../coop/recordop";
+import { Operator } from "../../operator/operator";
 import { exportText } from "../../data/baseexport";
 
 export class TextModifier extends Modifier {

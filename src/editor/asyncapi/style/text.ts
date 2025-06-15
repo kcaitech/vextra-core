@@ -27,7 +27,7 @@ import {
 } from "../../../data";
 import { exportGradient } from "../../../data/baseexport";
 import { importGradient, importStop, importText } from "../../../data/baseimport";
-import { Api } from "../../../coop";
+import { Api } from "../../../repo";
 import { ShapeView, TextShapeView } from "../../../dataview";
 import { varParent } from "../../symbol";
 import { uuid } from "../../../basic/uuid";

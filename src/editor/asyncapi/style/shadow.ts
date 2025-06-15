@@ -12,7 +12,7 @@ import { AsyncApiCaller } from "../basic/asyncapi";
 import { importShadow } from "../../../data/baseimport";
 import { BasicArray, OverrideType, Shadow, VariableType } from "../../../data";
 import { PageView, ShapeView } from "../../../dataview";
-import { Api } from "../../../coop";
+import { Api } from "../../../repo";
 import { override_variable } from "../../symbol";
 
 export class ShadowAsyncApi extends AsyncApiCaller {

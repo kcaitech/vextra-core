@@ -23,7 +23,7 @@ import {
 import { ExportOptions, SymbolRefShape } from "../data/symbolref";
 import { uuid } from "../basic/uuid";
 import { Page } from "../data/page";
-import { Operator } from "../coop/recordop";
+import { Operator } from "../operator/operator";
 import { newArtboard, newText2 } from "./creator/creator";
 import {
     Artboard,

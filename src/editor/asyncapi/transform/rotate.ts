@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository } from "../../../coop/cooprepo";
+import { CoopRepository } from "../../../repo/cooprepo";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import { Document } from "../../../data/document";
 import { PageView, ShapeView, adapt2Shape } from "../../../dataview";

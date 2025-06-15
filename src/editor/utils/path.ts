@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Operator } from "../../coop/recordop";
+import { Operator } from "../../operator/operator";
 import { BorderPosition, CurveMode, ShapeType } from "../../data/typesdefine";
 import { CurvePoint, PathShape, PathShape2, Point2D, Shape } from "../../data/shape";
 import { Page } from "../../data/page";

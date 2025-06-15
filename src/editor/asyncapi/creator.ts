@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../coop";
+import { CoopRepository } from "../../repo";
 import {
     Document,
     ContactForm,
@@ -44,9 +44,9 @@ import {
     newStellateShape,
     newTextShape
 } from "../creator/creator";
-import { ISave4Restore, LocalCmd, SelectionState } from "../../coop";
+import { ISave4Restore, LocalCmd, SelectionState } from "../../repo";
 import { uuid } from "../../basic/uuid";
-import { Api } from "../../coop";
+import { Api } from "../../repo";
 import { Point2D, ScrollBehavior } from "../../data/typesdefine";
 import { update_frame_by_points } from "../utils/path";
 import { translateTo } from "../frame";

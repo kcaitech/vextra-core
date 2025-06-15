@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api } from "../../../coop";
+import { Api } from "../../../repo";
 import { ContactShape, GroupShape, Page, Shape, Document, OverrideType, SymbolShape, SymbolUnionShape, BoolShape } from "../../../data";
 import { find_layers_by_varid } from "../../utils/other";
 

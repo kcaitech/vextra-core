@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository } from "../repo/cooprepo";
 import { Document, Shape, ShapeType, Page, ResizingConstraints2 } from "../data";
 
 export class resizingConstraintEditor {

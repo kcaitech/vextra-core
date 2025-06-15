@@ -18,7 +18,7 @@ import {
 import { TextBehaviour } from "../data/typesdefine";
 import { fixTextShapeFrameByLayout } from "./utils/other";
 import { ResizingConstraints2 } from "../data/consts";
-import { Operator } from "../coop/recordop";
+import { Operator } from "../operator/operator";
 import { Document } from "../data/document";
 import { ShapeSize, SymbolUnionShape } from "../data/classes";
 import { SymbolRefShape } from "../data/symbolref";

@@ -8,9 +8,9 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository } from "../../../coop/cooprepo";
+import { CoopRepository } from "../../../repo/cooprepo";
 import { Document, Page } from "../../../data";
-import { Operator } from "../../../coop/recordop";
+import { Operator } from "../../../operator/operator";
 import { PageView, adapt2Shape } from "../../../dataview";
 
 /**

@@ -22,7 +22,7 @@ import {
     importTextAttr,
 } from "../data/baseimport";
 import { newDocument } from "./creator/creator";
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository } from "../repo/cooprepo";
 import { TransactDataGuard } from "../data/transact";
 import * as types from "../data/typesdefine";
 import { FMT_VER_latest } from "../data/fmtver";

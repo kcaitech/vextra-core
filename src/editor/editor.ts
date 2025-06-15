@@ -3,11 +3,11 @@ import { DocEditor } from "./document";
 import { PageEditor } from "./page";
 import { ShapeEditor } from "./shape";
 import { Controller } from "./controller"; /* 逐步取消Controller */
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository } from "../repo/cooprepo";
 import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
 import { resizingConstraintEditor } from "./resizingConstraint";
-import { ISave4Restore } from "../coop/localcmd";
+import { ISave4Restore } from "../repo";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView } from "../dataview";
 import { Page } from "../data/page";
 

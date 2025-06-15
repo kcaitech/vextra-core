@@ -14,7 +14,7 @@ import { v4 } from "uuid";
 import { Matrix } from "../../basic/matrix";
 import { uuid } from "../../basic/uuid";
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { Api, CoopRepository } from "../../coop";
+import { Api, CoopRepository } from "../../repo";
 
 export function modifySweep(api: Api, page: Page, shapes: ShapeView[], value: number) {
     const end = Math.PI * 2 * (value / 100);

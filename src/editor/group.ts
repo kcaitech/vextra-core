@@ -14,7 +14,7 @@
 // 3. BOOL
 
 import { GroupShape, Shape, Document, Page, ShapeType, ScrollBehavior, Transform } from "../data";
-import { Operator } from "../coop/recordop";
+import { Operator } from "../operator/operator";
 import { ColVector3D } from "../basic/matrix2";
 
 export function expandBounds(bounds: {

@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api, CoopRepository } from "../coop";
+import { Api, CoopRepository } from "../repo";
 import { adapt2Shape, ContactLineView, get_nearest_border_point, PageView, ShapeView } from "../dataview";
 import {
     BasicArray,

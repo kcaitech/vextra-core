@@ -10,7 +10,7 @@
 
 import { SymbolRefShape, Document, Page, GroupShape, Shape, ShapeType, SymbolUnionShape } from "../../data";
 import { is_circular_ref2 } from "./ref_check";
-import { Operator } from "../../coop/recordop";
+import { Operator } from "../../operator/operator";
 import { is_exist_invalid_shape2, is_state } from "../symbol";
 
 /**

@@ -9,7 +9,7 @@
  */
 
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { CoopRepository } from "../../coop/cooprepo";
+import { CoopRepository } from "../../repo/cooprepo";
 import { Document } from "../../data/document";
 import { adapt2Shape, PageView, ShapeView, SymbolRefView } from "../../dataview";
 import { RadiusType } from "../../data/consts";
@@ -31,7 +31,7 @@ import {
     getPolygonPoints,
     getPolygonVertices,
 } from "../utils/path";
-import { Api } from "src/coop";
+import { Api } from "src/repo";
 
 export class PointModifyHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();

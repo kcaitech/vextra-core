@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api, CoopRepository } from "../../coop";
+import { Api, CoopRepository } from "../../repo";
 import { Modifier } from "../basic/modifier";
 import {
     BasicArray,

@@ -41,7 +41,7 @@ import {
     ShapeFrame
 } from "../data";
 import { expand, expandTo, translate, translateTo } from "./frame";
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository } from "../repo/cooprepo";
 import {
     CurveMode,
     ExportFileFormat,
@@ -52,7 +52,7 @@ import {
     StackSizing,
     StackWrap
 } from "../data/typesdefine";
-import { Operator } from "../coop/recordop";
+import { Operator } from "../operator/operator";
 import { importCurvePoint } from "../data/baseimport";
 import { v4 } from "uuid";
 import { uuid } from "../basic/uuid";
@@ -67,7 +67,7 @@ import { _typing_modify, modify_points_xy, update_frame_by_points } from "./util
 import { adapt_for_artboard } from "./utils/common";
 import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, ArtboardView, findVar, GroupShapeView, PageView } from "../dataview";
 import { is_part_of_symbol, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
-import { ISave4Restore, LocalCmd, SelectionState } from "../coop/localcmd";
+import { ISave4Restore, LocalCmd, SelectionState } from "../repo";
 import { exportCurvePoint } from "../data/baseexport";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 import { group, ungroup } from "./group";

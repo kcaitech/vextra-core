@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository, Api } from "../../../coop";
+import { CoopRepository, Api } from "../../../repo";
 import { BasicArray, Fill, OverrideType, VariableType } from "../../../data";
 import { PageView, ShapeView } from "../../../dataview";
 import { override_variable } from "../../symbol";

@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CoopRepository } from "../../../coop";
+import { CoopRepository } from "../../../repo";
 import { AsyncApiCaller } from "../basic/asyncapi";
 import {
     Artboard,
@@ -37,7 +37,7 @@ import {
     SymbolRefView,
     TextShapeView
 } from "../../../dataview";
-import { Operator, TextShapeLike } from "../../../coop/recordop";
+import { Operator, TextShapeLike } from "../../../operator/operator";
 import { fixTextShapeFrameByLayout } from "../../utils/other";
 import { ColVector3D } from "../../../basic/matrix2";
 import { shape4Autolayout } from "../../symbol";

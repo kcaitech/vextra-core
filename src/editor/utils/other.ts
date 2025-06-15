@@ -41,7 +41,7 @@ import { newSymbolShapeUnion } from "../creator/creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
-import { Api } from "../../coop";
+import { Api } from "../../repo";
 
 export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShapeView | TextShape) {
     if (!shape.text || shape.isVirtualShape) return;

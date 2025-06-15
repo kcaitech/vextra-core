@@ -20,8 +20,8 @@ import { translate } from "../frame";
 import { PaddingDir, Page, StackSizing } from "../..//data";
 import { after_migrate, unable_to_migrate } from "../utils/migrate";
 import { get_state_name, is_state, shape4Autolayout } from "../symbol";
-import { CoopRepository } from "../../coop/cooprepo";
-import { Operator } from "../../coop/recordop";
+import { CoopRepository } from "../../repo/cooprepo";
+import { Operator } from "../../operator/operator";
 
 export class AutoLayoutModify extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();

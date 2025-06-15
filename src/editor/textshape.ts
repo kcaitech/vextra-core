@@ -30,8 +30,8 @@ import {
     Variable, Document, FillType, Gradient,
     string2Text,
 } from "../data";
-import { CoopRepository, CmdMergeType } from "../coop";
-import { Operator } from "../coop/recordop";
+import { CoopRepository, CmdMergeType } from "../repo";
+import { Operator } from "../operator/operator";
 import { ShapeEditor } from "./shape";
 import { BasicArray } from "../data";
 import { mergeParaAttr, mergeSpanAttr } from "../data/text/textutils";

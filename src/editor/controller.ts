@@ -25,9 +25,9 @@ import {
 } from "./creator/creator";
 
 import { Page } from "../data/page";
-import { CoopRepository } from "../coop/cooprepo";
+import { CoopRepository } from "../repo/cooprepo";
 import { Document } from "../data/document";
-import { Operator } from "../coop/recordop";
+import { Operator } from "../operator/operator";
 import { uuid } from "../basic/uuid";
 import { importGradient } from "../data/baseimport";
 import { exportGradient } from "../data/baseexport";
