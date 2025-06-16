@@ -463,6 +463,8 @@ inject['Style']['before'] = `\
             }
         }
     }
+    
+    if (!source.shadows) source.shadows = new BasicArray()
 `
 inject['Style']['after'] = `\
     // inject code
@@ -492,6 +494,15 @@ inject['Border']['before'] = `\
             position: source.position,
             sideSetting: source.sideSetting,
             strokePaints: [strokePaint],
+        }
+    }
+    if (!source.sideSetting) {
+        (source.sideSetting as any) = {
+            sideType: types.SideType.Normal,
+            thicknessTop: 1,
+            thicknessLeft: 1,
+            thicknessBottom: 1,
+            thicknessRight: 1,
         }
     }
 `

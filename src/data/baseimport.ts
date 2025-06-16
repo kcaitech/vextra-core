@@ -1452,6 +1452,15 @@ export function importBorder(source: types.Border, ctx?: IImportContext): impl.B
             strokePaints: [strokePaint],
         }
     }
+    if (!source.sideSetting) {
+        (source.sideSetting as any) = {
+            sideType: types.SideType.Normal,
+            thicknessTop: 1,
+            thicknessLeft: 1,
+            thicknessBottom: 1,
+            thicknessRight: 1,
+        }
+    }
 
     const ret: impl.Border = new impl.Border (
         importBorderPosition(source.position, ctx),
@@ -1570,6 +1579,8 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
             }
         }
     }
+    
+    if (!source.shadows) source.shadows = new BasicArray()
 
     const ret: impl.Style = new impl.Style (
         importStyle_fills(source.fills, ctx),
