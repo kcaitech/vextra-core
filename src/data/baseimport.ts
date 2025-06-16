@@ -76,8 +76,8 @@ export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContex
 export function importBorder_strokePaints(source: types.Border_strokePaints, ctx?: IImportContext): Border_strokePaints {
     const ret: Border_strokePaints = new BasicArray()
     source.forEach((source, i) => {
-        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
-            source.crdtidx = (source.crdtidx as any).index;
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as {index: number[]}).index) {
+            source.crdtidx = (source.crdtidx as {index: number[]}).index;
         } else {
             source.crdtidx = [i];
         }
