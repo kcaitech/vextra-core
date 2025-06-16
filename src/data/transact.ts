@@ -399,14 +399,12 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
     // private __ph: ProxyHandler;
     private __trans: Transact[] = [];
     private __index: number = 0;
-    private __needundo: boolean;
 
-    constructor(props?: { settrap?: boolean, needundo?: boolean }) {
+    constructor(settrap?: boolean ) {
         super();
         this.__context = new TContext();
         // this.__ph = new ProxyHandler(this.__context);
-        this.__context.settrap = props ? (props.settrap ?? true) : true; // default true
-        this.__needundo = props ? (props.needundo ?? false) : false; // default false
+        this.__context.settrap = settrap ?? true; // default true
     }
     get transactCtx() {
         return this.__context;
@@ -464,13 +462,13 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
      *
      * @param cmd 最后打包成一个cmd，用于op，也可另外存
      */
-    _commit() {
+    _commit(stack: boolean) {
         if (this.__context.transact === undefined) {
             throw new Error("No transace neet commit");
         }
         this.__context.cache.clear();
         this.__trans.length = this.__index;
-        if (this.__needundo) {
+        if (stack) {
             this.__trans.push(this.__context.transact);
             this.__index++;
         }
@@ -480,8 +478,8 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
         this.notify();
     }
 
-    commit() {
-        this._commit()
+    commit(stack: boolean = false) {
+        this._commit(stack)
     }
 
     rollback(from: string = "") {
