@@ -54,17 +54,8 @@ export enum CmdMergeType {
     TextInsert,
     TextDelete,
 }
-export interface LocalCmd  {
-    id: string;
-    version: number;
-    time: number;
-    baseVer: number;
+export interface LocalCmd extends Cmd {
     ops: Op[];
-    batchId: string;
-    isRecovery: boolean;
-    description: string;
-    posttime: number;
-    dataFmtVer: string;
     delay: number; // 是否延迟同步
     mergetype: CmdMergeType; // 用于cmd合并
     saveselection: SelectionState | undefined; // undo时还原到旧选区。 redo及正常操作时，selectionupdater更新选区
