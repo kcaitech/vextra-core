@@ -1,10 +1,10 @@
-import { TransactDataGuard, Text } from "src/data";
+import { TransactDataGuard, Text, Document } from "../data";
 import { Operator as Api } from "../operator";
 import { Cmd, CmdMergeType, INet, IRepository, ISave4Restore, LocalCmd } from "./types";
 import { Operator } from "../operator";
-import { FMT_VER_latest } from "src/data/fmtver";
+import { FMT_VER_latest } from "../data/fmtver";
 import { defaultSU } from "./utils";
-import { uuid } from "src/basic/uuid";
+import { uuid } from "../basic/uuid";
 
 export class Repo implements IRepository {
     private __repo: TransactDataGuard;
@@ -14,8 +14,8 @@ export class Repo implements IRepository {
     private __cmds: LocalCmd[] = [];
     private __curCmd: LocalCmd | undefined;
     private __cmdIdx: number = 0;
-    constructor() {
-        this.__repo = new TransactDataGuard();
+    constructor(data: Document, repo: TransactDataGuard) {
+        this.__repo = repo;
         this.__operator = Operator.create(this.__repo);
     }
     setInitingDocument(init: boolean): void {
@@ -123,7 +123,7 @@ export class Repo implements IRepository {
     }
     commit(mergetype: CmdMergeType = CmdMergeType.None) {
         if (!this.__curCmd) throw new Error("commit failed");
-        this.__repo.commit();
+        this.__repo.commit(true);
         const cmd = this.__curCmd;
         cmd.ops = this.__operator.ops;
         cmd.id = uuid();
