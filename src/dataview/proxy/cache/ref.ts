@@ -61,6 +61,7 @@ export class RefViewCache extends ViewCache {
         const v = this.view._findOV2(OverrideType.Borders, VariableType.Borders);
         const border = v ? { ...v.value } : { ...this.view.m_sym?.style.borders };
         border.sideSetting = this.sideSettingOrDefault(border.sideSetting);
+        border.strokePaints = border.strokePaints ?? new BasicArray();
         const bordersMask = this.view.bordersMask;
         const mgr = this.view.style.getStylesMgr();
         if (bordersMask && mgr) {
