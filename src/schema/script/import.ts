@@ -240,7 +240,11 @@ function exportNode(n: Node, $: Writer) {
                 if (item.type === 'node') {
                     const _n = n.root.get(item.val);
                     if (_n && _n.schemaId && needCompatibleSet.has(_n.schemaId)) {
-                        $.nl('if (!source.crdtidx) source.crdtidx = [i]')
+                        $.nl(`if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }`)
                     }
                 }
                 $.nl('ret.push(')

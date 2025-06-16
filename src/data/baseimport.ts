@@ -76,7 +76,11 @@ export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContex
 export function importBorder_strokePaints(source: types.Border_strokePaints, ctx?: IImportContext): Border_strokePaints {
     const ret: Border_strokePaints = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importFill(source, ctx))
     })
     return ret
@@ -204,7 +208,11 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
 export function importDocumentMeta_pagesList(source: types.DocumentMeta_pagesList, ctx?: IImportContext): DocumentMeta_pagesList {
     const ret: DocumentMeta_pagesList = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importPageListItem(source, ctx))
     })
     return ret
@@ -236,7 +244,11 @@ export function importExportFormatNameingScheme(source: types.ExportFormatNamein
 export function importExportOptions_exportFormats(source: types.ExportOptions_exportFormats, ctx?: IImportContext): ExportOptions_exportFormats {
     const ret: ExportOptions_exportFormats = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importExportFormat(source, ctx))
     })
     return ret
@@ -248,7 +260,11 @@ export function importExportVisibleScaleType(source: types.ExportVisibleScaleTyp
 export function importFillMask_fills(source: types.FillMask_fills, ctx?: IImportContext): FillMask_fills {
     const ret: FillMask_fills = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importFill(source, ctx))
     })
     return ret
@@ -268,7 +284,11 @@ export function importGradientType(source: types.GradientType, ctx?: IImportCont
 export function importGradient_stops(source: types.Gradient_stops, ctx?: IImportContext): Gradient_stops {
     const ret: Gradient_stops = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importStop(source, ctx))
     })
     return ret
@@ -498,7 +518,11 @@ export function importPara_spans(source: types.Para_spans, ctx?: IImportContext)
 export function importPathSegment_points(source: types.PathSegment_points, ctx?: IImportContext): PathSegment_points {
     const ret: PathSegment_points = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importCurvePoint(source, ctx))
     })
     return ret
@@ -515,7 +539,11 @@ export function importPathSegment(source: types.PathSegment, ctx?: IImportContex
 export function importPathShape_pathsegs(source: types.PathShape_pathsegs, ctx?: IImportContext): PathShape_pathsegs {
     const ret: PathShape_pathsegs = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importPathSegment(source, ctx))
     })
     return ret
@@ -523,7 +551,11 @@ export function importPathShape_pathsegs(source: types.PathShape_pathsegs, ctx?:
 export function importPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx?: IImportContext): PathShape2_pathsegs {
     const ret: PathShape2_pathsegs = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importPathSegment(source, ctx))
     })
     return ret
@@ -612,7 +644,11 @@ export function importScrollDirection(source: types.ScrollDirection, ctx?: IImpo
 export function importShadowMask_shadows(source: types.ShadowMask_shadows, ctx?: IImportContext): ShadowMask_shadows {
     const ret: ShadowMask_shadows = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importShadow(source, ctx))
     })
     return ret
@@ -754,7 +790,11 @@ export function importStyleVarType(source: types.StyleVarType, ctx?: IImportCont
 export function importStyle_fills(source: types.Style_fills, ctx?: IImportContext): Style_fills {
     const ret: Style_fills = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importFill(source, ctx))
     })
     return ret
@@ -762,7 +802,11 @@ export function importStyle_fills(source: types.Style_fills, ctx?: IImportContex
 export function importStyle_shadows(source: types.Style_shadows, ctx?: IImportContext): Style_shadows {
     const ret: Style_shadows = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importShadow(source, ctx))
     })
     return ret
@@ -770,7 +814,11 @@ export function importStyle_shadows(source: types.Style_shadows, ctx?: IImportCo
 export function importStyle_innerShadows(source: types.Style_innerShadows, ctx?: IImportContext): Style_innerShadows {
     const ret: Style_innerShadows = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importShadow(source, ctx))
     })
     return ret
@@ -778,7 +826,11 @@ export function importStyle_innerShadows(source: types.Style_innerShadows, ctx?:
 export function importStyle_contacts(source: types.Style_contacts, ctx?: IImportContext): Style_contacts {
     const ret: Style_contacts = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
+        if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as any).index) {
+            source.crdtidx = (source.crdtidx as any).index;
+        } else {
+            source.crdtidx = [i];
+        }
         ret.push(importContactRole(source, ctx))
     })
     return ret

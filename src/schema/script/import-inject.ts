@@ -572,4 +572,3 @@ inject['StyleSheet']['before'] = `\
         source.crdtidx = [0];
     }
 `
-
