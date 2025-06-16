@@ -8,8 +8,6 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { error } from "kiwi-schema/util";
-
 const __uuid = '8BC00DB1-35BD-1B62-F81F-23E231443680'
 
 export interface Notifiable {
