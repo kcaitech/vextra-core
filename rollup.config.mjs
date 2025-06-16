@@ -24,7 +24,7 @@ export default [{
         json(),
         typescript(),
         babel({ babelHelpers: 'bundled' }),
-        terser(),
+        // terser(),
     ],
     external: ['uuid', 'kiwi-schema', 'uzip', 'skia-canvas']
 }];
