@@ -78,7 +78,7 @@ export function importBorder_strokePaints(source: types.Border_strokePaints, ctx
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importFill(source, ctx))
@@ -210,7 +210,7 @@ export function importDocumentMeta_pagesList(source: types.DocumentMeta_pagesLis
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importPageListItem(source, ctx))
@@ -246,7 +246,7 @@ export function importExportOptions_exportFormats(source: types.ExportOptions_ex
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importExportFormat(source, ctx))
@@ -262,7 +262,7 @@ export function importFillMask_fills(source: types.FillMask_fills, ctx?: IImport
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importFill(source, ctx))
@@ -286,7 +286,7 @@ export function importGradient_stops(source: types.Gradient_stops, ctx?: IImport
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importStop(source, ctx))
@@ -308,79 +308,147 @@ export function importGroupShape_childs(source: types.GroupShape_childs, ctx?: I
                 return source
             }
             if (source.typeId === "group-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importGroupShape(source as types.GroupShape, ctx)
-            }
+                }
             if (source.typeId === "image-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importImageShape(source as types.ImageShape, ctx)
-            }
+                }
             if (source.typeId === "path-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importPathShape(source as types.PathShape, ctx)
-            }
+                }
             if (source.typeId === "path-shape2") {
                 return importPathShape2(source as types.PathShape2, ctx)
             }
             if (source.typeId === "rect-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importRectShape(source as types.RectShape, ctx)
-            }
+                }
             if (source.typeId === "symbol-ref-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importSymbolRefShape(source as types.SymbolRefShape, ctx)
-            }
+                }
             if (source.typeId === "symbol-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importSymbolShape(source as types.SymbolShape, ctx)
-            }
+                }
             if (source.typeId === "symbol-union-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importSymbolUnionShape(source as types.SymbolUnionShape, ctx)
-            }
+                }
             if (source.typeId === "text-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importTextShape(source as types.TextShape, ctx)
-            }
+                }
             if (source.typeId === "artboard") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importArtboard(source as types.Artboard, ctx)
-            }
+                }
             if (source.typeId === "line-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importLineShape(source as types.LineShape, ctx)
-            }
+                }
             if (source.typeId === "oval-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importOvalShape(source as types.OvalShape, ctx)
-            }
+                }
             if (source.typeId === "table-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importTableShape(source as types.TableShape, ctx)
-            }
+                }
             if (source.typeId === "contact-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importContactShape(source as types.ContactShape, ctx)
-            }
+                }
             if (source.typeId === "shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importShape(source as types.Shape, ctx)
-            }
+                }
             if (source.typeId === "cutout-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importCutoutShape(source as types.CutoutShape, ctx)
-            }
+                }
             if (source.typeId === "bool-shape") {
                 return importBoolShape(source as types.BoolShape, ctx)
             }
             if (source.typeId === "polygon-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importPolygonShape(source as types.PolygonShape, ctx)
-            }
+                }
             if (source.typeId === "star-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importStarShape(source as types.StarShape, ctx)
-            }
+                }
             throw new Error("unknow typeId: " + source.typeId)
         })())
     })
@@ -520,7 +588,7 @@ export function importPathSegment_points(source: types.PathSegment_points, ctx?:
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importCurvePoint(source, ctx))
@@ -541,7 +609,7 @@ export function importPathShape_pathsegs(source: types.PathShape_pathsegs, ctx?:
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importPathSegment(source, ctx))
@@ -553,7 +621,7 @@ export function importPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importPathSegment(source, ctx))
@@ -646,7 +714,7 @@ export function importShadowMask_shadows(source: types.ShadowMask_shadows, ctx?:
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importShadow(source, ctx))
@@ -792,7 +860,7 @@ export function importStyle_fills(source: types.Style_fills, ctx?: IImportContex
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importFill(source, ctx))
@@ -804,7 +872,7 @@ export function importStyle_shadows(source: types.Style_shadows, ctx?: IImportCo
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importShadow(source, ctx))
@@ -816,7 +884,7 @@ export function importStyle_innerShadows(source: types.Style_innerShadows, ctx?:
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importShadow(source, ctx))
@@ -828,7 +896,7 @@ export function importStyle_contacts(source: types.Style_contacts, ctx?: IImport
     source.forEach((source, i) => {
         if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }
         ret.push(importContactRole(source, ctx))
@@ -946,13 +1014,21 @@ export function importVariable_0(source: types.Variable_0, ctx?: IImportContext)
                 return source
             }
             if (source.typeId === "fill") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importFill(source as types.Fill, ctx)
-            }
+                }
             if (source.typeId === "shadow") {
-                if (!source.crdtidx) source.crdtidx = [i]
+                if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
+                    source.crdtidx = (source.crdtidx as { index: number[] }).index;
+                } else if (!source.crdtidx) {
+                    source.crdtidx = [i];
+                }
                 return importShadow(source as types.Shadow, ctx)
-            }
+                }
             if (source.typeId === "prototype-inter-action") {
                 return importPrototypeInterAction(source as types.PrototypeInterAction, ctx)
             }
@@ -2104,8 +2180,8 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
             isClosed: true
         }
         
-        if ((source as any)?.points.length) {
-            seg.points.push(...(source as any)?.points);
+        if ((source as any)?.points?.length) {
+            seg.points.push(...(source as any).points);
         } else {
             // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
             const id1 = "b259921b-4eba-461d-afc3-c4c58c1fa337"
@@ -2386,6 +2462,11 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
     if (source.frameMaskDisabled !== undefined) tar.frameMaskDisabled = source.frameMaskDisabled
 }
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
+        // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
+
     compatibleOldData(source, ctx)
     const ret: impl.SymbolShape = new impl.SymbolShape (
         importCrdtidx(source.crdtidx, ctx),

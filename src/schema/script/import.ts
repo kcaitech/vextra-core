@@ -120,7 +120,12 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer, insideArr: boole
                         if (!n) throw new Error('not find node ' + v.val);
                         if (n.schemaId) {
                             $.fmt(`if (${source}.typeId === "${n.schemaId}") {
-                                ${insideArr && n && n.schemaId && needCompatibleSet.has(n.schemaId) ? `if (!${source}.crdtidx) ${source}.crdtidx = [i]` : ''}
+                                ${insideArr && n && n.schemaId && needCompatibleSet.has(n.schemaId) ? `
+                                    if (${source}.crdtidx && !Array.isArray(${source}.crdtidx) && (${source}.crdtidx as { index: number[] }).index) {
+                                        ${source}.crdtidx = (${source}.crdtidx as { index: number[] }).index;
+                                    } else if (!${source}.crdtidx) {
+                                        ${source}.crdtidx = [i];
+                                    }` : ''}
                                 return import${v.val}(${source} as types.${v.val}, ctx)
                             }`)
                         } else {
@@ -242,7 +247,7 @@ function exportNode(n: Node, $: Writer) {
                     if (_n && _n.schemaId && needCompatibleSet.has(_n.schemaId)) {
                         $.nl(`if (source.crdtidx && !Array.isArray(source.crdtidx) && (source.crdtidx as { index: number[] }).index) {
             source.crdtidx = (source.crdtidx as { index: number[] }).index;
-        } else {
+        } else if (!source.crdtidx) {
             source.crdtidx = [i];
         }`)
                     }
