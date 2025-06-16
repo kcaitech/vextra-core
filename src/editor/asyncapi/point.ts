@@ -31,7 +31,7 @@ import {
     getPolygonPoints,
     getPolygonVertices,
 } from "../utils/path";
-import { Api } from "src/repo";
+import { Api } from "../../repo";
 
 export class PointModifyHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
