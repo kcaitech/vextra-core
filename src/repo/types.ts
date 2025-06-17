@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { TransactDataGuard, Text } from "../data";
+import { Text } from "../data";
 import { ArrayOpSelection, Op, Operator } from "../operator";
 
 export interface Cmd { // 用户的一次操作

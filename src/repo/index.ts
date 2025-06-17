@@ -9,8 +9,6 @@
  */
 
 export * from "./types"
-export * from "./serial"
 export { Repo } from "./repo"
 export { Operator as Api, ArrayOpSelection } from "../operator"
-export { isDiffStringArr, defaultSU, MockNet, cloneSelectionState, importShape } from "./utils"
-export { transform } from "./arrayoptransform"
+export { isDiffStringArr, defaultSU, MockNet, cloneSelectionState, importShape, isDiffSelectionState } from "./utils"

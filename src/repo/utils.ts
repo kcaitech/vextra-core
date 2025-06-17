@@ -8,21 +8,31 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, exportOvalShape, exportPathShape, exportRectShape, exportSymbolRefShape, exportTextShape, exportTableShape, exportPathShape2, exportTableCell, exportContactShape, exportSymbolShape, exportSymbolUnionShape, exportCutoutShape, exportPolygonShape, exportStarShape } from "../data/baseexport";
+import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, 
+    exportOvalShape, exportPathShape, exportRectShape, 
+    exportSymbolRefShape, exportTextShape, 
+    exportTableShape, exportPathShape2, exportTableCell, 
+    exportContactShape, exportSymbolShape, exportSymbolUnionShape, 
+    exportCutoutShape, exportPolygonShape, exportStarShape } from "../data/baseexport";
 import { Artboard } from "../data/artboard";
-import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, PathShape2, RectShape, Shape, ShapeType, SymbolUnionShape, SymbolShape, TextShape, CutoutShape, PolygonShape, StarShape } from "../data/shape";
+import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, 
+    PathShape2, RectShape, Shape, ShapeType, SymbolUnionShape, 
+    SymbolShape, TextShape, CutoutShape, PolygonShape, StarShape } from "../data/shape";
 import { TableCell, TableShape } from "../data/table";
 import { ContactShape } from "../data/contact";
 import { Page } from "../data/page";
 import { SymbolRefShape } from "../data/classes";
-import { IImportContext, importArtboard, importContactShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, importTableCell, importTableShape, importTextShape, importCutoutShape, importBoolShape, importPolygonShape, importStarShape } from "../data/baseimport";
+import { IImportContext, importArtboard, importContactShape, importGroupShape, 
+    importImageShape, 
+    importLineShape, importOvalShape, importPathShape, importPathShape2, 
+    importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, 
+    importTableCell, importTableShape, importTextShape, importCutoutShape, importBoolShape, 
+    importPolygonShape, importStarShape } from "../data/baseimport";
 import { Document } from "../data/document";
 import { FMT_VER_latest } from "../data/fmtver";
 
 
 import { Cmd, INet, ISave4Restore, LocalCmd, SelectionState } from "./types";
-import { ArrayOp, ArrayOpSelection } from "../operator";
-import { transform } from "./arrayoptransform";
 
 export function isDiffStringArr(lhs: string[], rhs: string[]): boolean {
     if (lhs.length !== rhs.length) return true;
@@ -88,113 +98,6 @@ export function setFrame(page: Page, shape: Shape, x: number, y: number, w: numb
     }
     return changed;
 }
-
-// const float_accuracy = 1e-7;
-
-// function __updateShapeFrame(page: Page, shape: Shape, api: Api): boolean {
-//     const p: GroupShape | undefined = shape.parent as GroupShape;
-//     // check
-//     if (!p || p.childs.length === 0) return false;
-//     if ((p.type === ShapeType.Artboard || p.type === ShapeType.SymbolRef || p.type === ShapeType.Symbol || p.type === ShapeType.SymbolUnion)) return false;
-//     const idx = p.childs.findIndex(s => s.id === shape.id);
-//     if (idx < 0) return false;
-
-//     let changed = false;
-//     const cc = p.childs.length;
-//     const cf = p.childs[0].boundingBox();
-//     let l = cf.x, t = cf.y, r = l + cf.width, b = t + cf.height;
-//     for (let i = 1; i < cc; i++) {
-//         const c = p.childs[i];
-//         const cf = c.boundingBox();
-//         const cl = cf.x, ct = cf.y, cr = cl + cf.width, cb = ct + cf.height;
-//         l = Math.min(cl, l);
-//         t = Math.min(ct, t);
-//         r = Math.max(cr, r);
-//         b = Math.max(cb, b);
-//     }
-//     if ((Math.abs(l) > float_accuracy || Math.abs(t) > float_accuracy)) { // 仅在对象被删除后要更新？
-//         for (let i = 0; i < cc; i++) {
-//             const c = p.childs[i];
-//             const transfrom = c.transform;
-//             api.shapeModifyX(page, c, transfrom.m02 - l)
-//             api.shapeModifyY(page, c, transfrom.m12 - t)
-//         }
-//     }
-
-//     const w = r - l;
-//     const h = b - t;
-//     if (p.isNoTransform()) {
-//         const ptransfrom = p.transform;
-//         changed = setFrame(page, p, ptransfrom.m02 + l, ptransfrom.m12 + t, w, h, api);
-//     } else {
-//         const ptransfrom = p.transform;
-//         const m = p.matrix2Parent();
-//         const xy = m.computeRef(l, t);
-//         changed = setFrame(page, p, ptransfrom.m02 + xy.x, ptransfrom.m12 + xy.y, w, h, api);
-//     }
-
-//     return changed;
-// }
-
-// export function updateShapesFrame(page: Page, shapes: Shape[], api: Api) {
-//     if (shapes.length === 0) return;
-//     type Node = { shape: Shape, updated: boolean, childs: Node[], changed: boolean, needupdate: boolean }
-//     const updatetree: Map<string, Node> = new Map();
-//     shapes.forEach((s) => {
-//         let n: Node | undefined = updatetree.get(s.id);
-//         if (n) {
-//             n.needupdate = true;
-//             return;
-//         }
-//         n = { shape: s, updated: false, childs: [], changed: false, needupdate: true }
-//         updatetree.set(s.id, n);
-
-//         let p = s.parent;
-//         while (p) {
-//             let pn: Node | undefined = updatetree.get(p.id);
-//             if (pn) {
-//                 pn.childs.push(n);
-//             }
-//             else {
-//                 pn = { shape: p, updated: false, childs: [n], changed: false, needupdate: false }
-//                 updatetree.set(p.id, pn);
-//             }
-//             n = pn;
-//             p = p.parent;
-//         }
-//     });
-
-//     const root: Node | undefined = updatetree.get(page.id);
-//     if (!root) throw new Error("")
-
-//     while (updatetree.size > 0 && !root.updated) {
-//         // get first node of childs is empty or all updated!
-//         let next = root;
-//         while (next) {
-//             if (next.childs.length === 0) break;
-//             let nextchild;
-//             for (let i = 0, len = next.childs.length; i < len; i++) {
-//                 const child = next.childs[i];
-//                 if (!child.updated) {
-//                     nextchild = child; // 下一个未更新的子节点
-//                     break;
-//                 }
-//             }
-//             if (!nextchild) break;
-//             next = nextchild;
-//         }
-//         const needupdate = next.needupdate || ((childs) => {
-//             for (let i = 0; i < childs.length; i++) {
-//                 if (childs[i].changed) return true;
-//             }
-//             return false;
-//         })(next.childs)
-//         const changed = needupdate && __updateShapeFrame(page, next.shape, api);
-//         next.updated = true;
-//         next.changed = changed;
-//     }
-//     page.__collect.notify('collect'); // 收集辅助线采用的关键点位
-// }
 
 const imhdl: { [key: string]: (source: any, ctx?: IImportContext) => any } = {};
 imhdl['bool-shape'] = importBoolShape;
@@ -272,22 +175,7 @@ export class MockNet implements INet {
 
 export function defaultSU(selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd): void {
     if (!cmd.saveselection) return;
-    let saveselection = cmd.saveselection;
-    if (!isUndo && saveselection.text) {
-        // 需要变换
-        const selectTextOp = saveselection.text;
-        const idx = cmd.ops.indexOf(selectTextOp);
-        if (idx < 0) {
-            throw new Error(); // 出现了
-        }
-        const rhs = cmd.ops.slice(idx + 1).reduce((rhs, op) => {
-            if (!isDiffStringArr(op.path, selectTextOp.path)) rhs.push(op as ArrayOp);
-            return rhs;
-        }, [] as ArrayOp[])
-        const trans = transform([selectTextOp], rhs);
-        saveselection = cloneSelectionState(saveselection);
-        saveselection.text = trans.lhs[0] as ArrayOpSelection;
-    }
+    const saveselection = cmd.saveselection;
     const cur = selection.save();
     if (isDiffSelectionState(cur, saveselection)) {
         selection.restore(saveselection);
