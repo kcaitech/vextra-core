@@ -71,7 +71,7 @@ export class LinearApi {
     }
 
     private __update() {
-        this.__repo.transactCtx.fireNotify();
+        this.__repo.fireNotify();
     }
 
     private __commit() {

@@ -518,7 +518,7 @@ export class TextShapeEditor extends ShapeEditor {
             this.__preInputText = savetext;
             if (!this.view.isVirtualShape && this.view instanceof TextShapeView) this.view.frameProxy.forceUpdateOriginFrame();
             this.fixFrameByLayout(api);
-            this.__repo.transactCtx.fireNotify(); // 会导致不断排版绘制
+            this.__repo.fireNotify(); // 会导致不断排版绘制
             return true;
         } catch (e) {
             console.error(e);
@@ -1343,7 +1343,7 @@ export class TextShapeEditor extends ShapeEditor {
                 new_gradient.from.x = from.x;
                 new_gradient.from.y = from.y;
                 set_gradient(new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1357,7 +1357,7 @@ export class TextShapeEditor extends ShapeEditor {
                 new_gradient.to.x = to.x;
                 new_gradient.to.y = to.y;
                 set_gradient(new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1370,7 +1370,7 @@ export class TextShapeEditor extends ShapeEditor {
                 const new_gradient = importGradient(gradient);
                 new_gradient.elipseLength = length;
                 set_gradient(new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1394,7 +1394,7 @@ export class TextShapeEditor extends ShapeEditor {
                     }
                 })
                 set_gradient(new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1458,7 +1458,7 @@ export class TextShapeEditor extends ShapeEditor {
                         this.fixFrameByLayout2(api, shape);
                     }
                 }
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1486,7 +1486,7 @@ export class TextShapeEditor extends ShapeEditor {
                         this.fixFrameByLayout2(api, shape);
                     }
                 }
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);

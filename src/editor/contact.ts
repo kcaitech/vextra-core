@@ -47,7 +47,7 @@ export class ContactLineModifier {
     }
 
     private updateView() {
-        this.repo.transactCtx.fireNotify();
+        this.repo.fireNotify();
     }
 
     /* ===public=== */

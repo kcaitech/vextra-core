@@ -38,7 +38,7 @@ export class AsyncApiCaller {
     }
 
     updateView() {
-        this.__repo.transactCtx.fireNotify();
+        this.__repo.fireNotify();
     }
 
     commit() {

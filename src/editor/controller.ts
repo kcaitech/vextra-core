@@ -183,7 +183,7 @@ export class Controller {
 
                 setCurrentEnv(targetParent);
 
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -210,7 +210,7 @@ export class Controller {
                         __migrate(this.__document, api, page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index, env_transform);
                     }
                 });
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 setCurrentEnv(emit_by);
                 status = Status.Fulfilled;
             } catch (error) {
@@ -224,7 +224,7 @@ export class Controller {
                 for (let i = 0; i < shapes.length; i++) {
                     translate(api, page, shapes[i], end.x - start.x, end.y - start.y);
                 }
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -237,7 +237,7 @@ export class Controller {
                 for (let i = 0; i < shapes.length; i++) {
                     translate(api, page, shapes[i], dx, dy);
                 }
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -250,7 +250,7 @@ export class Controller {
                 for (let i = 0; i < shapes.length; i++) {
                     translate(api, page, shapes[i], dx, dy);
                 }
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -267,7 +267,7 @@ export class Controller {
                     api.shapeInsert(this.__document, page, parent, shape, index);
                     result.push(parent.childs[index]);
                 }
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
                 shapes = result;
                 return result;
@@ -332,7 +332,7 @@ export class Controller {
                 const p = new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight);
                 api.addPointAt(page, shape as PathShape, index, p, 0);
                 after_insert_point(page, api, shape, index, 0);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -343,7 +343,7 @@ export class Controller {
             status === Status.Pending
             try {
                 // pathEdit(api, page, shape, index, end, m);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -361,7 +361,7 @@ export class Controller {
                     }
                     // pointsEdit(api, page, shape, points, indexes, dx, dy, segment);
                 });
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -382,7 +382,7 @@ export class Controller {
                         api.modifyPointCornerRadius(page, shape, indexes[i], radius + r, segment);
                     }
                 });
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -424,7 +424,7 @@ export class Controller {
                     const shape = shape4contextSettings(api, shapes[i], _page);
                     api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
                 }
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -454,7 +454,7 @@ export class Controller {
                 new_gradient.from.x = from.x;
                 new_gradient.from.y = from.y;
                 api.setFillGradient(fill, new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -470,7 +470,7 @@ export class Controller {
                 new_gradient.to.x = to.x;
                 new_gradient.to.y = to.y;
                 api.setFillGradient(fill, new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -485,7 +485,7 @@ export class Controller {
                 const new_gradient = importGradient(exportGradient(gradient));
                 new_gradient.elipseLength = length;
                 api.setFillGradient(fill, new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -513,7 +513,7 @@ export class Controller {
                     }
                 })
                 api.setFillGradient(fill, new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);

@@ -1138,7 +1138,7 @@ export class TableEditor extends ShapeEditor {
                 new_gradient.from.x = from.x;
                 new_gradient.from.y = from.y;
                 set_gradient(new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1152,7 +1152,7 @@ export class TableEditor extends ShapeEditor {
                 new_gradient.to.x = to.x;
                 new_gradient.to.y = to.y;
                 set_gradient(new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1165,7 +1165,7 @@ export class TableEditor extends ShapeEditor {
                 const new_gradient = importGradient(gradient!);
                 new_gradient.elipseLength = length;
                 set_gradient(new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1189,7 +1189,7 @@ export class TableEditor extends ShapeEditor {
                     }
                 })
                 set_gradient(new_gradient);
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1389,7 +1389,7 @@ export class TableEditor extends ShapeEditor {
                         api.setBorderSide(c.data.getBorders(), new BorderSideSetting(SideType.Normal, contextSettingThickness, contextSettingThickness, contextSettingThickness, contextSettingThickness));
                     }
                 })
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1509,7 +1509,7 @@ export class TableEditor extends ShapeEditor {
                         }
                     })
                 }
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -1545,7 +1545,7 @@ export class TableEditor extends ShapeEditor {
                         }
                     })
                 }
-                this.__repo.transactCtx.fireNotify();
+                this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);

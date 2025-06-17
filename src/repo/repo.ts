@@ -1,6 +1,6 @@
 import { TransactDataGuard, Text, Document } from "../data";
 import { Operator as Api } from "../operator";
-import { Cmd, CmdMergeType, INet, IRepository, ISave4Restore, LocalCmd } from "./types";
+import { CmdMergeType, IRepository, ISave4Restore, LocalCmd } from "./types";
 import { Operator } from "../operator";
 import { FMT_VER_latest } from "../data/fmtver";
 import { defaultSU } from "./utils";
@@ -8,54 +8,32 @@ import { uuid } from "../basic/uuid";
 
 export class Repo implements IRepository {
     private __repo: TransactDataGuard;
-    private __onChange?: Function;
+    private __onChange?: (cmdId: string) => void;
     private __selection?: ISave4Restore;
     private __operator: Operator;
     private __cmds: LocalCmd[] = [];
     private __curCmd: LocalCmd | undefined;
     private __cmdIdx: number = 0;
+    private __initing: boolean = false
     constructor(data: Document, repo: TransactDataGuard) {
         this.__repo = repo;
         this.__operator = Operator.create(this.__repo);
     }
-    setInitingDocument(init: boolean): void {
-        // throw new Error("Method not implemented.");
+    startInitData(): void {
+        this.__initing = true
     }
-    onLoaded(): void {
-        // throw new Error("Method not implemented.");
+    endInitData(): void {
+        this.__initing = false
     }
-    setOnChange(onChange: Function): void {
-        this.__onChange = onChange;
+
+    onChange(cb: (cmdId: string) => void): void {
+        this.__onChange = cb;
     }
-    lastRemoteCmdVersion(): number | undefined {
-        // throw new Error("Method not implemented.");
-        return undefined;
-    }
-    hasPendingSyncCmd(): boolean {
-        // throw new Error("Method not implemented.");
-        return false;
-    }
-    setNet(net: INet): void {
-        // throw new Error("Method not implemented.");
-    }
-    setBaseVer(baseVer: number): void {
-        // throw new Error("Method not implemented.");
-    }
-    setProcessCmdsTrigger(trigger: () => void): void {
-        // throw new Error("Method not implemented.");
-    }
-    receive(cmds: Cmd[]): void {
-        // throw new Error("Method not implemented.");
-    }
+
     setSelection(selection: ISave4Restore): void {
         this.__selection = selection;
     }
-    get repo(): TransactDataGuard {
-        return this.__repo;
-    }
-    get transactCtx(): any {
-        return this.__repo.transactCtx;
-    }
+
     isInTransact(): boolean {
         return this.__repo.isInTransact();
     }
@@ -67,6 +45,7 @@ export class Repo implements IRepository {
             // selection
             cmd.selectionupdater(this.__selection, true, cmd);
         }
+        if (this.__onChange) this.__onChange(cmd.id)
     }
     redo(): void {
         if (!this.__repo.redo()) return;
@@ -76,6 +55,7 @@ export class Repo implements IRepository {
             // selection
             cmd.selectionupdater(this.__selection, false, cmd);
         }
+        if (this.__onChange) this.__onChange(cmd.id)
     }
     canUndo(): boolean {
         return this.__repo.canUndo();
@@ -123,7 +103,12 @@ export class Repo implements IRepository {
     }
     commit(mergetype: CmdMergeType = CmdMergeType.None) {
         if (!this.__curCmd) throw new Error("commit failed");
-        this.__repo.commit(true);
+        this.__repo.commit(!this.__initing);
+        if (this.__initing) {
+            this.__operator.reset();
+            this.__curCmd = undefined;
+            return
+        }
         const cmd = this.__curCmd;
         cmd.ops = this.__operator.ops;
         cmd.id = uuid();
@@ -132,6 +117,7 @@ export class Repo implements IRepository {
         this.__cmds.push(cmd);
         this.__operator.reset();
         this.__curCmd = undefined;
+        if (this.__onChange) this.__onChange(cmd.id)
     }
     rollback(from?: string): void {
         if (!this.__curCmd) throw new Error("rollback failed");
@@ -139,7 +125,7 @@ export class Repo implements IRepository {
         this.__operator.reset();
         this.__curCmd = undefined;
     }
-    quit(): void {
-        throw new Error("Method not implemented.");
+    fireNotify(): void {
+        this.__repo.transactCtx.fireNotify();
     }
 }

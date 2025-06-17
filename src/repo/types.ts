@@ -84,7 +84,7 @@ export interface INet {
      * 
      * @param cmds 要推送的命令
      */
-    postCmds(cmds: Cmd[], serial:(cmds: Cmd[])=> string): Promise<boolean>;
+    postCmds(cmds: Cmd[], serial: (cmds: Cmd[]) => string): Promise<boolean>;
 
     /**
      * 监听远程cmd
@@ -109,39 +109,24 @@ export interface INet {
 }
 
 export interface IRepository {
-    setInitingDocument(init: boolean): void;
-    onLoaded(): void;
+    startInitData(): void;
+    endInitData(): void;
 
-    setOnChange(onChange: Function): void;
-    lastRemoteCmdVersion(): number | undefined;
-    hasPendingSyncCmd(): boolean;
-    setNet(net: INet): void;
-    setBaseVer(baseVer: number): void;
-    setProcessCmdsTrigger(trigger: () => void): void;
-    receive(cmds: Cmd[]): void;
+    // 用户编辑时，通知外部更新
+    onChange(cb: (cmdId: string) => void): void;
+
     setSelection(selection: ISave4Restore): void;
-    
-    /**
-     * @deprecated
-     */
-    get repo(): TransactDataGuard;
-    
-    /**
-     * @deprecated
-     */
-    get transactCtx(): any;
-    
+    updateTextSelectionPath(text: Text): void;
+    updateTextSelectionRange(start: number, length: number): void;
+
     isInTransact(): boolean;
     undo(): void;
     redo(): void;
     canUndo(): boolean;
     canRedo(): boolean;
     start(description: string, selectionupdater?: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void): Operator;
-    updateTextSelectionPath(text: Text): void;
-    updateTextSelectionRange(start: number, length: number): void;
     isNeedCommit(): boolean;
     commit(mergetype?: CmdMergeType): void;
     rollback(from?: string): void;
-
-    quit(): void;
+    fireNotify(): void;
 }

@@ -105,7 +105,7 @@ export class GradientEditor {
     }
 
     updateView() {
-        this.__repo.transactCtx.fireNotify();
+        this.__repo.fireNotify();
     }
 
     commit() {
