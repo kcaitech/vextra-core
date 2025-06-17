@@ -10,122 +10,213 @@
 
 import fs from 'fs';
 
-function space4(level: number) {
-    let ret = ''
-    while ((level--) > 0) ret += '    '
-    return ret
+/**
+ * 生成指定数量的缩进空格
+ */
+function generateIndent(level: number): string {
+    return '    '.repeat(Math.max(0, level));
 }
-const charlevel: { [key: string]: number } = {
+
+/**
+ * 括号层级映射
+ */
+const BRACKET_LEVELS: Record<string, number> = {
     '{': 1,
     '[': 1,
     '(': 1,
     '}': -1,
     ']': -1,
     ')': -1
+} as const;
+
+/**
+ * 计算字符串中的括号层级变化
+ */
+function calculateLevelChange(str: string): number {
+    return str.split('').reduce((level, char) => level + (BRACKET_LEVELS[char] || 0), 0);
 }
-function calclevel(str: string) {
-    return str.split('').reduce((l, c) => l += (charlevel[c] || 0), 0)
+
+/**
+ * 检查字符串是否以闭合括号开始
+ */
+function startsWithClosingBracket(str: string): boolean {
+    return str.length > 0 && BRACKET_LEVELS[str[0]] < 0;
 }
-function decfirst(str: string) {
-    return charlevel[str[0]] < 0
-}
-const tips = `/* 代码生成，勿手动修改 */`
+
+const GENERATED_CODE_HEADER = `/*
+ * Copyright (c) 2023-2025 KCai Technology (https://kcaitech.com). All rights reserved.
+ *
+ * This file is part of the Vextra project, which is licensed under the AGPL-3.0 license.
+ * The full license text can be found in the LICENSE file in the root directory of this source tree.
+ *
+ * For more information about the AGPL-3.0 license, please visit:
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+
+/* 代码生成，勿手动修改 */`;
+
+/**
+ * 代码写入器类，用于生成格式化的代码文件
+ */
 export class Writer {
-    private level: number = 0
-    private file: string
-    private isNewLine: boolean = true;
-    constructor(file: string) {
-        if (fs.existsSync(file)) fs.rmSync(file)
-        this.file = file;
-        this.nl(tips);
+    private currentLevel: number = 0;
+    private readonly filePath: string;
+    private isAtNewLine: boolean = true;
+
+    constructor(filePath: string) {
+        this.filePath = filePath;
+        this.initializeFile();
     }
-    append(str: string) {
+
+    /**
+     * 初始化文件，清空并写入头部注释
+     */
+    private initializeFile(): void {
+        if (fs.existsSync(this.filePath)) {
+            fs.rmSync(this.filePath);
+        }
+        this.nl(GENERATED_CODE_HEADER);
+    }
+
+    /**
+     * 追加字符串到文件
+     */
+    append(str: string): this {
         if (str.length > 0) {
-            fs.appendFileSync(this.file, str);
-            this.isNewLine = false;
+            try {
+                fs.appendFileSync(this.filePath, str);
+                this.isAtNewLine = false;
+            } catch (error) {
+                throw new Error(`Failed to write to file ${this.filePath}: ${(error as Error).message}`);
+            }
         }
         return this;
     }
-    newline() {
-        if (!this.isNewLine) {
+
+    /**
+     * 添加换行符
+     */
+    newline(): this {
+        if (!this.isAtNewLine) {
             this.append('\n');
-            this.isNewLine = true;
+            this.isAtNewLine = true;
         }
         return this;
     }
-    sub(sub: (w: Writer) => void) {
+
+    /**
+     * 执行子块代码并自动处理大括号和缩进
+     */
+    sub(callback: (writer: Writer) => void): this {
         this.append('{');
-        ++this.level;
-        sub(this);
-        --this.level;
+        this.currentLevel++;
+        callback(this);
+        this.currentLevel--;
         this.newline().indent().append('}');
         return this;
     }
-    nl(...strs: string[]) {
+
+    /**
+     * 换行并添加内容
+     */
+    nl(...strings: string[]): this {
         this.newline();
-        if (strs.length > 0) this.indent().append(strs.join(''));
-        return this;
-    }
-    indent(indent: number = 0, sub?: (w: Writer) => void) {
-        if (sub) {
-            this.level += indent;
-            sub(this);
-            this.level -= indent;
-        } else {
-            this.append(space4(this.level + indent));
+        if (strings.length > 0) {
+            this.indent().append(strings.join(''));
         }
         return this;
     }
 
-    fmt(str: string, append: boolean = false) {
-        const baselevel = this.level;
-        let level = 0;
-        const aligns = [];
-        const lines = str.split('\n');
-        for (let i = 0, len = lines.length; i < len; ++i) {
-            const l = lines[i].trim();
-            if (l.length === 0) continue;
-            const savelevel = level;
-            if (decfirst(l)) {
-                --level;
-                if (level < 0) level = 0;
-                else if (level < aligns.length - 1) level = aligns.length - 1;
-            }
-            if (!append || i > 0) {
-                this.newline()
-                this.append(space4(level + baselevel))
-            }
-            this.append(l)
+    /**
+     * 添加缩进或执行带缩进的子块
+     */
+    indent(extraIndent: number = 0, callback?: (writer: Writer) => void): this {
+        if (callback) {
+            const originalLevel = this.currentLevel;
+            this.currentLevel += extraIndent;
+            callback(this);
+            this.currentLevel = originalLevel;
+        } else {
+            this.append(generateIndent(this.currentLevel + extraIndent));
+        }
+        return this;
+    }
 
-            const ll = calclevel(l)
-            if (ll === 0) {
-                level = savelevel
-                continue
+    /**
+     * 格式化多行字符串并写入文件
+     * @param str 要格式化的字符串
+     * @param append 是否追加到当前行
+     */
+    fmt(str: string, append: boolean = false): this {
+        const baseLevel = this.currentLevel;
+        let currentLevel = 0;
+        const levelStack: number[] = [];
+        const lines = str.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (line.length === 0) continue;
+
+            const savedLevel = currentLevel;
+
+            // 处理闭合括号
+            if (startsWithClosingBracket(line)) {
+                currentLevel--;
+                if (currentLevel < 0) {
+                    currentLevel = 0;
+                } else if (currentLevel < levelStack.length - 1) {
+                    currentLevel = levelStack.length - 1;
+                }
             }
-            if (ll > 0) {
-                if (level === aligns.length) {
-                    aligns.push(ll)
-                    ++level
-                } else if (level === aligns.length - 1) {
-                    aligns[aligns.length - 1] += ll
-                    ++level
+
+            // 写入行内容
+            if (!append || i > 0) {
+                this.newline();
+                this.append(generateIndent(currentLevel + baseLevel));
+            }
+            this.append(line);
+
+            // 处理括号层级变化
+            const levelChange = calculateLevelChange(line);
+            if (levelChange === 0) {
+                currentLevel = savedLevel;
+                continue;
+            }
+
+            if (levelChange > 0) {
+                if (currentLevel === levelStack.length) {
+                    levelStack.push(levelChange);
+                    currentLevel++;
+                } else if (currentLevel === levelStack.length - 1) {
+                    levelStack[levelStack.length - 1] += levelChange;
+                    currentLevel++;
                 } else {
-                    throw new Error('fmt error');
+                    throw new Error(`Formatting error: unexpected bracket nesting at line: ${line}`);
                 }
             } else {
-                let i = 0
-                for (; aligns.length > 0 && i < 0;) {
-                    if (aligns[aligns.length - 1] + i <= 0) {
-                        i += aligns[aligns.length - 1]
-                        aligns.pop()
+                // levelChange < 0
+                let remainingChange = levelChange;
+                while (levelStack.length > 0 && remainingChange < 0) {
+                    const topLevel = levelStack[levelStack.length - 1];
+                    if (topLevel + remainingChange <= 0) {
+                        remainingChange += topLevel;
+                        levelStack.pop();
                     } else {
-                        aligns[aligns.length - 1] += i
-                        i = 0
+                        levelStack[levelStack.length - 1] += remainingChange;
+                        remainingChange = 0;
                     }
                 }
-                if (i < 0) throw new Error('fmt error')
-                if (level > aligns.length) level = aligns.length
+                
+                if (remainingChange < 0) {
+                    throw new Error(`Formatting error: unmatched closing bracket at line: ${line}`);
+                }
+                
+                if (currentLevel > levelStack.length) {
+                    currentLevel = levelStack.length;
+                }
             }
         }
+
+        return this;
     }
 }

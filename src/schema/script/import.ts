@@ -13,35 +13,28 @@ import { Writer } from "./writer";
 import { exportBaseProp as exportBasePropType, exportNode as exportNodeClass } from "./import_class"
 import { inject } from "./import-inject"
 
-// 兼容非crdt数据
-const needCompatibleSet = new Set([
-    "stop",
-    "shadow",
-    "path-segment",
-    "page-list-item",
-    "fill",
-    "export-format",
-    "curve-point",
-    "contact-role",
-    "border",
-    'group-shape',
-    'image-shape',
-    'path-shape',
-    'rect-shape',
-    'symbol-ref-shape',
-    'symbol-shape',
-    'symbol-union-shape',
-    'text-shape',
-    'artboard',
-    'line-shape',
-    'oval-shape',
-    'table-shape',
-    'contact-shape',
-    'shape',
-    'flatten-shape',
-    'cutout-shape',
-    'polygon-shape',
-    'star-shape',
+/**
+ * 需要兼容非CRDT数据的类型集合
+ */
+const COMPATIBLE_NON_CRDT_TYPES = new Set([
+    "stop", "shadow", "path-segment", "page-list-item", "fill",
+    "export-format", "curve-point", "contact-role", "border",
+    'group-shape', 'image-shape', 'path-shape', 'rect-shape',
+    'symbol-ref-shape', 'symbol-shape', 'symbol-union-shape',
+    'text-shape', 'artboard', 'line-shape', 'oval-shape',
+    'table-shape', 'contact-shape', 'shape', 'flatten-shape',
+    'cutout-shape', 'polygon-shape', 'star-shape',
+]);
+
+/**
+ * 需要兼容旧数据格式的类型集合
+ */
+const COMPATIBLE_OLD_DATA_TYPES = new Set([
+    "PathShape", "PathShape2", "GroupShape", "Artboard",
+    "ImageShape", "Page", "TextShape", "SymbolRefShape",
+    "SymbolShape", "SymbolUnionShape", "RectShape", "StarShape",
+    "PolygonShape", "OvalShape", "LineShape", "TableShape",
+    "TableCell", "ContactShape", "CutoutShape", "BoolShape"
 ]);
 
 function exportBaseProp(p: BaseProp, source: string, $: Writer, insideArr: boolean, allNodes: Map<string, Node>) {
@@ -120,7 +113,7 @@ function exportBaseProp(p: BaseProp, source: string, $: Writer, insideArr: boole
                         if (!n) throw new Error('not find node ' + v.val);
                         if (n.schemaId) {
                             $.fmt(`if (${source}.typeId === "${n.schemaId}") {
-                                ${insideArr && n && n.schemaId && needCompatibleSet.has(n.schemaId) ? `if (!${source}.crdtidx) ${source}.crdtidx = [i]` : ''}
+                                ${insideArr && n && n.schemaId && COMPATIBLE_NON_CRDT_TYPES.has(n.schemaId) ? `if (!${source}.crdtidx) ${source}.crdtidx = [i]` : ''}
                                 return import${v.val}(${source} as types.${v.val}, ctx)
                             }`)
                         } else {
@@ -185,7 +178,7 @@ function exportObject(n: Node, $: Writer) {
             $.nl(inject[n.name]['before'])
         }
 
-        if (compatibleList.has(n.name)) {
+        if (COMPATIBLE_OLD_DATA_TYPES.has(n.name)) {
             $.nl('compatibleOldData(source, ctx)')
         }
         if (inject[n.name] && inject[n.name]['content']) {
@@ -239,7 +232,7 @@ function exportNode(n: Node, $: Writer) {
             $.nl('source.forEach((source, i) => ').sub(() => {
                 if (item.type === 'node') {
                     const _n = n.root.get(item.val);
-                    if (_n && _n.schemaId && needCompatibleSet.has(_n.schemaId)) {
+                    if (_n && _n.schemaId && COMPATIBLE_NON_CRDT_TYPES.has(_n.schemaId)) {
                         $.nl('if (!source.crdtidx) source.crdtidx = [i]')
                     }
                 }
@@ -257,29 +250,6 @@ function exportNode(n: Node, $: Writer) {
         throw new Error("wrong value type: " + n.value)
     }
 }
-
-const compatibleList = new Set([
-    "PathShape",
-    "PathShape2",
-    "GroupShape",
-    "Artboard",
-    "ImageShape",
-    "Page",
-    "TextShape",
-    "SymbolRefShape",
-    "SymbolShape",
-    "SymbolUnionShape",
-    "RectShape",
-    "StarShape",
-    "PolygonShape",
-    "OvalShape",
-    "LineShape",
-    "TableShape",
-    "TableCell",
-    "ContactShape",
-    "CutoutShape",
-    "BoolShape"
-])
 
 export function gen(allNodes: Map<string, Node>, out: string) {
     const $ = new Writer(out);

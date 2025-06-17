@@ -180,27 +180,6 @@ function importCurvePointOptional(tar: impl.CurvePoint, source: types.CurvePoint
     if (source.hasTo !== undefined) tar.hasTo = source.hasTo
 }
 export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext): impl.CurvePoint {
-        // inject code
-    const _source = source as any;
-    if (_source.cornerRadius) _source.radius = _source.cornerRadius;
-    if (_source.hasCurveFrom) {
-        _source.hasFrom = true;
-        _source.fromX = _source.curveFrom.x;
-        _source.fromY = _source.curveFrom.y;
-    }
-    if (_source.hasCurveTo) {
-        _source.hasTo = true;
-        _source.toX = _source.curveTo.x;
-        _source.toY = _source.curveTo.y;
-    }
-    if (_source.point) {
-        _source.x = _source.point.x;
-        _source.y = _source.point.y;
-    }
-    if (_source.curveMode) {
-        _source.mode = _source.curveMode;
-    }
-
     const ret: impl.CurvePoint = new impl.CurvePoint (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1263,16 +1242,6 @@ function importTextAttrOptional(tar: impl.TextAttr, source: types.TextAttr, ctx?
     if (source.padding !== undefined) tar.padding = importPadding(source.padding, ctx)
 }
 export function importTextAttr(source: types.TextAttr, ctx?: IImportContext): impl.TextAttr {
-        // inject code
-    // 兼容旧数据
-    const _source = source as any;
-    if (typeof _source.bold === 'boolean') {
-        _source.bold = _source.bold ? 700 : 400;
-    }
-    if (_source.bold) {
-        _source.weight = _source.bold;
-    }
-
     const ret: impl.TextAttr = new impl.TextAttr ()
     importTextAttrOptional(ret, source, ctx)
     return ret
@@ -1314,26 +1283,6 @@ function importBorderOptional(tar: impl.Border, source: types.Border, ctx?: IImp
     if (source.fillsMask !== undefined) tar.fillsMask = source.fillsMask
 }
 export function importBorder(source: types.Border, ctx?: IImportContext): impl.Border {
-        // inject code
-    if (!source.strokePaints) {
-        const strokePaint = { ...(source as any) };
-        if (!strokePaint.crdtidx) strokePaint.crdtidx = [0];
-        strokePaint.typeId = 'fill';
-        delete strokePaint.borderStyle;
-        delete strokePaint.cornerType;
-        delete strokePaint.position;
-        delete strokePaint.sideSetting;
-        delete strokePaint.thickness;
-        (source as any) = {
-            typeId: "border",
-            borderStyle: source.borderStyle,
-            cornerType: source.cornerType,
-            position: source.position,
-            sideSetting: source.sideSetting,
-            strokePaints: [strokePaint],
-        }
-    }
-
     const ret: impl.Border = new impl.Border (
         importBorderPosition(source.position, ctx),
         importBorderStyle(source.borderStyle, ctx),
@@ -1363,11 +1312,6 @@ export function importFillMask(source: types.FillMask, ctx?: IImportContext): im
 }
 /* style sheet */
 export function importStyleSheet(source: types.StyleSheet, ctx?: IImportContext): impl.StyleSheet {
-    // inject code
-    if (!source.crdtidx) {
-        source.crdtidx = [0];
-    }
-
     const ret: impl.StyleSheet = new impl.StyleSheet (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1401,57 +1345,6 @@ function importStyleOptional(tar: impl.Style, source: types.Style, ctx?: IImport
     if (source.bordersMask !== undefined) tar.bordersMask = source.bordersMask
 }
 export function importStyle(source: types.Style, ctx?: IImportContext): impl.Style {
-        // inject code
-    if (Array.isArray(source.borders)) {
-        if ((source.borders as any).length > 0) {
-            const border = (source.borders as any)[0] as any;
-            if (!border.sideSetting) {
-                border.sideSetting = {
-                    sideType: types.SideType.Normal,
-                    thicknessTop: border.thickness || 1,
-                    thicknessLeft: border.thickness || 1,
-                    thicknessBottom: border.thickness || 1,
-                    thicknessRight: border.thickness || 1,
-                }
-            }
-            const strokePaints: any = [];
-            for (let i = 0; i < (source.borders as any).length; ++i) {
-                const strokePaint = { ...(source.borders as any)[i] };
-                if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
-                strokePaint.typeId = 'fill';
-                delete strokePaint.borderStyle;
-                delete strokePaint.cornerType;
-                delete strokePaint.position;
-                delete strokePaint.sideSetting;
-                delete strokePaint.thickness;
-                strokePaints.push(strokePaint);
-            }
-            (source as any).borders = {
-                typeId: "border",
-                borderStyle: border.borderStyle,
-                cornerType: border.cornerType,
-                position: border.position,
-                sideSetting: border.sideSetting,
-                strokePaints: strokePaints,
-            }
-        } else {
-            (source.borders as any) = {
-                typeId: "border",
-                borderStyle: { gap: 0, length: 0 },
-                cornerType: types.CornerType.Miter,
-                position: types.BorderPosition.Inner,
-                sideSetting: {
-                    sideType: types.SideType.Normal,
-                    thicknessTop: 1,
-                    thicknessLeft: 1,
-                    thicknessBottom: 1,
-                    thicknessRight: 1,
-                },
-                strokePaints: [],
-            }
-        }
-    }
-
     const ret: impl.Style = new impl.Style (
         importStyle_fills(source.fills, ctx),
         importStyle_shadows(source.shadows, ctx),
@@ -1515,44 +1408,6 @@ function importTableCellOptional(tar: impl.TableCell, source: types.TableCell, c
     if (source.colSpan !== undefined) tar.colSpan = source.colSpan
 }
 export function importTableCell(source: types.TableCell, ctx?: IImportContext): impl.TableCell {
-        // inject code
-    // 兼容旧数据
-    if (!(source as any).crdtidx) (source as any).crdtidx = []
-    if (!source.text) source.text = {
-        typeId: "text",
-        paras: [
-            {
-                text: "\n",
-                spans: [
-                    {
-                        fontName: is_mac() ? "PingFang SC" : "微软雅黑",
-                        fontSize: 14,
-                        length: 1,
-                        color: {
-                            typeId: "color",
-                            alpha: 0.85,
-                            red: 0,
-                            green: 0,
-                            blue: 0
-                        }
-                    }
-                ],
-                attr: {
-                    minimumLineHeight: 24
-                }
-            }
-        ],
-        attr: {
-            textBehaviour: types.TextBehaviour.Fixed,
-            padding: {
-                left: 5,
-                top: 0,
-                right: 3,
-                bottom: 0
-            }
-        }
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.TableCell = new impl.TableCell (
         importCrdtidx(source.crdtidx, ctx),
@@ -1572,37 +1427,6 @@ function importTableShapeOptional(tar: impl.TableShape, source: types.TableShape
     if (source.textAttr !== undefined) tar.textAttr = importTextAttr(source.textAttr, ctx)
 }
 export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
-        // inject code
-    // 兼容旧数据
-    if ((source as any).datas || (source as any).childs) {
-        source.colWidths = ((source as any).colWidths as number[]).map((v, i) => ({
-            id: uuid(),
-            crdtidx: [i],
-            value: v
-        } as types.CrdtNumber));
-        source.rowHeights = ((source as any).rowHeights as number[]).map((v, i) => ({
-            id: uuid(),
-            crdtidx: [i],
-            value: v
-        } as types.CrdtNumber));
-
-        const colCount = source.colWidths.length;
-        const rowCount = source.rowHeights.length;
-        const datas: types.TableCell[] = (source as any).datas || (source as any).childs;
-        const cells: {[key: string]: types.TableCell} = {};
-        for (let i = 0; i < datas.length; ++i) {
-            const c = datas[i];
-            if (!c) continue;
-            const ri = Math.floor(i / colCount);
-            const ci = i % colCount;
-            if (ri >= rowCount) break;
-            const id = source.rowHeights[ri].id + ',' + source.colWidths[ci].id;
-            cells[id] = c;
-            c.id = id;
-        }
-        source.cells = cells as any;
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.TableShape = new impl.TableShape (
         importCrdtidx(source.crdtidx, ctx),
@@ -1649,31 +1473,6 @@ export function importTextShape(source: types.TextShape, ctx?: IImportContext): 
 }
 /* color */
 export function importVariable(source: types.Variable, ctx?: IImportContext): impl.Variable {
-        // inject code
-    if (Array.isArray(source.value) && source.value[0]?.typeId === "border") {
-        const strokePaints: any = [];
-        for (let i = 0; i < source.value.length; ++i) {
-            const strokePaint = { ...source.value[i] } as any;
-            if (!strokePaint.crdtidx) strokePaint.crdtidx = [i];
-            strokePaint.typeId = 'fill';
-            delete strokePaint.borderStyle;
-            delete strokePaint.cornerType;
-            delete strokePaint.position;
-            delete strokePaint.sideSetting;
-            delete strokePaint.thickness;
-            strokePaints.push(strokePaint);
-        }
-        const border = source.value[0] as any;
-        source.value = {
-            typeId: "border",
-            borderStyle: border.borderStyle,
-            cornerType: border.cornerType,
-            position: border.position,
-            sideSetting: border.sideSetting,
-            strokePaints: strokePaints,
-        } as types.Border
-    }
-
     const ret: impl.Variable = new impl.Variable (
         source.id,
         importVariableType(source.type, ctx),
@@ -1745,22 +1544,6 @@ function importPathShapeOptional(tar: impl.PathShape, source: types.PathShape, c
     if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importPathShape(source: types.PathShape, ctx?: IImportContext): impl.PathShape {
-        // inject code
-     if (!source.pathsegs?.length) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: true
-        }
-        
-        if ((source as any)?.points?.length) {
-            seg.points.push(...(source as any)?.points);
-        } 
-        
-        source.pathsegs = [seg];
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.PathShape = new impl.PathShape (
         importCrdtidx(source.crdtidx, ctx),
@@ -1780,36 +1563,18 @@ function importPathShape2Optional(tar: impl.PathShape2, source: types.PathShape2
     if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
-        // inject code
-     if (!source.pathsegs?.length) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: true
-        }
-        
-        if ((source as any)?.points?.length) {
-            seg.points.push(...(source as any)?.points);
-        } 
-        
-        source.pathsegs = [seg];
-    }
-
     compatibleOldData(source, ctx)
-    source.type = types.ShapeType.Path;
-    const ret: impl.PathShape = new impl.PathShape (
-    importCrdtidx(source.crdtidx, ctx),
-    source.id,
-    source.name,
-    importShapeType(source.type, ctx),
-    importTransform(source.transform, ctx),
-    importStyle(source.style, ctx),
-    importShapeSize(source.size, ctx),
-    importPathShape_pathsegs(source.pathsegs, ctx));
-    importPathShapeOptional(ret, source, ctx)
-
-    return ret as unknown as impl.PathShape2;
+    const ret: impl.PathShape2 = new impl.PathShape2 (
+        importCrdtidx(source.crdtidx, ctx),
+        source.id,
+        source.name,
+        importShapeType(source.type, ctx),
+        importTransform(source.transform, ctx),
+        importStyle(source.style, ctx),
+        importShapeSize(source.size, ctx),
+        importPathShape2_pathsegs(source.pathsegs, ctx))
+    importPathShape2Optional(ret, source, ctx)
+    return ret
 }
 /* polygon shape */
 const importPolygonShapeOptional = importPathShapeOptional
@@ -1831,25 +1596,6 @@ export function importPolygonShape(source: types.PolygonShape, ctx?: IImportCont
 /* rect shape */
 const importRectShapeOptional = importPathShapeOptional
 export function importRectShape(source: types.RectShape, ctx?: IImportContext): impl.RectShape {
-        // inject code
-    if (!source.pathsegs?.length) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: true
-        }
-        
-        if ((source as any)?.points?.length) {
-            seg.points.push(...(source as any)?.points);
-        } 
-        
-        source.pathsegs = [seg];
-    }
-    if ((source.pathsegs.length !== 1 || source.pathsegs[0].points.length !== 4) && !source.haveEdit) {
-        source.haveEdit = true;
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.RectShape = new impl.RectShape (
         importCrdtidx(source.crdtidx, ctx),
@@ -1898,14 +1644,6 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     if (source.uniformScale !== undefined) tar.uniformScale = source.uniformScale
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
-        // inject code
-    if (!source.variables) {
-        source.variables = {} as any
-    }
-    if ((source as any).virbindsEx) {
-        source.overrides = (source as any).virbindsEx
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
         importCrdtidx(source.crdtidx, ctx),
@@ -1960,26 +1698,6 @@ function importContactShapeOptional(tar: impl.ContactShape, source: types.Contac
     if (source.to !== undefined) tar.to = importContactForm(source.to, ctx)
 }
 export function importContactShape(source: types.ContactShape, ctx?: IImportContext): impl.ContactShape {
-        // inject code
-    if (!source.pathsegs?.length) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: false
-        }
-        
-        if ((source as any)?.points?.length) {
-            seg.points.push(...(source as any)?.points);
-        } 
-        
-        source.pathsegs = [seg];
-    } else {
-        if (source?.pathsegs[0]?.isClosed) {
-            source.pathsegs[0].isClosed = false;
-        }
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.ContactShape = new impl.ContactShape (
         importCrdtidx(source.crdtidx, ctx),
@@ -1999,22 +1717,6 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
 /* cutout shape */
 const importCutoutShapeOptional = importPathShapeOptional
 export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContext): impl.CutoutShape {
-        // inject code
-    if (!source.pathsegs?.length) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: true
-        }
-        
-        if ((source as any)?.points?.length) {
-            seg.points.push(...(source as any)?.points);
-        } 
-        
-        source.pathsegs = [seg];
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.CutoutShape = new impl.CutoutShape (
         importCrdtidx(source.crdtidx, ctx),
@@ -2031,76 +1733,6 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
 /* image shape */
 const importImageShapeOptional = importPathShapeOptional
 export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
-        // inject code
-    const color: types.Color = {
-        typeId: "color",
-        alpha: 1,
-        blue: 216,
-        green: 216,
-        red: 216
-    }
-    const size = source.size ?? (source as any).frame;
-    const fill: types.Fill = {
-        typeId: "fill",
-        color: color,
-        crdtidx: [0],
-        fillType: types.FillType.Pattern,
-        id: "bdcd3743-fb61-4aeb-8864-b95d47b84a90",
-        imageRef: source.imageRef,
-        isEnabled: true,
-        imageScaleMode: types.ImageScaleMode.Fill,
-        originalImageHeight: size.height,
-        originalImageWidth: size.width
-    }
-    source.style.fills = [fill];
-    if (!source.pathsegs) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: true
-        }
-        
-        if ((source as any)?.points.length) {
-            seg.points.push(...(source as any)?.points);
-        } else {
-            // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
-            const id1 = "b259921b-4eba-461d-afc3-c4c58c1fa337"
-            const id2 = "62ea3ee3-3378-4602-a918-7e05f426bb8e"
-            const id3 = "1519da3c-c692-4e1d-beb4-01a85cc56738"
-            const id4 = "e857f541-4e7f-491b-96e6-2ca38f1d4c09"
-            const p1: types.CurvePoint = {
-                crdtidx: [0],
-                id: id1,
-                mode: types.CurveMode.Straight,
-                x: 0, y: 0
-            }; // lt
-            const p2: types.CurvePoint =
-            {
-                crdtidx: [1],
-                id: id2,
-                mode: types.CurveMode.Straight,
-                x: 1, y: 0
-            }; // rt
-            const p3: types.CurvePoint = {
-                crdtidx: [2],
-                id: id3,
-                mode: types.CurveMode.Straight,
-                x: 1, y: 1
-            }; // rb
-            const p4: types.CurvePoint = {
-                crdtidx: [3],
-                id: id4,
-                mode: types.CurveMode.Straight,
-                x: 0, y: 1
-            }; // lb
-        
-            seg.points.push(p1, p2, p3, p4);
-        }
-     
-        source.pathsegs = [seg];
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.ImageShape = new impl.ImageShape (
         importCrdtidx(source.crdtidx, ctx),
@@ -2118,22 +1750,6 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
 /* line shape */
 const importLineShapeOptional = importPathShapeOptional
 export function importLineShape(source: types.LineShape, ctx?: IImportContext): impl.LineShape {
-        // inject code
-    if (!source.pathsegs?.length) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: false
-        }
-        
-        if ((source as any)?.points?.length) {
-            seg.points.push(...(source as any)?.points);
-        } 
-        
-        source.pathsegs = [seg];
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.LineShape = new impl.LineShape (
         importCrdtidx(source.crdtidx, ctx),
@@ -2155,22 +1771,6 @@ function importOvalShapeOptional(tar: impl.OvalShape, source: types.OvalShape, c
     if (source.innerRadius !== undefined) tar.innerRadius = source.innerRadius
 }
 export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
-        // inject code
-    if (!source.pathsegs?.length) { // 兼容旧数据
-        const seg: types.PathSegment = {
-            crdtidx: [0],
-            id: '39e508e8-a1bb-4b55-ad68-aa2a9b3b447a',
-            points:[],
-            isClosed: true
-        }
-        
-        if ((source as any)?.points?.length) {
-            seg.points.push(...(source as any)?.points);
-        } 
-        
-        source.pathsegs = [seg];
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.OvalShape = new impl.OvalShape (
         importCrdtidx(source.crdtidx, ctx),
@@ -2194,17 +1794,6 @@ function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?
     if (source.frameMaskDisabled !== undefined) tar.frameMaskDisabled = source.frameMaskDisabled
 }
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
-    // inject code
-    if (source.fixedRadius) {
-        let cornerRadius = source.cornerRadius;
-        if (!cornerRadius) {
-            source.cornerRadius = new impl.CornerRadius('39e508e8-a1bb-4b55-ad68-aa2a9b3b447a', 0, 0, 0, 0);
-            cornerRadius = source.cornerRadius;
-        }
-        cornerRadius.lt = cornerRadius.rt = cornerRadius.rb = cornerRadius.lb = source.fixedRadius;
-        source.fixedRadius = undefined;
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.Artboard = new impl.Artboard (
         importCrdtidx(source.crdtidx, ctx),
@@ -2258,9 +1847,6 @@ function importDocumentMetaOptional(tar: impl.DocumentMeta, source: types.Docume
     if (source.thumbnailViewId !== undefined) tar.thumbnailViewId = source.thumbnailViewId
 }
 export function importDocumentMeta(source: types.DocumentMeta, ctx?: IImportContext): impl.DocumentMeta {
-        // inject code
-    if (!(source as any).symbolregist) (source as any).symbolregist = {};
-
     const ret: impl.DocumentMeta = new impl.DocumentMeta (
         source.id,
         source.name,
@@ -2284,13 +1870,6 @@ function importGroupShapeOptional(tar: impl.GroupShape, source: types.GroupShape
     if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importGroupShape(source: types.GroupShape, ctx?: IImportContext): impl.GroupShape {
-        // inject code
-    if ((source as any).isBoolOpShape) {
-        source.typeId = "bool-shape";
-        source.type = types.ShapeType.BoolShape;
-        return importBoolShape(source, ctx);
-    }
-
     compatibleOldData(source, ctx)
     const ret: impl.GroupShape = new impl.GroupShape (
         importCrdtidx(source.crdtidx, ctx),
@@ -2311,10 +1890,6 @@ function importPageOptional(tar: impl.Page, source: types.Page, ctx?: IImportCon
     if (source.connections !== undefined) tar.connections = importPage_connections(source.connections, ctx)
 }
 export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
-    // inject code
-    // 兼容旧数据
-    if (!(source as any).crdtidx) (source as any).crdtidx = [];
-
     compatibleOldData(source, ctx)
     const ret: impl.Page = new impl.Page (
         importCrdtidx(source.crdtidx, ctx),

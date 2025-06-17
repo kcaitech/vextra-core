@@ -1175,8 +1175,8 @@ export class Variable extends Basic {
     id: string
     type: VariableType
     name: string
-    value:  | number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout
-    constructor(id: string, type: VariableType, name: string, value:  | number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout) {
+    value: undefined | number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout
+    constructor(id: string, type: VariableType, name: string, value: undefined | number | string | boolean | Color | Text | Gradient | Style | Variable_0 | Border | ContextSettings | TableCell | ExportOptions | CornerRadius | Blur | AutoLayout) {
         super()
         this.id = id
         this.type = type

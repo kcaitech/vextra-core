@@ -31,7 +31,7 @@ export type BaseProp = {
 export type NamedProp = {
     name: string,
     required: boolean,
-    default?: string
+    default?: string | number | boolean
 } & BaseProp
 
 type ItemProp = BaseProp
@@ -47,47 +47,67 @@ type NodeValue = {
     enum: string[]
 }
 
+/**
+ * Schema 节点类，代表一个完整的数据结构定义
+ */
 export class Node {
-    root: Map<string, Node>; // 所有的node所在的map
-
-    parent?: Node; // 非用户定义的类型（程序内部生成）才有parent?
-    get inner() {
-        return this.parent !== undefined
+    /** 所有节点的根映射 */
+    readonly root: Map<string, Node>;
+    /** 父节点 - 非用户定义的类型（程序内部生成）才有parent */
+    readonly parent?: Node;
+    
+    /** 是否为内部生成的节点 */
+    get inner(): boolean {
+        return this.parent !== undefined;
     }
-    // 继承，allOf
+    
+    /** 继承的基类名称 */
     extend?: string;
-    // 引用了其它的schema
-    depends: Set<string> = new Set();
-    // 一般对应文件名的帕斯卡命名法，唯一不重复
-    name: string;
+    /** 依赖的其他schema */
+    readonly depends: Set<string> = new Set();
+    /** 节点名称 - 一般对应文件名的帕斯卡命名法，唯一不重复 */
+    readonly name: string;
+    /** 节点描述 */
     description?: string;
-    // 文件名 rename to typeId?
+    /** 文件名标识符 */
     schemaId?: string;
-    value: NodeValue;
-
-    noNameChildCount: number = 0; // 给没有属性名的子node命名
+    /** 节点值定义 */
+    readonly value: NodeValue;
+    /** 无名子节点计数器 - 给没有属性名的子node命名 */
+    noNameChildCount: number = 0;
 
     constructor(root: Map<string, Node>, name: string, value: NodeValue)
     constructor(parent: Node, name: string, value: NodeValue)
-    constructor(a1: Map<string, Node> | Node, name: string, value: NodeValue) {
-        this.root = a1 instanceof Map ? a1 : a1.root
+    constructor(rootOrParent: Map<string, Node> | Node, name: string, value: NodeValue) {
+        this.root = rootOrParent instanceof Map ? rootOrParent : rootOrParent.root;
         this.name = name;
         this.value = value;
-        this.parent = a1 instanceof Map ? undefined : a1
+        this.parent = rootOrParent instanceof Map ? undefined : rootOrParent;
     }
 }
 
-export function allDepsIsGen(node: Node, gented: Set<string>) {
-    for (let d of node.depends) {
-        const n = node.root.get(d);
-        if (!n) throw new Error('depends not exist: ' + d);
-        if (!gented.has(n.name)) return false
+/**
+ * 检查节点的所有依赖是否已经生成
+ */
+export function allDepsIsGen(node: Node, gented: Set<string>): boolean {
+    for (const dep of node.depends) {
+        const depNode = node.root.get(dep);
+        if (!depNode) {
+            throw new Error(`Dependency '${dep}' not found for node '${node.name}'`);
+        }
+        if (!gented.has(depNode.name)) {
+            return false;
+        }
     }
     return true;
 }
 
-// 将文件名转换为帕斯卡命名法的类名
+/**
+ * 将文件名转换为帕斯卡命名法的类名
+ */
 export function toPascalCase(str: string): string {
+    if (!str) return '';
+    
     return str
         // 将下划线 _ 和短横线 - 统一替换为空格，方便后续处理
         .replace(/[_-]/g, ' ')
@@ -101,25 +121,32 @@ export function toPascalCase(str: string): string {
         .replace(/\s+/g, '');
 }
 
-function collectDepends(val: any, set: Set<string>, schemaext: string) {
-    if (typeof val != 'object') return;
-    const valkeys = Object.keys(val)
-    for (let i = 0, len = valkeys.length; i < len; i++) {
-        const k = valkeys[i]
-        let v = val[k]
-        if (k == "$ref") {
-            if (v.endsWith(schemaext)) {
-                const filename = getFileName(v)
-                const name = toPascalCase(filename);
-                set.add(name);
+/**
+ * 递归收集schema中的依赖关系
+ */
+function collectDepends(val: unknown, dependsSet: Set<string>, schemaExt: string): void {
+    if (typeof val !== 'object' || val === null) return;
+    
+    const obj = val as Record<string, unknown>;
+    
+    for (const [key, value] of Object.entries(obj)) {
+        if (key === "$ref" && typeof value === 'string') {
+            if (value.endsWith(schemaExt)) {
+                const filename = getFileName(value);
+                if (filename) {
+                    const name = toPascalCase(filename);
+                    dependsSet.add(name);
+                }
             }
-        }
-        else if (typeof v == 'object') {
-            collectDepends(v, set, schemaext);
+        } else if (typeof value === 'object' && value !== null) {
+            collectDepends(value, dependsSet, schemaExt);
         }
     }
 }
 
+/**
+ * 转换Schema类型为内部类型
+ */
 function transSchemaType(type: string): 'node' | 'string' | 'boolean' | 'number' {
     switch (type) {
         case 'number':
@@ -131,279 +158,405 @@ function transSchemaType(type: string): 'node' | 'string' | 'boolean' | 'number'
             return 'node';
         case 'string':
             return 'string';
+        default:
+            throw new Error(`Unsupported schema type: ${type}`);
     }
-    throw new Error('trans schema type fail: ' + type);
 }
 
-function parseNodeValue(schema: any): NodeValue {
-    if (schema.enum) {
-        if (!Array.isArray(schema.enum)) throw new Error('wrong enum: ' + schema.enum)
+/**
+ * 解析Schema节点值
+ */
+function parseNodeValue(schema: Record<string, unknown>): NodeValue {
+    // 处理枚举类型
+    if (schema.enum && Array.isArray(schema.enum)) {
         return {
             type: 'enum',
-            enum: Array.from(schema.enum)
-        }
-    };
+            enum: schema.enum.map(String)
+        };
+    }
+    
+    // 处理对象类型
     if (schema.type === 'object') {
-        // const required = schema.required;
-        // const properties = schema.properties;
-        const props: NamedProp[] = [];
-        // const keys = Object.keys(properties)
-        // for (let i = 0; i < keys.length; ++i) {
-        //     const k = keys[i]
-        //     const v = properties[k]
-        // }
         return {
             type: 'object',
-            props
-        }
-    };
+            props: []
+        };
+    }
+    
+    // 处理数组类型
     if (schema.type === 'array') {
-        // const required = schema.required;
-        const items = schema.items;
+        const items = schema.items as Record<string, unknown>;
+        if (!items) {
+            throw new Error('Array schema must have items property');
+        }
 
-        let itemType: 'node' | 'string' | 'boolean' | 'number' | 'oneOf'
+        let itemType: 'node' | 'string' | 'boolean' | 'number' | 'oneOf';
         if (items.oneOf) {
-            itemType = 'oneOf'
-        }
-        else if (items.type) {
+            itemType = 'oneOf';
+        } else if (typeof items.type === 'string') {
             itemType = transSchemaType(items.type);
-        }
-        else if (items['$ref']) {
-            itemType = 'node'
-        }
-        else {
-            throw new Error("unknow array item type: " + items.type);
+        } else if (items['$ref']) {
+            itemType = 'node';
+        } else {
+            throw new Error(`Unknown array item type: ${JSON.stringify(items)}`);
         }
 
         return {
             type: 'array',
             item: {
                 type: itemType
-            } as any/* hack, todo */
-        }
-    };
+            } as ItemProp
+        };
+    }
 
-    throw new Error('unknow schema type: ' + schema.type);
+    throw new Error(`Unknown schema type: ${schema.type}`);
 }
 
-// 转换schema的基础类型为ts类型
-function extractBaseProp(schema: any, name: string | undefined, parent: Node): BaseProp {
-    if (schema.type) switch (schema.type) {
-        case 'undefined': return {
-            type: 'undefined'
-        }
-        case 'boolean':
-            return {
-                type: 'boolean'
-            }
-        case 'number':
-        case 'integer':
-            return {
-                type: 'number'
-            }
-        case 'string':
-            return {
-                type: 'string'
-            }
-        case 'array':
-            {
-                name = name ? name : ('' + parent.noNameChildCount++);
-                const subnode = new Node(parent, parent.name + '_' + name, parseNodeValue(schema));
-                if (parent.root.has(subnode.name)) throw new Error('node name duplicate: ' + subnode.name);
-                if (subnode.value.type !== 'array') throw new Error("subnode type error");
-                extractArrayValue(schema.items, subnode.value.item, subnode);
+/**
+ * 转换schema的基础类型为ts类型
+ */
+function extractBaseProp(schema: Record<string, unknown>, name: string | undefined, parent: Node): BaseProp {
+    if (schema.type) {
+        switch (schema.type) {
+            case 'undefined': 
+                return { type: 'undefined' };
+            case 'boolean':
+                return { type: 'boolean' };
+            case 'number':
+            case 'integer':
+                return { type: 'number' };
+            case 'string':
+                return { type: 'string' };
+            case 'array': {
+                const nodeName = name || String(parent.noNameChildCount++);
+                const subnode = new Node(parent, `${parent.name}_${nodeName}`, parseNodeValue(schema));
+                
+                if (parent.root.has(subnode.name)) {
+                    throw new Error(`Node name duplicate: ${subnode.name}`);
+                }
+                if (subnode.value.type !== 'array') {
+                    throw new Error(`Subnode type error: expected array, got ${subnode.value.type}`);
+                }
+                
+                extractArrayValue(schema.items as Record<string, unknown>, subnode.value.item, subnode);
                 parent.root.set(subnode.name, subnode);
                 parent.depends.add(subnode.name);
+                
                 return {
                     type: 'node',
                     val: subnode.name
-                }
+                };
             }
-        case 'map':
-            {
-                const k = schema.key.type;
-                const v = schema.value;
-                let key: 'string' | 'number';
-                if (k === 'string') {
-                    key = 'string'
-                } else if (k === 'number' || k === 'integer') {
-                    key = 'number'
-                } else {
-                    throw new Error('not supported map key type: ' + k)
+            case 'map': {
+                if (!schema.key || !schema.value) {
+                    throw new Error('Map schema must have key and value properties');
                 }
+                
+                const keySchema = schema.key as Record<string, unknown>;
+                const keyType = keySchema.type as string;
+                
+                let key: 'string' | 'number';
+                if (keyType === 'string') {
+                    key = 'string';
+                } else if (keyType === 'number' || keyType === 'integer') {
+                    key = 'number';
+                } else {
+                    throw new Error(`Unsupported map key type: ${keyType}`);
+                }
+                
                 return {
                     type: 'map',
                     key,
-                    val: extractBaseProp(v, name, parent)
-                }
+                    val: extractBaseProp(schema.value as Record<string, unknown>, name, parent)
+                };
             }
-        case 'object':
-            {
-                name = name ? name : ('' + parent.noNameChildCount++);
-                const subnode = new Node(parent, parent.name + '_' + name, parseNodeValue(schema));
-                if (parent.root.has(subnode.name)) throw new Error('node name duplicate: ' + subnode.name);
-                if (subnode.value.type !== 'object') throw new Error("subnode type error");
-                extractObjectValue(schema.properties, schema.required || [], subnode.value.props, subnode);
+            case 'object': {
+                const nodeName = name || String(parent.noNameChildCount++);
+                const subnode = new Node(parent, `${parent.name}_${nodeName}`, parseNodeValue(schema));
+                
+                if (parent.root.has(subnode.name)) {
+                    throw new Error(`Node name duplicate: ${subnode.name}`);
+                }
+                if (subnode.value.type !== 'object') {
+                    throw new Error(`Subnode type error: expected object, got ${subnode.value.type}`);
+                }
+                
+                const properties = schema.properties as Record<string, unknown> || {};
+                const required = (schema.required as string[]) || [];
+                extractObjectValue(properties, required, subnode.value.props, subnode);
                 parent.root.set(subnode.name, subnode);
                 parent.depends.add(subnode.name);
+                
                 return {
                     type: 'node',
                     val: subnode.name
-                }
+                };
             }
-        default:
-            throw new Error('unknow schema type: ' + schema.type);
+            default:
+                throw new Error(`Unknown schema type: ${schema.type}`);
+        }
     }
-    if (schema.oneOf) {
-        const oneOf = schema.oneOf;
-        if (!Array.isArray(oneOf)) throw new Error('oneOf must be array');
+    
+    if (schema.oneOf && Array.isArray(schema.oneOf)) {
         const val: BaseProp[] = [];
-        for (let i = 0; i < oneOf.length; ++i) {
-            val.push(extractBaseProp(oneOf[i], undefined, parent))
+        for (const oneOfSchema of schema.oneOf) {
+            val.push(extractBaseProp(oneOfSchema as Record<string, unknown>, undefined, parent));
         }
         return {
             type: 'oneOf',
             val
-        }
+        };
     }
+    
     if (schema.allOf) {
-        throw new Error('base prop not support allOf')
+        throw new Error('Base prop does not support allOf');
     }
-    if (schema['$ref']) {
-        // '#'
-        // 'path to file'
+    
+    if (schema['$ref'] && typeof schema['$ref'] === 'string') {
         const ref = schema['$ref'];
+        
+        // 自引用
         if (ref === '#') {
             let p = parent;
-            while (p.inner) p = p.parent!;
+            while (p.inner && p.parent) {
+                p = p.parent;
+            }
             return {
                 type: 'node',
                 val: p.name
-            }
+            };
         }
-        const filename = getFileName(ref) //ref.substring(0, ref.length - schemaext.length)
+        
+        const filename = getFileName(ref);
+        if (!filename) {
+            throw new Error(`Invalid reference: ${ref}`);
+        }
+        
         const name = toPascalCase(filename);
         return {
             type: 'node',
             val: name
+        };
+    }
+    
+    throw new Error(`Unknown property schema: ${JSON.stringify(schema)}`);
+}
+
+/**
+ * 提取对象类型的属性
+ */
+function extractObjectValue(
+    properties: Record<string, unknown>, 
+    required: string[], 
+    props: NamedProp[], 
+    parent: Node
+): void {
+    // 先处理必需属性
+    for (const propName of required) {
+        const propSchema = properties[propName];
+        if (!propSchema) {
+            throw new Error(`Required property '${propName}' not found in properties`);
         }
+        
+        const baseProp = extractBaseProp(propSchema as Record<string, unknown>, propName, parent);
+        const namedProp: NamedProp = {
+            ...baseProp,
+            name: propName,
+            required: true
+        };
+        
+        const schemaObj = propSchema as Record<string, unknown>;
+        if (schemaObj.default !== undefined) {
+            namedProp.default = schemaObj.default as string | number | boolean;
+        }
+        
+        props.push(namedProp);
     }
-    throw new Error('unknow prop ' + schema);
+
+    // 再处理可选属性
+    for (const [propName, propSchema] of Object.entries(properties)) {
+        if (required.includes(propName)) continue;
+        
+        const baseProp = extractBaseProp(propSchema as Record<string, unknown>, propName, parent);
+        const namedProp: NamedProp = {
+            ...baseProp,
+            name: propName,
+            required: false
+        };
+        
+        const schemaObj = propSchema as Record<string, unknown>;
+        if (schemaObj.default !== undefined) {
+            namedProp.default = schemaObj.default as string | number | boolean;
+        }
+        
+        props.push(namedProp);
+    }
 }
 
-function extractObjectValue(schema: any, required: string[], props: NamedProp[], parent: Node) {
-    // schema <- properties
-    // {key: {}}
-
-    // required first
-    for (let k of required) {
-        const v = schema[k];
-        if (!v) throw new Error('required not in properties: ' + k);
-        const p = extractBaseProp(v, k, parent) as NamedProp;
-        p.name = k;
-        p.required = true;
-        if (v.default !== undefined) p.default = v.default;
-        props.push(p);
-    }
-
-    const keys = Object.keys(schema);
-    for (let k of keys) {
-        if (required.indexOf(k) >= 0) continue;
-        const v = schema[k];
-        const p = extractBaseProp(v, k, parent) as NamedProp;
-        p.name = k;
-        if (v.default !== undefined) p.default = v.default;
-        props.push(p);
-    }
-}
-
-function extractArrayValue(schema: any, item: ItemProp, n: Node) {
-    // schema <- items
+/**
+ * 提取数组类型的元素定义
+ */
+function extractArrayValue(itemsSchema: Record<string, unknown>, item: ItemProp, node: Node): void {
     if (item.type === 'node') {
-        const ref = schema['$ref'];
-        if (!ref) throw new Error('wrong ref? ' + schema);
+        const ref = itemsSchema['$ref'];
+        if (!ref || typeof ref !== 'string') {
+            throw new Error(`Invalid reference in array items: ${JSON.stringify(itemsSchema)}`);
+        }
 
         if (ref === '#') {
-            let p = n;
-            while (p.inner) p = p.parent!;
-            item.val = p.name;
+            let p = node;
+            while (p.inner && p.parent) {
+                p = p.parent;
+            }
+            (item as any).val = p.name;
         } else {
-            const filename = getFileName(ref) //ref.substring(0, ref.length - schemaext.length)
+            const filename = getFileName(ref);
+            if (!filename) {
+                throw new Error(`Invalid reference: ${ref}`);
+            }
             const name = toPascalCase(filename);
-            item.val = name;
+            (item as any).val = name;
         }
-    }
-    else if (item.type === 'oneOf') {
+    } else if (item.type === 'oneOf') {
+        const oneOf = itemsSchema.oneOf;
+        if (!Array.isArray(oneOf)) {
+            throw new Error('oneOf must be an array');
+        }
+
         const val: BaseProp[] = [];
-        // oneOf : array
-
-        const oneOf = schema.oneOf;
-        if (!Array.isArray(oneOf)) throw new Error('oneOf must be array!');
-
-        for (let i = 0; i < oneOf.length; ++i) {
-            const p = extractBaseProp(oneOf[i], undefined, n);
-            val.push(p);
+        for (const oneOfSchema of oneOf) {
+            const prop = extractBaseProp(oneOfSchema as Record<string, unknown>, undefined, node);
+            val.push(prop);
         }
 
-        item.val = val;
+        (item as any).val = val;
     }
 }
 
-function getFileName(path: string) {
-    // 使用正则表达式匹配文件名部分
+/**
+ * 从路径中提取文件名（不含扩展名）
+ */
+function getFileName(path: string): string {
     const match = path.match(/([^\/]+)\./);
-    return match && match[1] || ''
+    return match?.[1] || '';
 }
 
 import path from 'path';
 import fs from 'fs';
-export function loadSchemas(schemadir: string, schemaext = '.json'): Map<string, Node> {
-    const files = fs.readdirSync(schemadir)
-    const allNodes = new Map<string, Node>()
-    for (let index = 0; index < files.length; index++) {
-        const file = files[index]
-        if (!file.endsWith(schemaext)) continue;
 
-        const filepath = path.join(schemadir, file)
-        const raw = fs.readFileSync(filepath, "utf8") as string;
+/**
+ * 加载指定目录下的所有schema文件
+ */
+export function loadSchemas(schemaDir: string, schemaExt = '.json'): Map<string, Node> {
+    if (!fs.existsSync(schemaDir)) {
+        throw new Error(`Schema directory does not exist: ${schemaDir}`);
+    }
+    
+    const files = fs.readdirSync(schemaDir);
+    const allNodes = new Map<string, Node>();
+    
+    for (const file of files) {
+        if (!file.endsWith(schemaExt)) continue;
 
-        const schema = JSON.parse(raw)
-        const filename = getFileName(file)
+        const filePath = path.join(schemaDir, file);
+        
+        try {
+            const rawContent = fs.readFileSync(filePath, "utf8");
+            const schema = JSON.parse(rawContent) as Record<string, unknown>;
+            const filename = getFileName(file);
 
-        // console.log('filename:', filename, file)
-        const name = toPascalCase((filename));
-        const node = new Node(allNodes, name, parseNodeValue(schema));
-        node.schemaId = filename;
+            if (!filename) {
+                console.warn(`Skipping file with invalid name: ${file}`);
+                continue;
+            }
 
-        if (schema.description) node.description = schema.description;
+            const name = toPascalCase(filename);
+            const node = new Node(allNodes, name, parseNodeValue(schema));
+            node.schemaId = filename;
 
-        // extract object
-        if (node.value.type === 'object') {
-            // console.log('__node.value__', node.value, filepath);
-            const properties = schema.properties;
-            extractObjectValue(properties, schema.required || [], node.value.props, node);
-        }
-        // extract array
-        else if (node.value.type === 'array') {
-            const items = schema.items;
-            extractArrayValue(items, node.value.item, node);
-        }
+            if (schema.description && typeof schema.description === 'string') {
+                node.description = schema.description;
+            }
 
-        collectDepends(schema, node.depends, schemaext);
-
-        // extends
-        if (schema && schema.allOf) {
-            if (schema.allOf.length > 1) throw new Error('not support multi allOf')
-            if (schema.allOf.length > 0) {
-                const ref = schema.allOf[0]['$ref']
-                if (ref.endsWith(schemaext)) {
-                    const filename = getFileName(ref) // ref.substring(0, ref.length - schemaext.length)
-                    node.extend = toPascalCase(filename);
+            // 提取对象属性
+            if (node.value.type === 'object') {
+                const properties = (schema.properties as Record<string, unknown>) || {};
+                const required = (schema.required as string[]) || [];
+                extractObjectValue(properties, required, node.value.props, node);
+            }
+            // 提取数组元素
+            else if (node.value.type === 'array') {
+                const items = schema.items as Record<string, unknown>;
+                if (items) {
+                    extractArrayValue(items, node.value.item, node);
                 }
             }
-        }
 
-        allNodes.set(name, node);
+            // 收集依赖
+            collectDepends(schema, node.depends, schemaExt);
+
+            // 处理继承关系
+            if (schema.allOf && Array.isArray(schema.allOf)) {
+                if (schema.allOf.length > 1) {
+                    throw new Error(`Multiple allOf not supported in ${filename}`);
+                }
+                if (schema.allOf.length > 0) {
+                    const allOfItem = schema.allOf[0] as Record<string, unknown>;
+                    const ref = allOfItem['$ref'];
+                    if (ref && typeof ref === 'string' && ref.endsWith(schemaExt)) {
+                        const baseFilename = getFileName(ref);
+                        if (baseFilename) {
+                            node.extend = toPascalCase(baseFilename);
+                        }
+                    }
+                }
+            }
+
+            allNodes.set(name, node);
+        } catch (error) {
+            throw new Error(`Error processing file ${file}: ${(error as Error).message}`);
+        }
     }
-    return allNodes
+    
+    return allNodes;
+}
+
+/**
+ * 通用的基础类型导出函数，用于生成TypeScript类型定义
+ * 可以被类型生成器和类生成器共同使用
+ */
+export function exportBaseProp(
+    prop: BaseProp, 
+    writer: { append: (str: string) => void }, 
+    config: {
+        arrayType?: string;
+        mapType?: string;
+    } = {}
+): void {
+    const { arrayType = 'Array', mapType = 'Map' } = config;
+    
+    switch (prop.type) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+        case 'undefined':
+            writer.append(prop.type);
+            break;
+        case 'node':
+            writer.append(prop.val);
+            break;
+        case 'map':
+            writer.append(`${mapType}<${prop.key}, `);
+            exportBaseProp(prop.val, writer, config);
+            writer.append('>');
+            break;
+        case 'oneOf':
+            for (let i = 0; i < prop.val.length; i++) {
+                exportBaseProp(prop.val[i], writer, config);
+                if (i !== prop.val.length - 1) {
+                    writer.append(' | ');
+                }
+            }
+            break;
+    }
 }

@@ -8,244 +8,320 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { BaseProp, NamedProp, Node, allDepsIsGen } from "./basic";
+import { BaseProp, NamedProp, Node, allDepsIsGen, exportBaseProp } from "./basic";
 import { Writer } from "./writer";
 
-function exportBaseProp(p: BaseProp, $: Writer, baseClass: {
-    array: string,
-    map: string,
-    extends?: string
-}) {
-    switch (p.type) {
-        case 'string':
-        case 'number':
-        case 'boolean':
-            $.append(p.type);
-            break;
-        case 'node':
-            $.append(p.val);
-            break;
-        case 'map':
-            $.append(`${baseClass.map}<${p.key}, `)
-            exportBaseProp(p.val, $, baseClass);
-            $.append('>');
-            break;
-        case 'oneOf':
-            for (let i = 0, len = p.val.length; i < len; ++i) {
-                const v = p.val[i];
-                exportBaseProp(v, $, baseClass);
-                if (i !== len - 1) {
-                    $.append(' | ')
-                }
-            }
-            break;
-    }
+interface BaseClassConfig {
+    array: string;
+    map: string;
+    extends?: string;
 }
 
-function exportObject(n: Node, $: Writer, baseClass: {
-    array: string,
-    map: string,
-    extends?: string
-}) {
-    if (n.value.type !== 'object') throw new Error();
-    const exp = n.inner ? '' : 'export ';
-    const extend = n.extend ? n.extend : baseClass.extends
-    const props = n.value.props;
+interface GenerationConfig {
+    extraHeader?(w: Writer): void;
+    typesPath: string;
+    baseClass?: BaseClassConfig;
+    extraOrder?: string[];
+}
 
-    const chain: Node[] = [];
-    let p = n;
-    while (p.extend) {
-        const n = p.root.get(p.extend);
-        if (!n) throw new Error('extend not find: ' + p.extend);
-        chain.push(n);
-        p = n;
+/**
+ * 导出对象类型为TypeScript类
+ */
+function exportObject(node: Node, writer: Writer, baseClass: BaseClassConfig): void {
+    if (node.value.type !== 'object') {
+        throw new Error(`Expected object type, got ${node.value.type}`);
     }
-    const localrequired: NamedProp[] = [];
-    for (let j = 0; j < props.length; ++j) {
-        const pr = props[j];
-        if (pr.required) localrequired.push(pr);
-        else break;
-    }
-    const required: NamedProp[] = [];
-    for (let i = chain.length - 1; i >= 0; --i) {
-        const n = chain[i];
-        if (n.value.type !== 'object') continue;
-        const props = n.value.props;
-        for (let j = 0; j < props.length; ++j) {
-            const pr = props[j];
-            if (pr.required) required.push(pr);
-            else break;
-        }
-    }
-    required.push(...localrequired);
-    // const needTypeId = (() => {
-    //     for (let i = 0; i < required.length; ++i) {
-    //         if (required[i].required && required[i].name === 'typeId') return true;
-    //     }
-    //     return false;
-    // })()
-    // 这里有个很隐晦的情况：
-    // 协作走的是JSON.stringnify，所以class里带的typeId也序列化出去了，回来的时候可以用typeId.
-    // 而正常的export不会给没有声明typeId的class导出typeId的，所以正常文档数据里这些数据是没typeId.
-    const needTypeId = true;
 
-    if (props.length > 0) $.nl(`${exp}class ${n.name} ${extend ? 'extends ' + extend + ' ': ''}`).sub(() => {
-        if (needTypeId && n.schemaId) $.nl('typeId = "', n.schemaId, '"')
-        props.forEach(p => {
-            if (p.name === 'typeId') return;
-            $.newline();
-            $.indent().append(p.name + (p.required ? ': ' : '?: '));
-            exportBaseProp(p, $, baseClass);
-        })
+    const exportKeyword = node.inner ? '' : 'export ';
+    const extendsClause = node.extend ? node.extend : baseClass.extends;
+    const properties = node.value.props;
 
-        const needConstructor = localrequired.length > 0 && (!(localrequired.length === 1 && localrequired[0].name === 'typeId'))
-        // constructor
-        if (needConstructor) {
-            $.nl('constructor(')
-            for (let i = 0, j = 0; i < required.length; ++i) {
-                const prop = required[i];
-                if (prop.name === 'typeId') continue;
-                if (j > 0) $.append(', ');
-                $.append(prop.name + ': ');
-                exportBaseProp(prop, $, baseClass);
-                if (prop.default !== undefined) {
-                    if (prop.type === 'boolean' || prop.type === 'number') $.append(' = ' + prop.default);
-                    else if (prop.type === 'string') $.append(' = "' + prop.default + '"');
-                    else throw new Error("not supported default type " + prop.type)
-                }
-                ++j;
+    // 构建继承链，收集所有必需属性
+    const requiredProps = collectRequiredProperties(node);
+    const localRequiredProps = properties.filter(p => p.required);
+    
+    const needTypeId = true; // 总是需要typeId（用于JSON序列化识别）
+    const needConstructor = shouldGenerateConstructor(localRequiredProps);
+
+    if (properties.length > 0) {
+        writer.nl(`${exportKeyword}class ${node.name} ${extendsClause ? 'extends ' + extendsClause + ' ' : ''}`).sub(() => {
+            // 添加typeId
+            if (needTypeId && node.schemaId) {
+                writer.nl('typeId = "', node.schemaId, '"');
             }
 
-            $.append(') ').sub(() => {
-                // super
-                if (required.length > localrequired.length) {
-                    $.nl('super(')
-                    for (let i = 0, j = 0, len = required.length - localrequired.length; i < len; ++i) {
-                        const prop = required[i];
-                        if (prop.name === 'typeId') continue;
-                        if (j > 0) $.append(', ');
-                        $.append(prop.name);
-                        ++j;
-                    }
-                    $.append(')')
-                } else if (extend) {
-                    $.nl('super()')
-                }
-
-                for (let i = 0; i < localrequired.length; ++i) {
-                    const prop = localrequired[i];
-                    if (prop.name === 'typeId') continue;
-                    $.nl('this.', prop.name, ' = ', prop.name)
-                }
-            })
-        }
-    })
-    else if (n.extend) {
-        if (needTypeId && n.schemaId) {
-            const schemaId = n.schemaId;
-            $.nl(exp + 'class ' + n.name + ' extends ' + extend + ' ').sub(() => {
-                $.nl('typeId = "', schemaId, '"')
+            // 添加属性定义
+            properties.forEach(prop => {
+                if (prop.name === 'typeId') return;
+                writer.newline();
+                writer.indent().append(prop.name + (prop.required ? ': ' : '?: '));
+                exportBaseProp(prop, writer, {
+                    arrayType: baseClass.array,
+                    mapType: baseClass.map
+                });
             });
+
+            // 生成构造函数
+            if (needConstructor) {
+                generateConstructor(writer, requiredProps, localRequiredProps, extendsClause, baseClass);
+            }
+        });
+    } else if (node.extend) {
+        // 只有继承没有属性的情况
+        if (needTypeId && node.schemaId) {
+            writer.nl(`${exportKeyword}class ${node.name} extends ${extendsClause || ''} `).sub(() => {
+                writer.nl('typeId = "', node.schemaId || '', '"');
+            });
+        } else {
+            writer.nl(`${exportKeyword}class ${node.name} extends ${extendsClause || ''} {}`);
         }
-        else $.nl(exp + 'class ' + n.name + ' extends ' + extend + ' {}');
+    } else {
+        throw new Error(`Invalid object definition for node: ${node.name}`);
     }
-    else throw new Error('wrong object: ' + n);
 }
 
-function exportNode(n: Node, $: Writer, baseClass: {
-    array: string,
-    map: string,
-    extends?: string
-}) {
-    if (n.value.type === 'enum') {
-        // 不需要输出
+/**
+ * 收集节点继承链中的所有必需属性
+ */
+function collectRequiredProperties(node: Node): NamedProp[] {
+    const requiredProps: NamedProp[] = [];
+    const inheritanceChain: Node[] = [];
+    
+    // 构建继承链
+    let currentNode = node;
+    while (currentNode.extend) {
+        const parentNode = currentNode.root.get(currentNode.extend);
+        if (!parentNode) {
+            throw new Error(`Parent class not found: ${currentNode.extend}`);
+        }
+        inheritanceChain.push(parentNode);
+        currentNode = parentNode;
+    }
+
+    // 从基类到子类收集必需属性
+    for (let i = inheritanceChain.length - 1; i >= 0; i--) {
+        const n = inheritanceChain[i];
+        if (n.value.type === 'object') {
+            const props = n.value.props.filter(p => p.required);
+            requiredProps.push(...props);
+        }
+    }
+
+    // 添加当前节点的必需属性
+    if (node.value.type === 'object') {
+        const localRequired = node.value.props.filter(p => p.required);
+        requiredProps.push(...localRequired);
+    }
+
+    return requiredProps;
+}
+
+/**
+ * 判断是否需要生成构造函数
+ */
+function shouldGenerateConstructor(localRequiredProps: NamedProp[]): boolean {
+    return localRequiredProps.length > 0 && 
+           !(localRequiredProps.length === 1 && localRequiredProps[0].name === 'typeId');
+}
+
+/**
+ * 生成构造函数
+ */
+function generateConstructor(
+    writer: Writer, 
+    allRequiredProps: NamedProp[], 
+    localRequiredProps: NamedProp[], 
+    extendsClause: string | undefined,
+    baseClass: BaseClassConfig
+): void {
+    writer.nl('constructor(');
+    
+    // 构造函数参数
+    let paramCount = 0;
+    for (const prop of allRequiredProps) {
+        if (prop.name === 'typeId') continue;
+        
+        if (paramCount > 0) writer.append(', ');
+        writer.append(prop.name + ': ');
+        exportBaseProp(prop, writer, {
+            arrayType: baseClass.array,
+            mapType: baseClass.map
+        });
+        
+        // 默认值
+        if (prop.default !== undefined) {
+            const defaultValue = formatDefaultValue(prop.default);
+            writer.append(' = ' + defaultValue);
+        }
+        
+        paramCount++;
+    }
+
+    writer.append(') ').sub(() => {
+        // 调用父类构造函数
+        const inheritedPropsCount = allRequiredProps.length - localRequiredProps.length;
+        if (inheritedPropsCount > 0) {
+            writer.nl('super(');
+            let superParamCount = 0;
+            for (let i = 0; i < inheritedPropsCount; i++) {
+                const prop = allRequiredProps[i];
+                if (prop.name === 'typeId') continue;
+                
+                if (superParamCount > 0) writer.append(', ');
+                writer.append(prop.name);
+                superParamCount++;
+            }
+            writer.append(')');
+        } else if (extendsClause) {
+            writer.nl('super()');
+        }
+
+        // 初始化本地属性
+        for (const prop of localRequiredProps) {
+            if (prop.name === 'typeId') continue;
+            writer.nl('this.', prop.name, ' = ', prop.name);
+        }
+    });
+}
+
+/**
+ * 格式化默认值
+ */
+function formatDefaultValue(defaultValue: string | number | boolean): string {
+    switch (typeof defaultValue) {
+        case 'boolean':
+        case 'number':
+            return String(defaultValue);
+        case 'string':
+            return `"${defaultValue}"`;
+        default:
+            throw new Error(`Unsupported default value type: ${typeof defaultValue}`);
+    }
+}
+
+/**
+ * 导出单个节点
+ */
+function exportNode(node: Node, writer: Writer, baseClass: BaseClassConfig): void {
+    if (node.value.type === 'enum') {
+        // 枚举类型不需要输出（在types文件中处理）
         return;
     }
 
-    if (n.description) {
-        $.nl('/* ' + n.description + ' */');
+    if (node.description) {
+        writer.nl('/* ' + node.description + ' */');
     }
 
-    if (n.value.type === 'array') {
-        const exp = n.inner ? '' : 'export ';
-        if (n.extend) throw new Error('array can\'t extend class')
-        const item = n.value.item;
-        $.nl(`${exp}type ${n.name} = ${baseClass.array}<`)
-        exportBaseProp(item, $, baseClass);
-        $.append('>')
-    }
-    else if (n.value.type === 'object') {
-        exportObject(n, $, baseClass);
-    }
-    else {
-        throw new Error("wrong value type: " + n.value)
+    if (node.value.type === 'array') {
+        const exportKeyword = node.inner ? '' : 'export ';
+        if (node.extend) {
+            throw new Error('Array types cannot extend classes');
+        }
+        
+        const item = node.value.item;
+        writer.nl(`${exportKeyword}type ${node.name} = ${baseClass.array}<`);
+        exportBaseProp(item, writer, {
+            arrayType: baseClass.array,
+            mapType: baseClass.map
+        });
+        writer.append('>');
+    } else if (node.value.type === 'object') {
+        exportObject(node, writer, baseClass);
+    } else {
+        // 这里使用never类型检查来确保所有情况都被处理
+        const exhaustiveCheck: never = node.value;
+        throw new Error(`Unsupported node value type: ${JSON.stringify(exhaustiveCheck)}`);
     }
 }
 
-export function gen(allNodes: Map<string, Node>, out: string, customs: {
-    extraHeader?(w: Writer): void;
-    typesPath: string;
-    baseClass?: {
-        array?: string,
-        map?: string,
-        extends?: string
-    },
-    extraOrder?: string[]
-}) {
-    const $ = new Writer(out);
+/**
+ * 生成所有类定义
+ */
+export function gen(allNodes: Map<string, Node>, outputPath: string, config: GenerationConfig): void {
+    const writer = new Writer(outputPath);
     const nodes = Array.from(allNodes.values());
 
-    // enums
-    const enums = (() => {
-        const enums = new Set()
-        for (let i = 0, len = nodes.length; i < len; ++i) {
-            const v = nodes[i]
-            if (v.value.type === 'enum') {
-                enums.add(v.name)
-            }
-        }
-        let ret = ''
-        let needDotAndLine = false
-        enums.forEach((e) => {
-            if (needDotAndLine) ret += ',\n'
-            ret += '    ' + e
-            needDotAndLine = true
-        })
-        return ret;
-    })()
-
-    $.nl(`export {\n${enums}\n} from "${customs.typesPath}"`);
-    $.nl(`import {\n${enums}\n} from "${customs.typesPath}"`);
-    if (customs.extraHeader) customs.extraHeader($)
-
-    // 按顺序输出下列class
-    const order = customs.extraOrder ?? []
-    // const genType = 'cls'
-    let checkExport = allDepsIsGen;
-    const gented = new Set<string>()
-    while (nodes.length > 0) {
-        let count = 0;
-        for (let i = 0; i < nodes.length;) {
-            const n = nodes[i];
-            if (checkExport(n, gented)) {
-                exportNode(n, $, {
-                    array: customs.baseClass?.array ?? 'Array',
-                    map: customs.baseClass?.map ?? 'Map',
-                    extends: customs.baseClass?.extends
-                });
-                ++count;
-                nodes.splice(i, 1);
-                gented.add(n.name)
-            } else {
-                ++i;
-            }
-        }
-        if (count === 0 && checkExport === allDepsIsGen) checkExport = (n: Node) => {
-            if (order.length > 0 && n.name === order[0]) {
-                order.shift();
-                return true;
-            }
-            return !(order.length > 0);
-        }; // export on order
+    // 收集所有枚举类型
+    const enums = collectEnums(nodes);
+    
+    // 导出枚举类型
+    if (enums.length > 0) {
+        writer.nl(`export {\n${enums.join(',\n')}\n} from "${config.typesPath}"`);
+        writer.nl(`import {\n${enums.join(',\n')}\n} from "${config.typesPath}"`);
     }
+    
+    // 添加额外的头部内容
+    if (config.extraHeader) {
+        config.extraHeader(writer);
+    }
+
+    // 按依赖顺序生成类
+    const baseClassConfig: BaseClassConfig = {
+        array: config.baseClass?.array ?? 'Array',
+        map: config.baseClass?.map ?? 'Map',
+        extends: config.baseClass?.extends
+    };
+
+    generateInDependencyOrder(nodes, writer, baseClassConfig, config.extraOrder ?? []);
+}
+
+/**
+ * 收集所有枚举类型
+ */
+function collectEnums(nodes: Node[]): string[] {
+    const enums: string[] = [];
+    for (const node of nodes) {
+        if (node.value.type === 'enum') {
+            enums.push('    ' + node.name);
+        }
+    }
+    return enums;
+}
+
+/**
+ * 按依赖顺序生成代码
+ */
+function generateInDependencyOrder(
+    nodes: Node[], 
+    writer: Writer, 
+    baseClass: BaseClassConfig,
+    extraOrder: string[]
+): void {
+    let checkExport = allDepsIsGen;
+    const generated = new Set<string>();
+    
+    while (nodes.length > 0) {
+        let progress = 0;
+        
+        for (let i = 0; i < nodes.length;) {
+            const node = nodes[i];
+            
+            if (checkExport(node, generated)) {
+                exportNode(node, writer, baseClass);
+                progress++;
+                nodes.splice(i, 1);
+                generated.add(node.name);
+            } else {
+                i++;
+            }
+        }
+        
+        // 如果没有进展，切换到按顺序导出模式
+        if (progress === 0 && checkExport === allDepsIsGen) {
+            checkExport = createOrderBasedChecker(extraOrder);
+        }
+    }
+}
+
+/**
+ * 创建基于顺序的检查器
+ */
+function createOrderBasedChecker(order: string[]): (node: Node) => boolean {
+    return (node: Node) => {
+        if (order.length > 0 && node.name === order[0]) {
+            order.shift();
+            return true;
+        }
+        return order.length === 0;
+    };
 }
