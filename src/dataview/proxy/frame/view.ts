@@ -40,7 +40,7 @@ export class FrameProxy {
         let maxleftborder = 0;
         let maxrightborder = 0;
         let maxbottomborder = 0;
-        if (border) {
+        if (border && border.strokePaints) {
             const isEnabled = border.strokePaints.some(p => p.isEnabled);
             if (isEnabled) {
                 const outer = border.position === BorderPosition.Outer;

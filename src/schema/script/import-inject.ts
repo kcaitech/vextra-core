@@ -41,8 +41,8 @@ inject['ImageShape']['before'] = `\
             isClosed: true
         }
         
-        if ((source as any)?.points.length) {
-            seg.points.push(...(source as any)?.points);
+        if ((source as any)?.points?.length) {
+            seg.points.push(...(source as any).points);
         } else {
             // 需要用固定的，这样如果不同用户同时打开此文档，对points做的操作，对应的point id也是对的
             const id1 = "b259921b-4eba-461d-afc3-c4c58c1fa337"
@@ -273,6 +273,12 @@ inject['GroupShape']['before'] = `\
 `
 
 inject['SymbolShape'] = {};
+inject['SymbolShape']['before'] = `\
+    // inject code
+    if (!source.variables) {
+        source.variables = {} as any
+    }
+`
 inject['SymbolShape']['after'] = `\
     // inject code
     if (ctx?.document) {
@@ -457,6 +463,8 @@ inject['Style']['before'] = `\
             }
         }
     }
+    
+    if (!source.shadows) source.shadows = new BasicArray()
 `
 inject['Style']['after'] = `\
     // inject code
@@ -486,6 +494,15 @@ inject['Border']['before'] = `\
             position: source.position,
             sideSetting: source.sideSetting,
             strokePaints: [strokePaint],
+        }
+    }
+    if (!source.sideSetting) {
+        (source.sideSetting as any) = {
+            sideType: types.SideType.Normal,
+            thicknessTop: 1,
+            thicknessLeft: 1,
+            thicknessBottom: 1,
+            thicknessRight: 1,
         }
     }
 `
@@ -572,4 +589,3 @@ inject['StyleSheet']['before'] = `\
         source.crdtidx = [0];
     }
 `
-

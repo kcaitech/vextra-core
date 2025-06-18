@@ -34,7 +34,7 @@ export class ArtboardFrameProxy extends FrameProxy {
         let maxleftborder = 0;
         let maxrightborder = 0;
         let maxbottomborder = 0;
-        const isEnabled = border.strokePaints.some(p => p.isEnabled);
+        const isEnabled = border.strokePaints && border.strokePaints.some(p => p.isEnabled);
         if (isEnabled) {
             const outer = border.position === BorderPosition.Outer;
             maxtopborder = outer ? border.sideSetting.thicknessTop : border.sideSetting.thicknessTop / 2;

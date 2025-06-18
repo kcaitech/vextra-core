@@ -9,7 +9,7 @@
  */
 
 import { DViewCtx, GraphicsLibrary, PropsType } from "./viewctx";
-import { Shape, SymbolRefShape, SymbolShape } from "../data";
+import { Shape, ShapeType, SymbolRefShape, SymbolShape } from "../data";
 import { getShapeViewId, stringh } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";
@@ -149,13 +149,13 @@ export class DataView extends EventEL {
         const view = this as unknown as any;
         switch (gl) {
             case "SVG":
-                const SVGRendererConstructor = SVGConstructorMap.get(view.type)!;
+                const SVGRendererConstructor = SVGConstructorMap.get(view.type) || SVGConstructorMap.get(ShapeType.Rectangle)!;
                 return new SVGRendererConstructor(view);
             case "Canvas":
                 const CanvasRendererConstructor = CanvasConstructorMap.get(view.type)!;
                 return new CanvasRendererConstructor(view);
             default:
-                const DefaultCon = SVGConstructorMap.get(view.type)!;
+                const DefaultCon = SVGConstructorMap.get(view.type) || SVGConstructorMap.get(ShapeType.Rectangle)!;
                 return new DefaultCon(view);
         }
     }
