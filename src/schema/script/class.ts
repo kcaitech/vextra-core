@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { BaseProp, NamedProp, Node, allDepsIsGen, exportBaseProp } from "./basic";
+import { NamedProp, Node, allDepsIsGen, exportBaseProp } from "./basic";
 import { Writer } from "./writer";
 
 interface BaseClassConfig {
@@ -272,7 +272,7 @@ export function gen(allNodes: Map<string, Node>, outputPath: string, config: Gen
         );
     } finally {
         // 确保所有内容都被写入文件
-        writer.destroy();
+        writer.flush();
     }
 }
 

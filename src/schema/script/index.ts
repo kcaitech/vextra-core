@@ -15,6 +15,9 @@ import { gen as genClass } from "./class";
 import { gen as genExp } from "./export";
 import { gen as genImp } from "./import";
 
+import { inject as importInject } from "./import-inject";
+import { inject as exportInject } from "./export-inject";
+
 /**
  * 代码生成配置接口
  */
@@ -39,6 +42,19 @@ interface GenerationConfig {
  * 默认配置
  */
 const DEFAULT_CONFIG: GenerationConfig = {
+    schemaDir: './src/schema/',
+    outputDir: './src/data/',
+    baseClass: {
+        extends: "",
+        array: "Array",
+        map: "Map"
+    },
+    extraOrder: [],
+    extraImports: []
+};
+
+// 执行代码生成（使用当前项目的配置）
+const projectConfig: Partial<GenerationConfig> = {
     schemaDir: './src/schema/',
     outputDir: './src/data/',
     baseClass: {
@@ -81,26 +97,44 @@ function generateAll(config: Partial<GenerationConfig> = {}): void {
         console.log('🔧 生成类定义...');
         genClass(allNodes, outputPaths.classes, {
             extraHeader(writer) {
-                finalConfig.extraImports?.forEach(importStatement => {
-                    writer.nl(importStatement);
-                });
+                writer.nl('import { Basic, BasicArray, BasicMap } from "./basic"');
             },
             typesPath: "./typesdefine",
             extraOrder: finalConfig.extraOrder,
             baseClass: {
-                array: finalConfig.baseClass.array || 'Array',
-                map: finalConfig.baseClass.map || 'Map',
-                extends: finalConfig.baseClass.extends
+                array: 'BasicArray',
+                map: 'BasicMap',
+                extends: 'Basic'
             }
         });
 
         // 生成导出文件
         console.log('🔧 生成导出文件...');
-        genExp(allNodes, outputPaths.export);
+        genExp(allNodes, {
+            outputPath: outputPaths.export,
+            inject: exportInject,
+            extraHeader(writer) {
+            }
+        });
 
         // 生成导入文件
         console.log('🔧 生成导入文件...');
-        genImp(allNodes, outputPaths.import);
+        genImp(allNodes, outputPaths.import, {
+            baseTypes: {
+                array: 'BasicArray',
+                map: 'BasicMap'
+            },
+            namespaces: {
+                impl: 'impl.',
+                types: 'types.'
+            },
+            extraHeader(writer) {
+                writer.nl('import * as impl from "./classes"')
+                writer.nl('import * as types from "./typesdefine"')
+                writer.nl('import { BasicArray, BasicMap } from "./basic"');
+            },
+            inject: importInject
+        });
 
         console.log('🎉 代码生成完成！');
         
@@ -113,12 +147,6 @@ function generateAll(config: Partial<GenerationConfig> = {}): void {
     }
 }
 
-// 执行代码生成（使用当前项目的配置）
-const projectConfig: Partial<GenerationConfig> = {
-    schemaDir: './src/schema/',
-    outputDir: './src/data/',
-    extraOrder: ['GroupShape']
-};
 
 generateAll(projectConfig);
 

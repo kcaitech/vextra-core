@@ -68,7 +68,7 @@ export function gen(allNodes: Map<string, Node>, outputPath: string): void {
         generateInDependencyOrder(nodes, writer);
     } finally {
         // 确保所有内容都被写入文件
-        writer.destroy();
+        writer.flush();
     }
 }
 

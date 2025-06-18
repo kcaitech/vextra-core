@@ -8,6 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
+import { InjectDefinitions } from "./basic";
+
 /**
  * 导入函数的代码注入配置
  * 
@@ -17,14 +19,6 @@
  * 2. 注册符号和样式到相应的管理器
  * 3. 处理特殊的初始化逻辑
  */
-
-type InjectPhase = 'before' | 'after' | 'content' | 'force-type';
-
-type InjectConfig = Record<InjectPhase, string | undefined>;
-
-interface InjectDefinitions {
-    [nodeType: string]: Partial<InjectConfig>;
-}
 
 /**
  * 代码注入定义

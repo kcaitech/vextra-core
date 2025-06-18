@@ -8,9 +8,9 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { BaseProp, NamedProp, Node, allDepsIsGen } from "./basic";
+import { BaseProp, InjectDefinitions, NamedProp, Node, allDepsIsGen } from "./basic";
 import { Writer } from "./writer";
-import { inject } from "./export-inject";
+// import { inject } from "./export-inject";
 
 /**
  * 生成基础属性的导出代码
@@ -193,7 +193,7 @@ function handleNodeTypesExport(
 /**
  * 生成对象类型的导出函数
  */
-function generateObjectExport(node: Node, writer: Writer): void {
+function generateObjectExport(node: Node, writer: Writer, inject?: InjectDefinitions): void {
     if (node.value.type !== 'object') {
         throw new Error(`Expected object type, got ${node.value.type}`);
     }
@@ -204,7 +204,7 @@ function generateObjectExport(node: Node, writer: Writer): void {
     const needTypeId = requiredProps.some(prop => prop.required && prop.name === 'typeId');
 
     // 注入前置代码
-    injectCustomCode(node, writer, 'before');
+    injectCustomCode(node, writer, 'before', inject);
 
     // 创建返回对象
     createReturnObject(node, writer);
@@ -218,7 +218,7 @@ function generateObjectExport(node: Node, writer: Writer): void {
     exportObjectProperties(properties, writer, node.root);
 
     // 注入后置代码
-    injectCustomCode(node, writer, 'after');
+    injectCustomCode(node, writer, 'after', inject);
 
     writer.nl('return ret');
 }
@@ -290,8 +290,8 @@ function exportObjectProperties(properties: NamedProp[], writer: Writer, allNode
 /**
  * 注入自定义代码
  */
-function injectCustomCode(node: Node, writer: Writer, phase: 'before' | 'after'): void {
-    const customCode = inject[node.name]?.[phase];
+function injectCustomCode(node: Node, writer: Writer, phase: 'before' | 'after', inject?: InjectDefinitions): void {
+    const customCode = inject?.[node.name]?.[phase];
     if (customCode) {
         writer.nl(customCode);
     }
@@ -300,7 +300,7 @@ function injectCustomCode(node: Node, writer: Writer, phase: 'before' | 'after')
 /**
  * 生成单个节点的导出函数
  */
-function generateNodeExport(node: Node, writer: Writer): void {
+function generateNodeExport(node: Node, writer: Writer, inject?: InjectDefinitions): void {
     if (node.description) {
         writer.nl(`/* ${node.description} */`);
     }
@@ -317,7 +317,7 @@ function generateNodeExport(node: Node, writer: Writer): void {
                 break;
                 
             case 'object':
-                generateObjectExport(node, writer);
+                generateObjectExport(node, writer, inject);
                 break;
                 
             default:
@@ -345,14 +345,24 @@ function generateArrayExport(node: Node, writer: Writer): void {
     writer.nl('return ret');
 }
 
+interface ExportGenerationConfig {
+    inject?: InjectDefinitions;
+    extraHeader?: (writer: Writer) => void;
+    outputPath: string;
+}
+
 /**
  * 生成所有导出代码
  */
-export function gen(allNodes: Map<string, Node>, outputPath: string): void {
-    const writer = new Writer(outputPath);
+export function gen(allNodes: Map<string, Node>, config: ExportGenerationConfig): void {
+    const writer = new Writer(config.outputPath);
     
     try {
         const nodes = Array.from(allNodes.values());
+
+        if (config.extraHeader) {
+            config.extraHeader(writer);
+        }
 
         // 导入必要的类型和接口
         generateImportStatements(writer);
@@ -361,10 +371,10 @@ export function gen(allNodes: Map<string, Node>, outputPath: string): void {
         generateExportContext(writer);
 
         // 按依赖顺序生成导出函数
-        generateExportFunctionsInOrder(nodes, writer);
+        generateExportFunctionsInOrder(nodes, writer, config.inject);
     } finally {
         // 确保所有内容都被写入文件
-        writer.destroy();
+        writer.flush();
     }
 }
 
@@ -390,7 +400,7 @@ function generateExportContext(writer: Writer): void {
 /**
  * 按依赖顺序生成导出函数
  */
-function generateExportFunctionsInOrder(nodes: Node[], writer: Writer): void {
+function generateExportFunctionsInOrder(nodes: Node[], writer: Writer, inject?: InjectDefinitions): void {
     let checkExport = allDepsIsGen;
     const generated = new Set<string>();
 
@@ -401,7 +411,7 @@ function generateExportFunctionsInOrder(nodes: Node[], writer: Writer): void {
             const node = nodes[i];
             
             if (checkExport(node, generated)) {
-                generateNodeExport(node, writer);
+                generateNodeExport(node, writer, inject);
                 progress++;
                 nodes.splice(i, 1);
                 generated.add(node.name);

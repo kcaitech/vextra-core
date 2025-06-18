@@ -12,9 +12,6 @@
 import * as impl from "./classes"
 import * as types from "./typesdefine"
 import { BasicArray, BasicMap } from "./basic"
-import { uuid } from "../basic/uuid"
-import { compatibleOldData } from "./basecompatible"
-import { is_mac } from "./utils"
 export interface IImportContext {
     document: impl.Document
     fmtVer: string

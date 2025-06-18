@@ -456,7 +456,7 @@ export function loadSchemas(schemaDir: string, schemaExt = '.json'): Map<string,
     const schemaFiles = files.filter(file => file.endsWith(schemaExt));
     const allNodes = new Map<string, Node>();
     
-    console.log(`🔍 扫描到 ${schemaFiles.length} 个Schema文件`);
+    // console.log(`🔍 扫描到 ${schemaFiles.length} 个Schema文件`);
     
     for (const file of schemaFiles) {
         const filePath = path.join(schemaDir, file);
@@ -585,4 +585,13 @@ export function exportBaseProp(
             }
             break;
     }
+}
+
+
+type InjectPhase = 'before' | 'after' | 'content' | 'force-type';
+
+type InjectConfig = Record<InjectPhase, string | undefined>;
+
+export interface InjectDefinitions {
+    [nodeType: string]: Partial<InjectConfig>;
 }

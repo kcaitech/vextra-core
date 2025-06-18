@@ -107,7 +107,7 @@ export class Writer {
     /**
      * 刷新缓冲区到文件
      */
-    private flush(): void {
+    public flush(): void {
         if (this.buffer.length > 0) {
             try {
                 const content = this.buffer.join('');
@@ -323,7 +323,7 @@ export class Writer {
     /**
      * 析构函数 - 确保缓冲区被刷新
      */
-    destroy(): void {
-        this.flush();
-    }
+    // destroy(): void {
+    //     this.flush();
+    // }
 }

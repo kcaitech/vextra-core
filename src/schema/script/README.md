@@ -70,16 +70,62 @@
 
 ## 🚀 使用方法
 
+### 基本使用
+
 ```bash
-# 生成所有代码文件
 npm run schema
 ```
 
-这将生成以下文件：
-- `src/data/typesdefine.ts` - TypeScript类型定义
-- `src/data/baseclasses.ts` - TypeScript类定义
-- `src/data/baseexport.ts` - 导出函数
-- `src/data/baseimport.ts` - 导入函数
+### 自定义配置
+
+现在支持参数化的Basic类型配置，使代码可以复用到其他工程：
+
+```typescript
+import { generateAll, GenerationConfig } from './src/schema/script/index';
+
+// 自定义配置示例
+const customConfig: Partial<GenerationConfig> = {
+    schemaDir: './my-schemas/',
+    outputDir: './generated/',
+    baseClass: {
+        extends: "MyBaseClass",
+        array: "MyArrayType",
+        map: "MyMapType"
+    },
+    extraImports: [
+        'import { MyBaseClass, MyArrayType, MyMapType } from "./my-base-types"'
+    ],
+    extraOrder: ['CustomShape']
+};
+
+generateAll(customConfig);
+```
+
+### 默认配置
+
+```typescript
+const DEFAULT_CONFIG: GenerationConfig = {
+    schemaDir: './src/schema/',
+    outputDir: './src/data/',
+    baseClass: {
+        extends: "Basic",
+        array: "BasicArray", 
+        map: "BasicMap"
+    },
+    extraOrder: ['GroupShape'],
+    extraImports: ['import { BasicArray, BasicMap } from "./basic"']
+};
+```
+
+### 配置选项说明
+
+- `schemaDir`: Schema文件目录
+- `outputDir`: 生成代码的输出目录  
+- `baseClass.extends`: 基础类名称
+- `baseClass.array`: 数组类型名称
+- `baseClass.map`: Map类型名称
+- `extraOrder`: 额外的生成顺序控制
+- `extraImports`: 额外的导入语句列表
 
 ## 🔧 代码优化
 
@@ -177,3 +223,96 @@ npm run schema
 - `src/data/baseimport.ts` - 导入函数
 
 这些文件由代码生成器自动生成，请勿手动修改。
+
+## 主要功能
+
+- 根据JSON Schema自动生成TypeScript类型定义
+- 生成对应的类实现代码
+- 生成导入导出函数，支持类型转换和验证
+- 支持继承、泛型、可选属性等复杂类型
+- 支持自定义代码注入
+
+## 特性
+
+### 支持的Schema类型
+
+- 基础类型: string, number, boolean
+- 对象类型: 支持继承和可选属性
+- 数组类型: 支持泛型元素
+- 枚举类型: 字符串和数字枚举
+- Map类型: 键值对映射
+- OneOf类型: 联合类型
+
+### 代码注入
+
+支持在生成的代码中注入自定义逻辑：
+
+- 导入代码注入 (`import-inject.ts`)
+- 导出代码注入 (`export-inject.ts`)
+
+### 依赖解析
+
+自动分析类型依赖关系，按正确顺序生成代码。
+
+## 示例
+
+### Schema定义
+
+```json
+{
+  "name": "User",
+  "value": {
+    "type": "object",
+    "props": [
+      { "name": "id", "type": "string", "required": true },
+      { "name": "name", "type": "string", "required": true },
+      { "name": "age", "type": "number", "required": false }
+    ]
+  }
+}
+```
+
+### 生成的类型
+
+```typescript
+export interface User {
+    id: string;
+    name: string;
+    age?: number;
+}
+```
+
+### 生成的类
+
+```typescript
+export class User extends Basic {
+    constructor(
+        public id: string,
+        public name: string
+    ) {
+        super();
+    }
+    
+    age?: number;
+}
+```
+
+### 生成的导入函数
+
+```typescript
+export function importUser(source: types.User, ctx?: IImportContext): impl.User {
+    const ret: impl.User = new impl.User(
+        source.id,
+        source.name
+    );
+    if (source.age !== undefined) ret.age = source.age;
+    return ret;
+}
+```
+
+## 注意事项
+
+1. Schema文件必须是有效的JSON格式
+2. 类型名称必须唯一
+3. 循环依赖会被自动检测和处理
+4. 生成的代码包含版权头和"勿手动修改"警告
