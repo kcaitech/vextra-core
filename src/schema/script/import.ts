@@ -173,8 +173,12 @@ function exportObject(n: Node, $: Writer) {
     }
     const required = superrequired.concat(...localrequired);
     const extend = n.extend;
+    
+    // 获取实际的返回类型名称
+    const returnTypeName = n.name === 'ImageShape' ? 'RectShape' : n.name;
+    
     if (localoptional.length > 0) {
-        $.nl('function import', n.name, 'Optional(tar: ', (n.inner ? '' : 'impl.'), n.name, ', source: types.', n.name, ', ctx?: IImportContext) ').sub(() => {
+        $.nl('function import', n.name, 'Optional(tar: ', (n.inner ? '' : 'impl.'), returnTypeName, ', source: types.', n.name, ', ctx?: IImportContext) ').sub(() => {
             if (extend && superoptional.length > 0) $.nl('import', extend, 'Optional(tar, source)')
             localoptional.forEach((v) => {
                 $.nl('if (source.', v.name, ' !== undefined) ', 'tar.', v.name, ' = ');
@@ -185,7 +189,7 @@ function exportObject(n: Node, $: Writer) {
         $.nl('const import', n.name, 'Optional = import', extend, 'Optional');
     }
 
-    $.nl('export function import', n.name, '(source: types.', n.name, ', ctx?: IImportContext): ', (n.inner ? '' : 'impl.'), n.name, ' ').sub(() => {
+    $.nl('export function import', n.name, '(source: types.', n.name, ', ctx?: IImportContext): ', (n.inner ? '' : 'impl.'), returnTypeName, ' ').sub(() => {
         if (inject[n.name] && inject[n.name]['before']) {
             $.nl(inject[n.name]['before'])
         }
@@ -196,13 +200,15 @@ function exportObject(n: Node, $: Writer) {
         if (inject[n.name] && inject[n.name]['content']) {
             $.nl(inject[n.name]['content']);
         } else {
-            $.nl('const ret: ', (n.inner ? '' : 'impl.'), n.name, ' = new ', (n.inner ? '' : 'impl.'), n.name, ' (')
+            $.nl('const ret: ', (n.inner ? '' : 'impl.'), returnTypeName, ' = new ', (n.inner ? '' : 'impl.'), returnTypeName, ' (')
             const hasArgs = required.length > 0 && (!(required.length === 1 && required[0].name === 'typeId'));
             if (hasArgs) $.indent(1, () => {
                 let j = 0;
                 $.newline();
                 required.forEach((v, i) => {
                     if (v.name === 'typeId') return;
+                    // 如果是ImageShape转换为RectShape，过滤掉imageRef字段
+                    if (n.name === 'ImageShape' && v.name === 'imageRef') return;
                     if (j > 0) $.append(',').newline();
                     $.indent();
                     exportBaseProp(v, 'source.' + v.name, $, false, n.root);
@@ -232,15 +238,18 @@ function exportNode(n: Node, $: Writer) {
         $.nl('/* ' + n.description + ' */');
     }
 
+    // 获取实际的返回类型名称
+    const returnTypeName = n.name === 'ImageShape' ? 'RectShape' : n.name;
+
     if (n.value.type === 'enum') {
-        $.nl('export function import', n.name, '(source: types.', n.name, ', ctx?: IImportContext): ', (n.inner ? '' : 'impl.'), n.name, ' ').sub(() => {
+        $.nl('export function import', n.name, '(source: types.', n.name, ', ctx?: IImportContext): ', (n.inner ? '' : 'impl.'), returnTypeName, ' ').sub(() => {
             $.nl('return source')
         })
     }
     else if (n.value.type === 'array') {
         const item = n.value.item;
-        $.nl('export function import', n.name, '(source: types.', n.name, ', ctx?: IImportContext): ', (n.inner ? '' : 'impl.'), n.name, ' ').sub(() => {
-            $.nl('const ret: ', (n.inner ? '' : 'impl.'), n.name, ' = new BasicArray()')
+        $.nl('export function import', n.name, '(source: types.', n.name, ', ctx?: IImportContext): ', (n.inner ? '' : 'impl.'), returnTypeName, ' ').sub(() => {
+            $.nl('const ret: ', (n.inner ? '' : 'impl.'), returnTypeName, ' = new BasicArray()')
             $.nl('source.forEach((source, i) => ').sub(() => {
                 if (item.type === 'node') {
                     const _n = n.root.get(item.val);

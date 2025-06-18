@@ -2159,7 +2159,7 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
 }
 /* image shape */
 const importImageShapeOptional = importPathShapeOptional
-export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
+export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.RectShape {
         // inject code
     const color: types.Color = {
         typeId: "color",
@@ -2231,7 +2231,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
     }
 
     compatibleOldData(source, ctx)
-    const ret: impl.ImageShape = new impl.ImageShape (
+    const ret: impl.RectShape = new impl.RectShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
         source.name,
@@ -2239,8 +2239,7 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
         importTransform(source.transform, ctx),
         importStyle(source.style, ctx),
         importShapeSize(source.size, ctx),
-        importPathShape_pathsegs(source.pathsegs, ctx),
-        source.imageRef)
+        importPathShape_pathsegs(source.pathsegs, ctx))
     importImageShapeOptional(ret, source, ctx)
     return ret
 }
