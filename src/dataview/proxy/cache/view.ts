@@ -127,7 +127,6 @@ export class ViewCache {
         const v = this.view._findOV(OverrideType.Borders, VariableType.Borders);
         const border = v ? { ...v.value } : { ...this.view.data.style.borders };
         border.sideSetting = this.sideSettingOrDefault(border.sideSetting);
-        border.strokePaints = border.strokePaints ?? new BasicArray();
         if (!mgr) return this.m_border = border;
         const bordersMask: string | undefined = this.view.bordersMask;
         if (bordersMask) {

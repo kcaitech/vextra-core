@@ -1578,13 +1578,18 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
             }
         }
     } else {
-        if (source.borders && !source.borders.sideSetting) {
-            (source.borders.sideSetting as any) = {
-                sideType: types.SideType.Normal,
-                thicknessTop: 1,
-                thicknessLeft: 1,
-                thicknessBottom: 1,
-                thicknessRight: 1,
+        if (source.borders) {
+            if (!source.borders.sideSetting) {
+                (source.borders.sideSetting as any) = {
+                    sideType: types.SideType.Normal,
+                    thicknessTop: 1,
+                    thicknessLeft: 1,
+                    thicknessBottom: 1,
+                    thicknessRight: 1,
+                }
+            }
+            if (!source.borders.strokePaints) {
+                source.borders.strokePaints = [];
             }
         }
     }
