@@ -462,6 +462,16 @@ inject['Style']['before'] = `\
                 strokePaints: [],
             }
         }
+    } else {
+        if (source.borders && !source.borders.sideSetting) {
+            (source.borders.sideSetting as any) = {
+                sideType: types.SideType.Normal,
+                thicknessTop: 1,
+                thicknessLeft: 1,
+                thicknessBottom: 1,
+                thicknessRight: 1,
+            }
+        }
     }
     
     if (!source.shadows) source.shadows = new BasicArray()
@@ -524,6 +534,16 @@ inject['Variable']['before'] = `\
             strokePaints.push(strokePaint);
         }
         const border = source.value[0] as any;
+
+        if (border && !border.sideSetting) {
+            (border.sideSetting as any) = {
+                sideType: types.SideType.Normal,
+                thicknessTop: 1,
+                thicknessLeft: 1,
+                thicknessBottom: 1,
+                thicknessRight: 1,
+            }
+        }
         source.value = {
             typeId: "border",
             borderStyle: border.borderStyle,
