@@ -239,30 +239,41 @@ function exportNode(node: Node, writer: Writer, baseClass: BaseClassConfig): voi
  */
 export function gen(allNodes: Map<string, Node>, outputPath: string, config: GenerationConfig): void {
     const writer = new Writer(outputPath);
-    const nodes = Array.from(allNodes.values());
-
-    // 收集所有枚举类型
-    const enums = collectEnums(nodes);
     
-    // 导出枚举类型
-    if (enums.length > 0) {
-        writer.nl(`export {\n${enums.join(',\n')}\n} from "${config.typesPath}"`);
-        writer.nl(`import {\n${enums.join(',\n')}\n} from "${config.typesPath}"`);
-    }
-    
-    // 添加额外的头部内容
-    if (config.extraHeader) {
-        config.extraHeader(writer);
-    }
+    try {
+        const nodes = Array.from(allNodes.values());
 
-    // 按依赖顺序生成类
-    const baseClassConfig: BaseClassConfig = {
-        array: config.baseClass?.array ?? 'Array',
-        map: config.baseClass?.map ?? 'Map',
-        extends: config.baseClass?.extends
-    };
+        // 收集所有枚举类型
+        const enums = collectEnums(nodes);
+        
+        // 导出枚举类型
+        if (enums.length > 0) {
+            writer.nl(`export {\n${enums.join(',\n')}\n} from "${config.typesPath}"`);
+            writer.nl(`import {\n${enums.join(',\n')}\n} from "${config.typesPath}"`);
+        }
 
-    generateInDependencyOrder(nodes, writer, baseClassConfig, config.extraOrder ?? []);
+        // 导入基础类和工具类
+        if (config.extraHeader) {
+            config.extraHeader(writer);
+        }
+
+        // 按依赖顺序生成类定义
+        const baseClassConfig: BaseClassConfig = {
+            array: config.baseClass?.array ?? 'Array',
+            map: config.baseClass?.map ?? 'Map',
+            extends: config.baseClass?.extends
+        };
+        
+        generateInDependencyOrder(
+            nodes,
+            writer,
+            baseClassConfig,
+            config.extraOrder || []
+        );
+    } finally {
+        // 确保所有内容都被写入文件
+        writer.destroy();
+    }
 }
 
 /**

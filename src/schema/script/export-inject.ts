@@ -8,68 +8,130 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-export const inject: any = {};
+/**
+ * 导出函数的代码注入配置
+ * 
+ * 该模块定义了在生成导出函数时需要注入的自定义代码片段。
+ * 这些注入的代码主要用于：
+ * 1. 收集导出过程中遇到的资源引用
+ * 2. 处理样式遮罩的依赖关系
+ * 3. 管理符号和媒体资源的引用
+ */
 
-inject['Shape'] = {};
-inject['Shape']['after'] = `\
-    // inject code
-    if (ctx?.styles && ret.radiusMask) ctx.styles.add(ret.radiusMask);
+type InjectPhase = 'before' | 'after' | 'content' | 'force-type';
+
+type InjectConfig = Record<InjectPhase, string | undefined>;
+
+interface InjectDefinitions {
+    [nodeType: string]: Partial<InjectConfig>;
+}
+
+/**
+ * 代码注入定义
+ * 每个节点类型可以在导出函数的不同阶段注入自定义代码
+ */
+export const inject: InjectDefinitions = {};
+
+// =============================================================================
+// 形状相关注入
+// =============================================================================
+
+/**
+ * Shape 基类需要收集半径遮罩样式
+ */
+inject['Shape'] = {
+    after: `if (ctx?.styles && ret.radiusMask) ctx.styles.add(ret.radiusMask);
 `
+};
 
-inject['SymbolShape'] = {};
-inject['SymbolShape']['after'] = `\
-    // inject code
-    if (ctx?.symbols) ctx.symbols.add(ret.id);
+// =============================================================================
+// 符号相关注入
+// =============================================================================
+
+/**
+ * SymbolShape 需要收集符号引用
+ */
+inject['SymbolShape'] = {
+    after: `if (ctx?.symbols) ctx.symbols.add(ret.id);
 `
+};
 
-inject['SymbolRefShape'] = {};
-inject['SymbolRefShape']['after'] = `\
-    // inject code
-    if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
+/**
+ * SymbolRefShape 需要收集引用的符号ID
+ */
+inject['SymbolRefShape'] = {
+    after: `if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 `
+};
 
-inject['ImageShape'] = {};
-inject['ImageShape']['after'] = `\
-    // inject code
-    if (ctx?.medias) ctx.medias.add(ret.imageRef);
+// =============================================================================
+// 媒体资源相关注入
+// =============================================================================
+
+/**
+ * ImageShape 需要收集图片资源引用
+ */
+inject['ImageShape'] = {
+    after: `if (ctx?.medias) ctx.medias.add(ret.imageRef);
 `
+};
 
-inject['Style'] = {};
-inject['Style']['after'] = `\
-    // inject code
-    if (ctx?.styles) {
+/**
+ * Fill 需要收集图片资源引用（当填充类型为图片时）
+ */
+inject['Fill'] = {
+    after: `if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
+`
+};
+
+/**
+ * TableCell 需要收集图片资源引用
+ */
+inject['TableCell'] = {
+    after: `if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
+`
+};
+
+// =============================================================================
+// 样式相关注入
+// =============================================================================
+
+/**
+ * Style 需要收集各种样式遮罩引用
+ */
+inject['Style'] = {
+    after: `if (ctx?.styles) {
         if (ret.fillsMask) ctx.styles.add(ret.fillsMask);
         if (ret.bordersMask) ctx.styles.add(ret.bordersMask);
         if (ret.shadowsMask) ctx.styles.add(ret.shadowsMask);
         if (ret.blursMask) ctx.styles.add(ret.blursMask);
     }
 `
-inject['Span'] = {};
-inject['Span']['after'] = `\
-    // inject code
-    if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
-`
+};
 
-inject['ParaAttr'] = {};
-inject['ParaAttr']['after'] = `\
-    // inject code
-    if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
+/**
+ * Border 需要收集填充遮罩引用
+ */
+inject['Border'] = {
+    after: `if (ctx?.styles && ret.fillsMask) ctx.styles.add(ret.fillsMask);
 `
+};
 
-inject['Fill'] = {};
-inject['Fill']['after'] = `\
-    // inject code
-    if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
-`
+// =============================================================================
+// 文本相关注入
+// =============================================================================
 
-inject['Border'] = {};
-inject['Border']['after'] = `\
-    // inject code
-    if (ctx?.styles && ret.fillsMask) ctx.styles.add(ret.fillsMask);
+/**
+ * Span 需要收集文本遮罩引用
+ */
+inject['Span'] = {
+    after: `if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
 `
+};
 
-inject['TableCell'] = {};
-inject['TableCell']['after'] = `\
-    // inject code
-    if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
-`
+/**
+ * ParaAttr 需要收集文本遮罩引用
+ */
+inject['ParaAttr'] = {
+    after: `if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);`
+};

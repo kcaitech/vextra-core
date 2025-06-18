@@ -453,11 +453,12 @@ export function loadSchemas(schemaDir: string, schemaExt = '.json'): Map<string,
     }
     
     const files = fs.readdirSync(schemaDir);
+    const schemaFiles = files.filter(file => file.endsWith(schemaExt));
     const allNodes = new Map<string, Node>();
     
-    for (const file of files) {
-        if (!file.endsWith(schemaExt)) continue;
-
+    console.log(`🔍 扫描到 ${schemaFiles.length} 个Schema文件`);
+    
+    for (const file of schemaFiles) {
         const filePath = path.join(schemaDir, file);
         
         try {
@@ -466,11 +467,15 @@ export function loadSchemas(schemaDir: string, schemaExt = '.json'): Map<string,
             const filename = getFileName(file);
 
             if (!filename) {
-                console.warn(`Skipping file with invalid name: ${file}`);
+                console.warn(`⚠️  跳过无效文件名: ${file}`);
                 continue;
             }
 
             const name = toPascalCase(filename);
+            if (allNodes.has(name)) {
+                throw new Error(`Duplicate node name: ${name} (from ${file})`);
+            }
+
             const node = new Node(allNodes, name, parseNodeValue(schema));
             node.schemaId = filename;
 
@@ -513,12 +518,33 @@ export function loadSchemas(schemaDir: string, schemaExt = '.json'): Map<string,
             }
 
             allNodes.set(name, node);
+            
         } catch (error) {
-            throw new Error(`Error processing file ${file}: ${(error as Error).message}`);
+            throw new Error(`💥 处理文件 ${file} 时出错: ${(error as Error).message}`);
         }
     }
     
+    // 验证依赖关系
+    validateDependencies(allNodes);
+    
     return allNodes;
+}
+
+/**
+ * 验证所有节点的依赖关系是否完整
+ */
+function validateDependencies(allNodes: Map<string, Node>): void {
+    for (const [nodeName, node] of allNodes) {
+        for (const dep of node.depends) {
+            if (!allNodes.has(dep)) {
+                throw new Error(`❌ 节点 '${nodeName}' 依赖的 '${dep}' 未找到`);
+            }
+        }
+        
+        if (node.extend && !allNodes.has(node.extend)) {
+            throw new Error(`❌ 节点 '${nodeName}' 继承的 '${node.extend}' 未找到`);
+        }
+    }
 }
 
 /**

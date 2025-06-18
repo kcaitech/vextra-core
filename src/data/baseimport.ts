@@ -85,7 +85,6 @@ export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContex
 export function importBorder_strokePaints(source: types.Border_strokePaints, ctx?: IImportContext): Border_strokePaints {
     const ret: Border_strokePaints = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importFill(source, ctx))
     })
     return ret
@@ -192,7 +191,6 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
 export function importDocumentMeta_pagesList(source: types.DocumentMeta_pagesList, ctx?: IImportContext): DocumentMeta_pagesList {
     const ret: DocumentMeta_pagesList = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importPageListItem(source, ctx))
     })
     return ret
@@ -224,7 +222,6 @@ export function importExportFormatNameingScheme(source: types.ExportFormatNamein
 export function importExportOptions_exportFormats(source: types.ExportOptions_exportFormats, ctx?: IImportContext): ExportOptions_exportFormats {
     const ret: ExportOptions_exportFormats = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importExportFormat(source, ctx))
     })
     return ret
@@ -236,7 +233,6 @@ export function importExportVisibleScaleType(source: types.ExportVisibleScaleTyp
 export function importFillMask_fills(source: types.FillMask_fills, ctx?: IImportContext): FillMask_fills {
     const ret: FillMask_fills = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importFill(source, ctx))
     })
     return ret
@@ -256,7 +252,6 @@ export function importGradientType(source: types.GradientType, ctx?: IImportCont
 export function importGradient_stops(source: types.Gradient_stops, ctx?: IImportContext): Gradient_stops {
     const ret: Gradient_stops = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importStop(source, ctx))
     })
     return ret
@@ -276,77 +271,60 @@ export function importGroupShape_childs(source: types.GroupShape_childs, ctx?: I
                 return source
             }
             if (source.typeId === "group-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importGroupShape(source as types.GroupShape, ctx)
             }
             if (source.typeId === "image-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importImageShape(source as types.ImageShape, ctx)
             }
             if (source.typeId === "path-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importPathShape(source as types.PathShape, ctx)
             }
             if (source.typeId === "path-shape2") {
                 return importPathShape2(source as types.PathShape2, ctx)
             }
             if (source.typeId === "rect-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importRectShape(source as types.RectShape, ctx)
             }
             if (source.typeId === "symbol-ref-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importSymbolRefShape(source as types.SymbolRefShape, ctx)
             }
             if (source.typeId === "symbol-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importSymbolShape(source as types.SymbolShape, ctx)
             }
             if (source.typeId === "symbol-union-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importSymbolUnionShape(source as types.SymbolUnionShape, ctx)
             }
             if (source.typeId === "text-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importTextShape(source as types.TextShape, ctx)
             }
             if (source.typeId === "artboard") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importArtboard(source as types.Artboard, ctx)
             }
             if (source.typeId === "line-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importLineShape(source as types.LineShape, ctx)
             }
             if (source.typeId === "oval-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importOvalShape(source as types.OvalShape, ctx)
             }
             if (source.typeId === "table-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importTableShape(source as types.TableShape, ctx)
             }
             if (source.typeId === "contact-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importContactShape(source as types.ContactShape, ctx)
             }
             if (source.typeId === "shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importShape(source as types.Shape, ctx)
             }
             if (source.typeId === "cutout-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importCutoutShape(source as types.CutoutShape, ctx)
             }
             if (source.typeId === "bool-shape") {
                 return importBoolShape(source as types.BoolShape, ctx)
             }
             if (source.typeId === "polygon-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importPolygonShape(source as types.PolygonShape, ctx)
             }
             if (source.typeId === "star-shape") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importStarShape(source as types.StarShape, ctx)
             }
             throw new Error("unknow typeId: " + source.typeId)
@@ -486,7 +464,6 @@ export function importPara_spans(source: types.Para_spans, ctx?: IImportContext)
 export function importPathSegment_points(source: types.PathSegment_points, ctx?: IImportContext): PathSegment_points {
     const ret: PathSegment_points = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importCurvePoint(source, ctx))
     })
     return ret
@@ -503,7 +480,6 @@ export function importPathSegment(source: types.PathSegment, ctx?: IImportContex
 export function importPathShape_pathsegs(source: types.PathShape_pathsegs, ctx?: IImportContext): PathShape_pathsegs {
     const ret: PathShape_pathsegs = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importPathSegment(source, ctx))
     })
     return ret
@@ -511,7 +487,6 @@ export function importPathShape_pathsegs(source: types.PathShape_pathsegs, ctx?:
 export function importPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx?: IImportContext): PathShape2_pathsegs {
     const ret: PathShape2_pathsegs = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importPathSegment(source, ctx))
     })
     return ret
@@ -600,7 +575,6 @@ export function importScrollDirection(source: types.ScrollDirection, ctx?: IImpo
 export function importShadowMask_shadows(source: types.ShadowMask_shadows, ctx?: IImportContext): ShadowMask_shadows {
     const ret: ShadowMask_shadows = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importShadow(source, ctx))
     })
     return ret
@@ -742,7 +716,6 @@ export function importStyleVarType(source: types.StyleVarType, ctx?: IImportCont
 export function importStyle_fills(source: types.Style_fills, ctx?: IImportContext): Style_fills {
     const ret: Style_fills = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importFill(source, ctx))
     })
     return ret
@@ -750,7 +723,6 @@ export function importStyle_fills(source: types.Style_fills, ctx?: IImportContex
 export function importStyle_shadows(source: types.Style_shadows, ctx?: IImportContext): Style_shadows {
     const ret: Style_shadows = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importShadow(source, ctx))
     })
     return ret
@@ -758,7 +730,6 @@ export function importStyle_shadows(source: types.Style_shadows, ctx?: IImportCo
 export function importStyle_innerShadows(source: types.Style_innerShadows, ctx?: IImportContext): Style_innerShadows {
     const ret: Style_innerShadows = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importShadow(source, ctx))
     })
     return ret
@@ -766,7 +737,6 @@ export function importStyle_innerShadows(source: types.Style_innerShadows, ctx?:
 export function importStyle_contacts(source: types.Style_contacts, ctx?: IImportContext): Style_contacts {
     const ret: Style_contacts = new BasicArray()
     source.forEach((source, i) => {
-        if (!source.crdtidx) source.crdtidx = [i]
         ret.push(importContactRole(source, ctx))
     })
     return ret
@@ -882,11 +852,9 @@ export function importVariable_0(source: types.Variable_0, ctx?: IImportContext)
                 return source
             }
             if (source.typeId === "fill") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importFill(source as types.Fill, ctx)
             }
             if (source.typeId === "shadow") {
-                if (!source.crdtidx) source.crdtidx = [i]
                 return importShadow(source as types.Shadow, ctx)
             }
             if (source.typeId === "prototype-interaction") {
@@ -1083,9 +1051,7 @@ export function importRadiusMask(source: types.RadiusMask, ctx?: IImportContext)
         source.description,
         importRadius(source.radius, ctx))
     importRadiusMaskOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
-
     return ret
 }
 /* shadow mask */
@@ -1101,9 +1067,7 @@ export function importShadowMask(source: types.ShadowMask, ctx?: IImportContext)
         source.description,
         importShadowMask_shadows(source.shadows, ctx))
     importShadowMaskOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
-
     return ret
 }
 /* span attr */
@@ -1150,9 +1114,7 @@ export function importBlurMask(source: types.BlurMask, ctx?: IImportContext): im
         source.description,
         importBlur(source.blur, ctx))
     importBlurMaskOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
-
     return ret
 }
 /* border mask type */
@@ -1175,9 +1137,7 @@ export function importBorderMask(source: types.BorderMask, ctx?: IImportContext)
         source.description,
         importBorderMaskType(source.border, ctx))
     importBorderMaskOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
-
     return ret
 }
 /* fill */
@@ -1202,9 +1162,7 @@ export function importFill(source: types.Fill, ctx?: IImportContext): impl.Fill 
         importFillType(source.fillType, ctx),
         importColor(source.color, ctx))
     importFillOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
-
     return ret
 }
 /* span attr */
@@ -1259,9 +1217,7 @@ export function importTextMask(source: types.TextMask, ctx?: IImportContext): im
         source.description,
         importTextAttr(source.text, ctx))
     importTextMaskOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
-
     return ret
 }
 /* text */
@@ -1273,9 +1229,7 @@ export function importText(source: types.Text, ctx?: IImportContext): impl.Text 
     const ret: impl.Text = new impl.Text (
         importText_paras(source.paras, ctx))
     importTextOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
-
     return ret
 }
 /* border */
@@ -1305,9 +1259,7 @@ export function importFillMask(source: types.FillMask, ctx?: IImportContext): im
         source.description,
         importFillMask_fills(source.fills, ctx))
     importFillMaskOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) ctx.document.stylesMgr.add(ret.id, ret);
-
     return ret
 }
 /* style sheet */
@@ -1350,9 +1302,7 @@ export function importStyle(source: types.Style, ctx?: IImportContext): impl.Sty
         importStyle_shadows(source.shadows, ctx),
         importBorder(source.borders, ctx))
     importStyleOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) ret.setStylesMgr(ctx.document.stylesMgr);
-
     return ret
 }
 /* shape */
@@ -1408,7 +1358,6 @@ function importTableCellOptional(tar: impl.TableCell, source: types.TableCell, c
     if (source.colSpan !== undefined) tar.colSpan = source.colSpan
 }
 export function importTableCell(source: types.TableCell, ctx?: IImportContext): impl.TableCell {
-    compatibleOldData(source, ctx)
     const ret: impl.TableCell = new impl.TableCell (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1427,7 +1376,6 @@ function importTableShapeOptional(tar: impl.TableShape, source: types.TableShape
     if (source.textAttr !== undefined) tar.textAttr = importTextAttr(source.textAttr, ctx)
 }
 export function importTableShape(source: types.TableShape, ctx?: IImportContext): impl.TableShape {
-    compatibleOldData(source, ctx)
     const ret: impl.TableShape = new impl.TableShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1447,9 +1395,7 @@ export function importTableShape(source: types.TableShape, ctx?: IImportContext)
         importTableShape_rowHeights(source.rowHeights, ctx),
         importTableShape_colWidths(source.colWidths, ctx))
     importTableShapeOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) ret.setImageMgr(ctx.document.mediasMgr);
-
     return ret
 }
 /* text shape */
@@ -1458,7 +1404,6 @@ function importTextShapeOptional(tar: impl.TextShape, source: types.TextShape, c
     if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importTextShape(source: types.TextShape, ctx?: IImportContext): impl.TextShape {
-    compatibleOldData(source, ctx)
     const ret: impl.TextShape = new impl.TextShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1478,8 +1423,8 @@ export function importVariable(source: types.Variable, ctx?: IImportContext): im
         importVariableType(source.type, ctx),
         source.name,
         (() => {
-            if (typeof source.value!== "object" || source.value == null) {
-                return source.value == null? undefined : source.value
+            if (typeof source.value !== "object" || source.value == null) {
+                return source.value == null ? undefined : source.value
             }
             if (Array.isArray(source.value)) {
                 return importVariable_0(source.value, ctx)
@@ -1544,7 +1489,6 @@ function importPathShapeOptional(tar: impl.PathShape, source: types.PathShape, c
     if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importPathShape(source: types.PathShape, ctx?: IImportContext): impl.PathShape {
-    compatibleOldData(source, ctx)
     const ret: impl.PathShape = new impl.PathShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1563,7 +1507,6 @@ function importPathShape2Optional(tar: impl.PathShape2, source: types.PathShape2
     if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
-    compatibleOldData(source, ctx)
     const ret: impl.PathShape2 = new impl.PathShape2 (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1579,7 +1522,6 @@ export function importPathShape2(source: types.PathShape2, ctx?: IImportContext)
 /* polygon shape */
 const importPolygonShapeOptional = importPathShapeOptional
 export function importPolygonShape(source: types.PolygonShape, ctx?: IImportContext): impl.PolygonShape {
-    compatibleOldData(source, ctx)
     const ret: impl.PolygonShape = new impl.PolygonShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1596,7 +1538,6 @@ export function importPolygonShape(source: types.PolygonShape, ctx?: IImportCont
 /* rect shape */
 const importRectShapeOptional = importPathShapeOptional
 export function importRectShape(source: types.RectShape, ctx?: IImportContext): impl.RectShape {
-    compatibleOldData(source, ctx)
     const ret: impl.RectShape = new impl.RectShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1612,7 +1553,6 @@ export function importRectShape(source: types.RectShape, ctx?: IImportContext): 
 /* star shape */
 const importStarShapeOptional = importPathShapeOptional
 export function importStarShape(source: types.StarShape, ctx?: IImportContext): impl.StarShape {
-    compatibleOldData(source, ctx)
     const ret: impl.StarShape = new impl.StarShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1644,7 +1584,6 @@ function importSymbolRefShapeOptional(tar: impl.SymbolRefShape, source: types.Sy
     if (source.uniformScale !== undefined) tar.uniformScale = source.uniformScale
 }
 export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImportContext): impl.SymbolRefShape {
-    compatibleOldData(source, ctx)
     const ret: impl.SymbolRefShape = new impl.SymbolRefShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1663,12 +1602,10 @@ export function importSymbolRefShape(source: types.SymbolRefShape, ctx?: IImport
             return ret
         })())
     importSymbolRefShapeOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) {
         ret.setSymbolMgr(ctx.document.symbolsMgr);
         ret.setImageMgr(ctx.document.mediasMgr);
     }
-
     return ret
 }
 /* connection */
@@ -1698,7 +1635,6 @@ function importContactShapeOptional(tar: impl.ContactShape, source: types.Contac
     if (source.to !== undefined) tar.to = importContactForm(source.to, ctx)
 }
 export function importContactShape(source: types.ContactShape, ctx?: IImportContext): impl.ContactShape {
-    compatibleOldData(source, ctx)
     const ret: impl.ContactShape = new impl.ContactShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1717,7 +1653,6 @@ export function importContactShape(source: types.ContactShape, ctx?: IImportCont
 /* cutout shape */
 const importCutoutShapeOptional = importPathShapeOptional
 export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContext): impl.CutoutShape {
-    compatibleOldData(source, ctx)
     const ret: impl.CutoutShape = new impl.CutoutShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1733,7 +1668,6 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
 /* image shape */
 const importImageShapeOptional = importPathShapeOptional
 export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
-    compatibleOldData(source, ctx)
     const ret: impl.ImageShape = new impl.ImageShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1750,7 +1684,6 @@ export function importImageShape(source: types.ImageShape, ctx?: IImportContext)
 /* line shape */
 const importLineShapeOptional = importPathShapeOptional
 export function importLineShape(source: types.LineShape, ctx?: IImportContext): impl.LineShape {
-    compatibleOldData(source, ctx)
     const ret: impl.LineShape = new impl.LineShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1771,7 +1704,6 @@ function importOvalShapeOptional(tar: impl.OvalShape, source: types.OvalShape, c
     if (source.innerRadius !== undefined) tar.innerRadius = source.innerRadius
 }
 export function importOvalShape(source: types.OvalShape, ctx?: IImportContext): impl.OvalShape {
-    compatibleOldData(source, ctx)
     const ret: impl.OvalShape = new impl.OvalShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1794,7 +1726,6 @@ function importArtboardOptional(tar: impl.Artboard, source: types.Artboard, ctx?
     if (source.frameMaskDisabled !== undefined) tar.frameMaskDisabled = source.frameMaskDisabled
 }
 export function importArtboard(source: types.Artboard, ctx?: IImportContext): impl.Artboard {
-    compatibleOldData(source, ctx)
     const ret: impl.Artboard = new impl.Artboard (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1810,7 +1741,6 @@ export function importArtboard(source: types.Artboard, ctx?: IImportContext): im
 /* bool shape */
 const importBoolShapeOptional = importGroupShapeOptional
 export function importBoolShape(source: types.BoolShape, ctx?: IImportContext): impl.BoolShape {
-    compatibleOldData(source, ctx)
     const ret: impl.BoolShape = new impl.BoolShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1870,7 +1800,6 @@ function importGroupShapeOptional(tar: impl.GroupShape, source: types.GroupShape
     if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
 }
 export function importGroupShape(source: types.GroupShape, ctx?: IImportContext): impl.GroupShape {
-    compatibleOldData(source, ctx)
     const ret: impl.GroupShape = new impl.GroupShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1890,7 +1819,6 @@ function importPageOptional(tar: impl.Page, source: types.Page, ctx?: IImportCon
     if (source.connections !== undefined) tar.connections = importPage_connections(source.connections, ctx)
 }
 export function importPage(source: types.Page, ctx?: IImportContext): impl.Page {
-    compatibleOldData(source, ctx)
     const ret: impl.Page = new impl.Page (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1919,7 +1847,6 @@ function importSymbolShapeOptional(tar: impl.SymbolShape, source: types.SymbolSh
     if (source.frameMaskDisabled !== undefined) tar.frameMaskDisabled = source.frameMaskDisabled
 }
 export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContext): impl.SymbolShape {
-    compatibleOldData(source, ctx)
     const ret: impl.SymbolShape = new impl.SymbolShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,
@@ -1938,20 +1865,17 @@ export function importSymbolShape(source: types.SymbolShape, ctx?: IImportContex
             return ret
         })())
     importSymbolShapeOptional(ret, source, ctx)
-        // inject code
     if (ctx?.document) {
         // const registed = ctx.document.symbolregist.get(ret.id);
         // if (!registed || registed === 'freesymbols' || registed === ctx.curPage) {
         ctx.document.symbolsMgr.add(ret.id, ret);
         // }
     }
-
     return ret
 }
 /* symbol union shape */
 const importSymbolUnionShapeOptional = importSymbolShapeOptional
 export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IImportContext): impl.SymbolUnionShape {
-    compatibleOldData(source, ctx)
     const ret: impl.SymbolUnionShape = new impl.SymbolUnionShape (
         importCrdtidx(source.crdtidx, ctx),
         source.id,

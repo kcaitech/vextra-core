@@ -13,91 +13,138 @@ import { Writer } from "./writer";
 import { inject } from "./export-inject";
 
 /**
- * 导出基础属性的值
+ * 生成基础属性的导出代码
+ * 此函数生成将实现类实例转换为JSON数据的代码
  */
-function exportBaseProp(prop: BaseProp, source: string, writer: Writer, allNodes: Map<string, Node>): void {
+function generateBasePropExport(
+    prop: BaseProp, 
+    sourceExpression: string, 
+    writer: Writer, 
+    allNodes: Map<string, Node>
+): void {
     switch (prop.type) {
         case 'string':
         case 'number':
         case 'boolean':
-            writer.append(source);
+            // 基础类型直接返回
+            writer.append(sourceExpression);
             break;
+            
         case 'node':
-            writer.append(`export${prop.val}(${source}, ctx)`);
+            // 生成代码: exportNodeName(sourceExpression, ctx)
+            writer.append(`export${prop.val}(${sourceExpression}, ctx)`);
             break;
+            
         case 'map':
-            writer.append('(() => ').sub(() => {
-                writer.nl('const ret: any = {}');
-                writer.nl(`${source}.forEach((source, k) => `).sub(() => {
-                    writer.nl('ret[k] = ');
-                    exportBaseProp(prop.val, 'source', writer, allNodes);
-                }).append(')');
-                writer.nl('return ret');
-            }).append(')()');
+            generateMapExport(prop, sourceExpression, writer, allNodes);
             break;
+            
         case 'oneOf':
-            exportOneOfProp(prop, source, writer, allNodes);
+            generateOneOfExport(prop, sourceExpression, writer, allNodes);
             break;
     }
 }
 
 /**
- * 导出 oneOf 类型的属性
+ * 生成Map类型的导出代码
+ * 生成代码将BasicMap实例转换为JSON对象
  */
-function exportOneOfProp(prop: BaseProp & { type: 'oneOf' }, source: string, writer: Writer, allNodes: Map<string, Node>): void {
+function generateMapExport(
+    prop: BaseProp & { type: 'map' }, 
+    sourceExpression: string, 
+    writer: Writer, 
+    allNodes: Map<string, Node>
+): void {
     writer.append('(() => ').sub(() => {
-        const propTypes = Array.from(prop.val);
-        
-        // 处理 undefined 类型
-        const hasUndefined = handleUndefinedType(propTypes, source, writer);
-        
-        if (!hasUndefined) {
-            writer.nl(`if (typeof ${source} !== "object") `).sub(() => {
-                writer.nl(`return ${source}`);
-            });
-        }
-        
-        // 处理数组类型
-        handleArrayType(propTypes, source, writer, allNodes);
-        
-        // 处理其他节点类型
-        handleNodeTypes(propTypes, source, writer, allNodes);
-        
-        writer.nl(`throw new Error("unknow typeId: " + ${source}.typeId)`);
+        writer.nl('const ret: any = {}');
+        writer.nl(`${sourceExpression}.forEach((source, k) => `).sub(() => {
+            writer.nl('ret[k] = ');
+            generateBasePropExport(prop.val, 'source', writer, allNodes);
+        }).append(')');
+        writer.nl('return ret');
     }).append(')()');
 }
 
 /**
- * 处理 undefined 类型
+ * 生成OneOf类型的导出代码
+ * 生成代码根据typeId或类型判断选择正确的导出分支
  */
-function handleUndefinedType(propTypes: BaseProp[], source: string, writer: Writer): boolean {
-    for (let i = 0; i < propTypes.length; i++) {
-        const propType = propTypes[i];
-        if (propType.type === 'undefined') {
-            writer.nl(`if (typeof ${source} !== "object" || ${source} == null) `).sub(() => {
-                writer.nl(`return ${source} == null ? undefined : ${source}`);
-            });
-            return true;
-        }
-    }
-    return false;
+function generateOneOfExport(
+    prop: BaseProp & { type: 'oneOf' }, 
+    sourceExpression: string, 
+    writer: Writer, 
+    allNodes: Map<string, Node>
+): void {
+    writer.append('(() => ').sub(() => {
+        const propTypes = Array.from(prop.val);
+        
+        // 处理undefined类型分支
+        handleUndefinedExport(propTypes, sourceExpression, writer);
+        
+        // 处理基础类型分支
+        handleBasicTypesExport(propTypes, sourceExpression, writer);
+        
+        // 处理数组类型分支
+        handleArrayExport(propTypes, sourceExpression, writer, allNodes);
+        
+        // 处理其他节点类型分支
+        handleNodeTypesExport(propTypes, sourceExpression, writer, allNodes);
+        
+        // 如果没有匹配的类型，抛出错误
+        writer.nl(`throw new Error("unknow typeId: " + ${sourceExpression}.typeId)`);
+    }).append(')()');
 }
 
 /**
- * 处理数组类型
+ * 处理undefined类型的导出分支
  */
-function handleArrayType(propTypes: BaseProp[], source: string, writer: Writer, allNodes: Map<string, Node>): void {
+function handleUndefinedExport(propTypes: BaseProp[], sourceExpression: string, writer: Writer): void {
+    for (let i = 0; i < propTypes.length; i++) {
+        const propType = propTypes[i];
+        if (propType.type === 'undefined') {
+            writer.nl(`if (typeof ${sourceExpression} !== "object" || ${sourceExpression} == null) `).sub(() => {
+                writer.nl(`return ${sourceExpression} == null ? undefined : ${sourceExpression}`);
+            });
+            return;
+        }
+    }
+}
+
+/**
+ * 处理基础类型的导出分支
+ */
+function handleBasicTypesExport(propTypes: BaseProp[], sourceExpression: string, writer: Writer): void {
+    const hasUndefined = propTypes.some(prop => prop.type === 'undefined');
+    
+    if (!hasUndefined) {
+        writer.nl(`if (typeof ${sourceExpression} !== "object") `).sub(() => {
+            writer.nl(`return ${sourceExpression}`);
+        });
+    }
+}
+
+/**
+ * 处理数组类型的导出分支
+ */
+function handleArrayExport(
+    propTypes: BaseProp[], 
+    sourceExpression: string, 
+    writer: Writer, 
+    allNodes: Map<string, Node>
+): void {
     let usedArray = false;
     
+    // 从后往前遍历，移除已处理的基础类型
     for (let i = propTypes.length - 1; i >= 0; i--) {
         const propType = propTypes[i];
         
-        if (propType.type === 'string' || propType.type === 'number' || 
-            propType.type === 'boolean' || propType.type === 'undefined') {
+        // 移除基础类型
+        if (['string', 'number', 'boolean', 'undefined'].includes(propType.type)) {
             propTypes.splice(i, 1);
             continue;
         }
         
+        // 处理数组类型节点
         if (propType.type === 'node' && !usedArray) {
             const node = allNodes.get(propType.val);
             if (!node) {
@@ -106,9 +153,9 @@ function handleArrayType(propTypes: BaseProp[], source: string, writer: Writer, 
             
             if (node.value.type === 'array') {
                 usedArray = true;
-                writer.nl(`if (Array.isArray(${source})) `).sub(() => {
+                writer.nl(`if (Array.isArray(${sourceExpression})) `).sub(() => {
                     writer.nl('return ');
-                    exportBaseProp(propType, source, writer, allNodes);
+                    generateBasePropExport(propType, sourceExpression, writer, allNodes);
                 });
                 propTypes.splice(i, 1);
             }
@@ -117,9 +164,14 @@ function handleArrayType(propTypes: BaseProp[], source: string, writer: Writer, 
 }
 
 /**
- * 处理节点类型
+ * 处理节点类型的导出分支
  */
-function handleNodeTypes(propTypes: BaseProp[], source: string, writer: Writer, allNodes: Map<string, Node>): void {
+function handleNodeTypesExport(
+    propTypes: BaseProp[], 
+    sourceExpression: string, 
+    writer: Writer, 
+    allNodes: Map<string, Node>
+): void {
     for (const propType of propTypes) {
         if (propType.type === 'node') {
             const node = allNodes.get(propType.val);
@@ -128,8 +180,8 @@ function handleNodeTypes(propTypes: BaseProp[], source: string, writer: Writer, 
             }
             
             if (node.schemaId) {
-                writer.nl(`if (${source}.typeId === "${node.schemaId}") `).sub(() => {
-                    writer.nl(`return export${propType.val}(${source} as types.${propType.val}, ctx)`);
+                writer.nl(`if (${sourceExpression}.typeId === "${node.schemaId}") `).sub(() => {
+                    writer.nl(`return export${propType.val}(${sourceExpression} as types.${propType.val}, ctx)`);
                 });
             } else {
                 throw new Error(`OneOf elements need typeId or unique type: ${JSON.stringify(node)}`);
@@ -139,58 +191,42 @@ function handleNodeTypes(propTypes: BaseProp[], source: string, writer: Writer, 
 }
 
 /**
- * 导出对象类型
+ * 生成对象类型的导出函数
  */
-function exportObject(node: Node, writer: Writer): void {
+function generateObjectExport(node: Node, writer: Writer): void {
     if (node.value.type !== 'object') {
         throw new Error(`Expected object type, got ${node.value.type}`);
     }
 
     const properties = node.value.props;
-    const inheritanceChain = buildInheritanceChain(node);
-    const requiredProps = collectRequiredProps(inheritanceChain);
+    const inheritanceChain = buildObjectInheritanceChain(node);
+    const requiredProps = collectRequiredProperties(inheritanceChain);
     const needTypeId = requiredProps.some(prop => prop.required && prop.name === 'typeId');
 
     // 注入前置代码
-    if (inject[node.name]?.before) {
-        writer.nl(inject[node.name].before);
-    }
+    injectCustomCode(node, writer, 'before');
 
     // 创建返回对象
-    if (node.extend) {
-        writer.nl(`const ret: types.${node.name} = export${node.extend}(source, ctx) as types.${node.name}`);
-    } else {
-        writer.nl(`const ret: types.${node.name} = {} as types.${node.name}`);
-    }
+    createReturnObject(node, writer);
 
-    // 设置 typeId
+    // 设置typeId
     if (needTypeId && node.schemaId) {
         writer.nl(`ret.typeId = "${node.schemaId}"`);
     }
 
-    // 处理属性
-    for (const prop of properties) {
-        if (prop.required) {
-            writer.nl(`ret.${prop.name} = `);
-            exportBaseProp(prop, `source.${prop.name}`, writer, node.root);
-        } else {
-            writer.nl(`if (source.${prop.name} !== undefined) ret.${prop.name} = `);
-            exportBaseProp(prop, `source.${prop.name}`, writer, node.root);
-        }
-    }
+    // 处理属性导出
+    exportObjectProperties(properties, writer, node.root);
 
     // 注入后置代码
-    if (inject[node.name]?.after) {
-        writer.nl(inject[node.name].after);
-    }
+    injectCustomCode(node, writer, 'after');
 
     writer.nl('return ret');
 }
 
 /**
- * 构建继承链
+ * 构建对象继承链
  */
-function buildInheritanceChain(node: Node): Node[] {
+function buildObjectInheritanceChain(node: Node): Node[] {
     const chain: Node[] = [node];
     let current = node;
     
@@ -209,7 +245,7 @@ function buildInheritanceChain(node: Node): Node[] {
 /**
  * 收集所有必需属性
  */
-function collectRequiredProps(inheritanceChain: Node[]): NamedProp[] {
+function collectRequiredProperties(inheritanceChain: Node[]): NamedProp[] {
     const requiredProps: NamedProp[] = [];
     
     for (let i = inheritanceChain.length - 1; i >= 0; i--) {
@@ -224,9 +260,47 @@ function collectRequiredProps(inheritanceChain: Node[]): NamedProp[] {
 }
 
 /**
- * 导出单个节点
+ * 创建返回对象
  */
-function exportNode(node: Node, writer: Writer): void {
+function createReturnObject(node: Node, writer: Writer): void {
+    if (node.extend) {
+        writer.nl(`const ret: types.${node.name} = export${node.extend}(source, ctx) as types.${node.name}`);
+    } else {
+        writer.nl(`const ret: types.${node.name} = {} as types.${node.name}`);
+    }
+}
+
+/**
+ * 导出对象属性
+ */
+function exportObjectProperties(properties: NamedProp[], writer: Writer, allNodes: Map<string, Node>): void {
+    for (const prop of properties) {
+        if (prop.required) {
+            // 必需属性直接赋值
+            writer.nl(`ret.${prop.name} = `);
+            generateBasePropExport(prop, `source.${prop.name}`, writer, allNodes);
+        } else {
+            // 可选属性需要检查是否存在
+            writer.nl(`if (source.${prop.name} !== undefined) ret.${prop.name} = `);
+            generateBasePropExport(prop, `source.${prop.name}`, writer, allNodes);
+        }
+    }
+}
+
+/**
+ * 注入自定义代码
+ */
+function injectCustomCode(node: Node, writer: Writer, phase: 'before' | 'after'): void {
+    const customCode = inject[node.name]?.[phase];
+    if (customCode) {
+        writer.nl(customCode);
+    }
+}
+
+/**
+ * 生成单个节点的导出函数
+ */
+function generateNodeExport(node: Node, writer: Writer): void {
     if (node.description) {
         writer.nl(`/* ${node.description} */`);
     }
@@ -234,14 +308,18 @@ function exportNode(node: Node, writer: Writer): void {
     writer.nl(`export function export${node.name}(source: types.${node.name}, ctx?: IExportContext): types.${node.name} `).sub(() => {
         switch (node.value.type) {
             case 'enum':
+                // 枚举类型直接返回原值
                 writer.nl('return source');
                 break;
+                
             case 'array':
-                exportArrayNode(node, writer);
+                generateArrayExport(node, writer);
                 break;
+                
             case 'object':
-                exportObject(node, writer);
+                generateObjectExport(node, writer);
                 break;
+                
             default:
                 const exhaustiveCheck: never = node.value;
                 throw new Error(`Unsupported node value type: ${JSON.stringify(exhaustiveCheck)}`);
@@ -250,9 +328,9 @@ function exportNode(node: Node, writer: Writer): void {
 }
 
 /**
- * 导出数组节点
+ * 生成数组类型的导出函数
  */
-function exportArrayNode(node: Node, writer: Writer): void {
+function generateArrayExport(node: Node, writer: Writer): void {
     if (node.value.type !== 'array') {
         throw new Error(`Expected array type, got ${node.value.type}`);
     }
@@ -261,36 +339,58 @@ function exportArrayNode(node: Node, writer: Writer): void {
     writer.nl(`const ret: types.${node.name} = []`);
     writer.nl('source.forEach((source) => ').sub(() => {
         writer.nl('ret.push(');
-        exportBaseProp(item, 'source', writer, node.root);
+        generateBasePropExport(item, 'source', writer, node.root);
         writer.append(')');
     }).append(')');
     writer.nl('return ret');
 }
 
 /**
- * 生成导出代码
+ * 生成所有导出代码
  */
 export function gen(allNodes: Map<string, Node>, outputPath: string): void {
     const writer = new Writer(outputPath);
-    const nodes = Array.from(allNodes.values());
+    
+    try {
+        const nodes = Array.from(allNodes.values());
 
-    // 导入必要的类型和接口
+        // 导入必要的类型和接口
+        generateImportStatements(writer);
+
+        // 导出接口定义
+        generateExportContext(writer);
+
+        // 按依赖顺序生成导出函数
+        generateExportFunctionsInOrder(nodes, writer);
+    } finally {
+        // 确保所有内容都被写入文件
+        writer.destroy();
+    }
+}
+
+/**
+ * 生成导入语句
+ */
+function generateImportStatements(writer: Writer): void {
     writer.nl('import * as types from "./typesdefine"');
+}
+
+/**
+ * 生成导出上下文接口
+ */
+function generateExportContext(writer: Writer): void {
     writer.nl('export interface IExportContext ').sub(() => {
         writer.nl('symbols?: Set<string>');
         writer.nl('medias?: Set<string>');
         writer.nl('refsymbols?: Set<string>');
         writer.nl('styles?: Set<string>');
     });
-
-    // 按依赖顺序生成导出函数
-    generateInDependencyOrder(nodes, writer);
 }
 
 /**
- * 按依赖顺序生成代码
+ * 按依赖顺序生成导出函数
  */
-function generateInDependencyOrder(nodes: Node[], writer: Writer): void {
+function generateExportFunctionsInOrder(nodes: Node[], writer: Writer): void {
     let checkExport = allDepsIsGen;
     const generated = new Set<string>();
 
@@ -301,7 +401,7 @@ function generateInDependencyOrder(nodes: Node[], writer: Writer): void {
             const node = nodes[i];
             
             if (checkExport(node, generated)) {
-                exportNode(node, writer);
+                generateNodeExport(node, writer);
                 progress++;
                 nodes.splice(i, 1);
                 generated.add(node.name);

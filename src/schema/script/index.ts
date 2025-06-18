@@ -115,7 +115,7 @@ function generateAll(config: Partial<GenerationConfig> = {}): void {
 
 // 执行代码生成（使用当前项目的配置）
 const projectConfig: Partial<GenerationConfig> = {
-    schemaDir: './src/schema/script2/../',
+    schemaDir: './src/schema/',
     outputDir: './src/data/',
     extraOrder: ['GroupShape']
 };

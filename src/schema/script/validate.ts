@@ -10,191 +10,348 @@
 
 import { BaseProp, loadSchemas, NamedProp, Node, toPascalCase } from "./basic";
 
+/**
+ * Schema验证器类
+ * 
+ * 负责根据JSON Schema定义验证数据的合法性，支持：
+ * 1. 基础类型验证（string、number、boolean等）
+ * 2. 复杂类型验证（object、array、enum等）
+ * 3. 引用类型验证（$ref引用）
+ * 4. 联合类型验证（oneOf）
+ * 5. 继承关系验证
+ */
 export class Validator {
-    schemas: Map<string, Node>
-    schemadir: string
+    /** 加载的所有Schema定义 */
+    private readonly schemas: Map<string, Node>;
+    /** Schema文件目录路径 */
+    private readonly schemaDirectory: string;
 
-    constructor(schemadir: string) {
-        this.schemas = loadSchemas(schemadir);
-        this.schemadir = schemadir;
-    }
-
-    private validate_enum(val: any, schema: Node) {
-        if (schema.value.type !== 'enum') throw new Error("")
-        const idx = schema.value.enum.indexOf(val)
-        if (idx < 0) {
-            console.log("enum err:", val, schema.value.enum)
-        }
-        return idx >= 0
-    }
-
-    private validate_map(val: any, schema: BaseProp): boolean {
-        if (schema.type !== 'map') throw new Error("")
-
-            // json序列化回来的不是个map
-        if (typeof val !== 'object') {
-            console.log(val, "expected to be a K-V object")
-            return false
-        }
-
-        if (!(val instanceof Map)) {
-            val = Object.entries(val)
-        }
-
-        for (const [key, value] of val) {
-            if (!this.validate_prop(value, schema.val)) {
-                console.log(key, ' prop type wrong')
-                return false
-            }
-            if (typeof key !== 'string' || typeof key !== 'number') {
-                console.log('map key type if not string or number', value)
-                return false
-            }
-        }
-        return true
-    }
-
-    private validate_prop(val: any, schema: BaseProp): boolean {
-        const _type = schema.type
-        // console.log(type, schema, val)
-        if (_type === 'node') {
-            return this.validate_node(val, schema.val)
-        }
-        if (_type === 'map') {
-            return this.validate_map(val, schema)
-        }
-        else if (_type === 'number') {
-            return typeof val === 'number' ||
-                Number.parseInt(val).toString() === val ||
-                Number.parseFloat(val).toString() === val
-        }
-        else if (_type === 'boolean') {
-            return typeof val === 'boolean' ||
-                val === 'false' ||
-                val === 'true'
-        }
-        else if (_type === 'string') {
-            return typeof val === 'string'
-        }
-        else if (_type === 'undefined') {
-            return typeof val === 'undefined'
-        }
-        else if (_type === 'oneOf') {
-            for (let i = 0, len = schema.val.length; i < len; i++) {
-                const sk = schema.val[i]
-                if (this.validate_prop(val, sk)) {
-                    return true
-                }
-            }
-            console.log('oneOf prop type wrong', schema.val)
-            return false
-        }
-        else {
-            console.log('Unknow type: ' + schema)
-            throw new Error('Unknow type: ' + _type)
-        }
-    }
-
-    private merge_props(schema: Node, props = new Map<string, NamedProp>()): Map<string, NamedProp> {
-        if (schema.value.type !== 'object') throw new Error("")
-        for (let i = 0, len = schema.value.props.length; i < len; ++i) {
-            const p = schema.value.props[i]
-            props.set(p.name, p)
-        }
-        if (schema.extend) {
-            const extend = this.schemas.get(schema.extend)
-            if (!extend) throw new Error("")
-            this.merge_props(extend, props)
-        }
-        return props
-    }
-
-    private validate_object(val: any, schema: Node): boolean {
-
-        // 所有val的成员,在schema中都有定义,并且类型正确
-        // 所有schema中定义的required的,val中都有对应的值
-
-        if (schema.value.type !== 'object') throw new Error("")
-
-        // merge props
-        const props = this.merge_props(schema)
-
-        const keys = Object.keys(val)
-        for (let i = 0, len = keys.length; i < len; i++) {
-            const k = keys[i]
-            const v = val[k]
-
-            // const sk = props.get(k)
-            const prop = props.get(k)
-            if (!prop) {
-                // console.log(schema.value.props)
-                throw new Error("not find schema <" + k + "> at " + schema.name)
-            }
-
-            if (!this.validate_prop(v, prop)) {
-                console.log(v, prop.name)
-                return false
-            }
-        }
-
-        const required = Array.from(props.values()).filter((p) => p.required)
-
-        // const required = schema.mergedrequired;
-        required.forEach((v) => {
-            if (keys.indexOf(v.name) < 0) {
-                console.log(schema.name + " must have " + v)
-                return false
-            }
-        })
-
-        return true
-    }
-
-    private validate_array(val: any, schema: Node): boolean {
-        if (schema.value.type !== 'array') throw new Error("")
-        if (!(val instanceof Array)) {
-            console.log("val is not array", val)
-            return false
-        }
-        // console.log('array s')
-        for (let i = 0, len = val.length; i < len; i++) {
-            if (!this.validate_prop(val[i], schema.value.item)) {
-                console.log('item prop type wrong', val[i])
-                return false
-            }
-        }
-        // console.log('array e')
-        return true
-    }
-
-    private validate_node(val: any, schemaId: string): boolean {
-        // if (validated.has(schemaId)) return true; // todo 不对吧，重复同类型的数据呢
-
-        const schema = this.schemas.get(schemaId)
-        if (!schema) throw new Error("not find schema " + schemaId)
-        // return this.validate_type(val, schema.schema, schemapath)
-
-        const _type = schema.value.type
-        if (_type === 'object') {
-            return this.validate_object(val, schema)
-        }
-        if (_type === 'enum') {
-            return this.validate_enum(val, schema)
-        }
-        if (_type === 'array') {
-            return this.validate_array(val, schema)
-        }
-
-        throw new Error("unknow schema type:", _type)
+    constructor(schemaDirectory: string) {
+        this.schemas = loadSchemas(schemaDirectory);
+        this.schemaDirectory = schemaDirectory;
     }
 
     /**
-     * 
-     * @param val 实际数据
-     * @param schemaId 要校验的数据的schemaId(schema文件名)
-     * @returns 
+     * 验证枚举值
+     * @param value 待验证的值
+     * @param schema 枚举类型的Schema节点
+     * @returns 验证结果
      */
-    validate(val: any, schemaId: string) {
-        return this.validate_node(val, toPascalCase(schemaId))
+    private validateEnumValue(value: any, schema: Node): boolean {
+        if (schema.value.type !== 'enum') {
+            throw new Error(`Expected enum schema, got ${schema.value.type}`);
+        }
+        
+        const enumValues = schema.value.enum;
+        const isValid = enumValues.includes(value);
+        
+        if (!isValid) {
+            console.log(`Enum validation failed. Expected one of [${enumValues.join(', ')}], got:`, value);
+        }
+        
+        return isValid;
+    }
+
+    /**
+     * 验证Map类型数据
+     * @param value 待验证的值
+     * @param schema Map类型的Schema定义
+     * @returns 验证结果
+     */
+    private validateMapValue(value: any, schema: BaseProp): boolean {
+        if (schema.type !== 'map') {
+            throw new Error(`Expected map schema, got ${schema.type}`);
+        }
+
+        // 检查是否为对象类型
+        if (typeof value !== 'object' || value === null) {
+            console.log('Map validation failed: expected object, got:', typeof value);
+            return false;
+        }
+
+        // 转换为键值对数组进行验证
+        const entries = value instanceof Map ? Array.from(value.entries()) : Object.entries(value);
+
+        // 验证每个键值对
+        for (const [key, val] of entries) {
+            // 验证值的类型
+            if (!this.validatePropertyValue(val, schema.val)) {
+                console.log(`Map validation failed for key '${key}': value type mismatch`);
+                return false;
+            }
+            
+            // 验证键的类型
+            if (!this.isValidKeyType(key, schema.key)) {
+                console.log(`Map validation failed: invalid key type '${typeof key}', expected '${schema.key}'`);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * 检查键类型是否有效
+     */
+    private isValidKeyType(key: any, expectedType: 'string' | 'number'): boolean {
+        return expectedType === 'string' ? typeof key === 'string' : typeof key === 'number';
+    }
+
+    /**
+     * 验证属性值
+     * @param value 待验证的值
+     * @param schema 属性的Schema定义
+     * @returns 验证结果
+     */
+    private validatePropertyValue(value: any, schema: BaseProp): boolean {
+        switch (schema.type) {
+            case 'node':
+                return this.validateNodeValue(value, schema.val);
+                
+            case 'map':
+                return this.validateMapValue(value, schema);
+                
+            case 'number':
+                return this.validateNumberValue(value);
+                
+            case 'boolean':
+                return this.validateBooleanValue(value);
+                
+            case 'string':
+                return typeof value === 'string';
+                
+            case 'undefined':
+                return typeof value === 'undefined';
+                
+            case 'oneOf':
+                return this.validateOneOfValue(value, schema);
+                
+            default:
+                const exhaustiveCheck: never = schema;
+                throw new Error(`Unknown property type: ${JSON.stringify(exhaustiveCheck)}`);
+        }
+    }
+
+    /**
+     * 验证数字类型值
+     */
+    private validateNumberValue(value: any): boolean {
+        return typeof value === 'number' ||
+               Number.parseInt(value).toString() === value ||
+               Number.parseFloat(value).toString() === value;
+    }
+
+    /**
+     * 验证布尔类型值
+     */
+    private validateBooleanValue(value: any): boolean {
+        return typeof value === 'boolean' ||
+               value === 'false' ||
+               value === 'true';
+    }
+
+    /**
+     * 验证oneOf类型值
+     * @param value 待验证的值
+     * @param schema oneOf类型的Schema定义
+     * @returns 验证结果
+     */
+    private validateOneOfValue(value: any, schema: BaseProp & { type: 'oneOf' }): boolean {
+        // 尝试匹配任意一个类型
+        for (const unionSchema of schema.val) {
+            if (this.validatePropertyValue(value, unionSchema)) {
+                return true;
+            }
+        }
+        
+        console.log('OneOf validation failed: value does not match any union type:', {
+            value,
+            expectedTypes: schema.val.map(s => s.type)
+        });
+        
+        return false;
+    }
+
+    /**
+     * 合并节点及其继承链中的所有属性
+     * @param schema 节点Schema
+     * @param mergedProps 已合并的属性Map（用于递归）
+     * @returns 合并后的属性Map
+     */
+    private mergeInheritedProperties(schema: Node, mergedProps = new Map<string, NamedProp>()): Map<string, NamedProp> {
+        if (schema.value.type !== 'object') {
+            throw new Error(`Expected object schema, got ${schema.value.type}`);
+        }
+        
+        // 添加当前节点的属性
+        for (const property of schema.value.props) {
+            mergedProps.set(property.name, property);
+        }
+        
+        // 递归处理继承的属性
+        if (schema.extend) {
+            const parentSchema = this.schemas.get(schema.extend);
+            if (!parentSchema) {
+                throw new Error(`Parent schema not found: ${schema.extend}`);
+            }
+            this.mergeInheritedProperties(parentSchema, mergedProps);
+        }
+        
+        return mergedProps;
+    }
+
+    /**
+     * 验证对象类型数据
+     * @param value 待验证的对象
+     * @param schema 对象类型的Schema节点
+     * @returns 验证结果
+     */
+    private validateObjectValue(value: any, schema: Node): boolean {
+        if (schema.value.type !== 'object') {
+            throw new Error(`Expected object schema, got ${schema.value.type}`);
+        }
+
+        // 合并所有属性（包括继承的）
+        const allProperties = this.mergeInheritedProperties(schema);
+        
+        // 验证对象中的每个属性
+        if (!this.validateObjectProperties(value, allProperties, schema.name)) {
+            return false;
+        }
+        
+        // 验证必需属性是否都存在
+        return this.validateRequiredProperties(value, allProperties, schema.name);
+    }
+
+    /**
+     * 验证对象的属性
+     */
+    private validateObjectProperties(value: any, allProperties: Map<string, NamedProp>, schemaName: string): boolean {
+        const valueKeys = Object.keys(value);
+        
+        for (const key of valueKeys) {
+            const propertyValue = value[key];
+            const propertySchema = allProperties.get(key);
+            
+            if (!propertySchema) {
+                throw new Error(`Unknown property '${key}' in schema '${schemaName}'`);
+            }
+
+            if (!this.validatePropertyValue(propertyValue, propertySchema)) {
+                console.log(`Property validation failed for '${key}' in '${schemaName}':`, propertyValue);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * 验证必需属性
+     */
+    private validateRequiredProperties(value: any, allProperties: Map<string, NamedProp>, schemaName: string): boolean {
+        const requiredProperties = Array.from(allProperties.values()).filter(prop => prop.required);
+        const valueKeys = Object.keys(value);
+        
+        for (const requiredProp of requiredProperties) {
+            if (!valueKeys.includes(requiredProp.name)) {
+                console.log(`Missing required property '${requiredProp.name}' in schema '${schemaName}'`);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * 验证数组类型数据
+     * @param value 待验证的数组
+     * @param schema 数组类型的Schema节点
+     * @returns 验证结果
+     */
+    private validateArrayValue(value: any, schema: Node): boolean {
+        if (schema.value.type !== 'array') {
+            throw new Error(`Expected array schema, got ${schema.value.type}`);
+        }
+        
+        if (!Array.isArray(value)) {
+            console.log('Array validation failed: expected array, got:', typeof value);
+            return false;
+        }
+        
+        // 验证数组中的每个元素
+        for (let i = 0; i < value.length; i++) {
+            if (!this.validatePropertyValue(value[i], schema.value.item)) {
+                console.log(`Array element validation failed at index ${i}:`, value[i]);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * 验证节点值
+     * @param value 待验证的值
+     * @param schemaId Schema ID
+     * @returns 验证结果
+     */
+    private validateNodeValue(value: any, schemaId: string): boolean {
+        const schema = this.schemas.get(schemaId);
+        if (!schema) {
+            throw new Error(`Schema not found: ${schemaId}`);
+        }
+
+        switch (schema.value.type) {
+            case 'object':
+                return this.validateObjectValue(value, schema);
+                
+            case 'enum':
+                return this.validateEnumValue(value, schema);
+                
+            case 'array':
+                return this.validateArrayValue(value, schema);
+                
+            default:
+                const exhaustiveCheck: never = schema.value;
+                throw new Error(`Unknown schema type: ${JSON.stringify(exhaustiveCheck)}`);
+        }
+    }
+
+    /**
+     * 验证数据
+     * @param value 待验证的实际数据
+     * @param schemaId 要使用的Schema ID（schema文件名）
+     * @returns 验证结果
+     */
+    public validate(value: any, schemaId: string): boolean {
+        try {
+            const normalizedSchemaId = toPascalCase(schemaId);
+            return this.validateNodeValue(value, normalizedSchemaId);
+        } catch (error) {
+            console.error(`Validation error for schema '${schemaId}':`, (error as Error).message);
+            return false;
+        }
+    }
+
+    /**
+     * 获取已加载的Schema数量
+     */
+    public getSchemaCount(): number {
+        return this.schemas.size;
+    }
+
+    /**
+     * 检查是否存在指定的Schema
+     */
+    public hasSchema(schemaId: string): boolean {
+        return this.schemas.has(toPascalCase(schemaId));
+    }
+
+    /**
+     * 获取所有Schema ID列表
+     */
+    public getSchemaIds(): string[] {
+        return Array.from(this.schemas.keys());
     }
 }

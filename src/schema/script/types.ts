@@ -62,9 +62,14 @@ function exportNode(node: Node, writer: Writer): void {
  */
 export function gen(allNodes: Map<string, Node>, outputPath: string): void {
     const writer = new Writer(outputPath);
-    const nodes = Array.from(allNodes.values());
-
-    generateInDependencyOrder(nodes, writer);
+    
+    try {
+        const nodes = Array.from(allNodes.values());
+        generateInDependencyOrder(nodes, writer);
+    } finally {
+        // 确保所有内容都被写入文件
+        writer.destroy();
+    }
 }
 
 /**

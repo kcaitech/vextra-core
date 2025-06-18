@@ -1048,7 +1048,6 @@ export function exportSpanAttr(source: types.SpanAttr, ctx?: IExportContext): ty
 export function exportSpan(source: types.Span, ctx?: IExportContext): types.Span {
     const ret: types.Span = exportSpanAttr(source, ctx) as types.Span
     ret.length = source.length
-        // inject code
     if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
 
     return ret
@@ -1111,7 +1110,6 @@ export function exportFill(source: types.Fill, ctx?: IExportContext): types.Fill
     if (source.originalImageHeight !== undefined) ret.originalImageHeight = source.originalImageHeight
     if (source.paintFilter !== undefined) ret.paintFilter = exportPaintFilter(source.paintFilter, ctx)
     if (source.transform !== undefined) ret.transform = exportPatternTransform(source.transform, ctx)
-        // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
 
     return ret
@@ -1125,9 +1123,7 @@ export function exportParaAttr(source: types.ParaAttr, ctx?: IExportContext): ty
     if (source.maximumLineHeight !== undefined) ret.maximumLineHeight = source.maximumLineHeight
     if (source.autoLineHeight !== undefined) ret.autoLineHeight = source.autoLineHeight
     if (source.indent !== undefined) ret.indent = source.indent
-        // inject code
     if (ctx?.styles && ret.textMask) ctx.styles.add(ret.textMask);
-
     return ret
 }
 /* para */
@@ -1182,7 +1178,6 @@ export function exportBorder(source: types.Border, ctx?: IExportContext): types.
     ret.sideSetting = exportBorderSideSetting(source.sideSetting, ctx)
     ret.strokePaints = exportBorder_strokePaints(source.strokePaints, ctx)
     if (source.fillsMask !== undefined) ret.fillsMask = source.fillsMask
-        // inject code
     if (ctx?.styles && ret.fillsMask) ctx.styles.add(ret.fillsMask);
 
     return ret
@@ -1239,7 +1234,6 @@ export function exportStyle(source: types.Style, ctx?: IExportContext): types.St
     if (source.shadowsMask !== undefined) ret.shadowsMask = source.shadowsMask
     if (source.blursMask !== undefined) ret.blursMask = source.blursMask
     if (source.bordersMask !== undefined) ret.bordersMask = source.bordersMask
-        // inject code
     if (ctx?.styles) {
         if (ret.fillsMask) ctx.styles.add(ret.fillsMask);
         if (ret.bordersMask) ctx.styles.add(ret.bordersMask);
@@ -1290,7 +1284,6 @@ export function exportShape(source: types.Shape, ctx?: IExportContext): types.Sh
     if (source.mask !== undefined) ret.mask = source.mask
     if (source.stackPositioning !== undefined) ret.stackPositioning = exportStackPositioning(source.stackPositioning, ctx)
     if (source.radiusMask !== undefined) ret.radiusMask = source.radiusMask
-        // inject code
     if (ctx?.styles && ret.radiusMask) ctx.styles.add(ret.radiusMask);
 
     return ret
@@ -1304,7 +1297,6 @@ export function exportTableCell(source: types.TableCell, ctx?: IExportContext): 
     if (source.imageRef !== undefined) ret.imageRef = source.imageRef
     if (source.rowSpan !== undefined) ret.rowSpan = source.rowSpan
     if (source.colSpan !== undefined) ret.colSpan = source.colSpan
-        // inject code
     if (ctx?.medias && ret.imageRef) ctx.medias.add(ret.imageRef);
 
     return ret
@@ -1462,7 +1454,6 @@ export function exportSymbolRefShape(source: types.SymbolRefShape, ctx?: IExport
     if (source.cornerRadius !== undefined) ret.cornerRadius = exportCornerRadius(source.cornerRadius, ctx)
     if (source.innerEnvScale !== undefined) ret.innerEnvScale = source.innerEnvScale
     if (source.uniformScale !== undefined) ret.uniformScale = source.uniformScale
-        // inject code
     if (ctx?.refsymbols) ctx.refsymbols.add(ret.refId);
 
     return ret
@@ -1498,7 +1489,6 @@ export function exportImageShape(source: types.ImageShape, ctx?: IExportContext)
     const ret: types.ImageShape = exportPathShape(source, ctx) as types.ImageShape
     ret.typeId = "image-shape"
     ret.imageRef = source.imageRef
-        // inject code
     if (ctx?.medias) ctx.medias.add(ret.imageRef);
 
     return ret
@@ -1613,7 +1603,6 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
     if (source.guides !== undefined) ret.guides = exportSymbolShape_guides(source.guides, ctx)
     if (source.autoLayout !== undefined) ret.autoLayout = exportAutoLayout(source.autoLayout, ctx)
     if (source.frameMaskDisabled !== undefined) ret.frameMaskDisabled = source.frameMaskDisabled
-        // inject code
     if (ctx?.symbols) ctx.symbols.add(ret.id);
 
     return ret

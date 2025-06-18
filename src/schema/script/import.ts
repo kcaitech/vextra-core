@@ -10,291 +10,533 @@
 
 import { BaseProp, NamedProp, Node, allDepsIsGen } from "./basic";
 import { Writer } from "./writer";
-import { exportBaseProp as exportBasePropType, exportNode as exportNodeClass } from "./import_class"
-import { inject } from "./import-inject"
+import { exportBaseProp as exportBasePropType, exportNode as exportNodeClass } from "./import_class";
+import { inject } from "./import-inject";
 
 /**
- * 需要兼容非CRDT数据的类型集合
+ * 生成基础属性的导入代码
+ * 此函数生成将JSON数据转换为实现类实例的代码
  */
-const COMPATIBLE_NON_CRDT_TYPES = new Set([
-    "stop", "shadow", "path-segment", "page-list-item", "fill",
-    "export-format", "curve-point", "contact-role", "border",
-    'group-shape', 'image-shape', 'path-shape', 'rect-shape',
-    'symbol-ref-shape', 'symbol-shape', 'symbol-union-shape',
-    'text-shape', 'artboard', 'line-shape', 'oval-shape',
-    'table-shape', 'contact-shape', 'shape', 'flatten-shape',
-    'cutout-shape', 'polygon-shape', 'star-shape',
-]);
-
-/**
- * 需要兼容旧数据格式的类型集合
- */
-const COMPATIBLE_OLD_DATA_TYPES = new Set([
-    "PathShape", "PathShape2", "GroupShape", "Artboard",
-    "ImageShape", "Page", "TextShape", "SymbolRefShape",
-    "SymbolShape", "SymbolUnionShape", "RectShape", "StarShape",
-    "PolygonShape", "OvalShape", "LineShape", "TableShape",
-    "TableCell", "ContactShape", "CutoutShape", "BoolShape"
-]);
-
-function exportBaseProp(p: BaseProp, source: string, $: Writer, insideArr: boolean, allNodes: Map<string, Node>) {
-    switch (p.type) {
+function generateBasePropImport(
+    prop: BaseProp, 
+    sourceExpression: string, 
+    writer: Writer, 
+    insideArray: boolean, 
+    allNodes: Map<string, Node>
+): void {
+    switch (prop.type) {
         case 'string':
         case 'number':
         case 'boolean':
-            $.append(source);
+            // 基础类型直接返回
+            writer.append(sourceExpression);
             break;
+            
         case 'node':
-            $.append('import' + p.val + '(' + source + ', ctx)');
+            // 生成代码: importNodeName(sourceExpression, ctx)
+            writer.append(`import${prop.val}(${sourceExpression}, ctx)`);
             break;
+            
         case 'map':
-            const keyType = p.key;
-            const valType = p.val;
-            $.append('(() => ').sub(() => {
-                $.nl('const ret = new BasicMap<', keyType, ', ')
-                exportBasePropType(valType, $, allNodes)
-                $.append('>()')
-                $.nl('const _val = ', source, ' as any')
-                $.nl('objkeys(_val).forEach((val, k) => ').sub(() => {
-                    $.nl('ret.set(k, ')
-                    exportBaseProp(p.val, 'val', $, insideArr, allNodes)
-                    $.append(')')
-                }).append(')')
-                $.nl('return ret')
-            }).append(')()')
+            generateMapImport(prop, sourceExpression, writer, insideArray, allNodes);
             break;
+            
         case 'oneOf':
-            $.append('(() => ').sub(() => {
-                const prop = Array.from(p.val);
-                // 先处理undefined
-                let hasUndefined = false;
-                for (let i = 0; i < prop.length; ++i) {
-                    const v = prop[i];
-                    if (v.type === 'undefined') {
-                        $.nl(`if (typeof ${source}!== "object" || ${source} == null) `).sub(() => {
-                            $.nl(`return ${source} == null? undefined : ${source}`)
-                        })
-                        hasUndefined = true;
-                        break;
-                    }
-                }
-                if (!hasUndefined) $.fmt(`if (typeof ${source} !== "object") {
-                    return ${source}
-                }`)
-                // 特定类型先处理
-                for (let i = 0, usedArray = false; i < prop.length;) {
-                    const v = prop[i];
-                    if (v.type === 'string' || v.type === 'number' || v.type === 'boolean' || v.type === 'undefined') {
-                        prop.splice(i, 1);
-                        continue;
-                    }
-                    if (v.type === 'node') {
-                        const n = allNodes.get(v.val);
-                        if (!n) throw new Error('not find node ' + v.val);
-                        if (n.value.type === 'array' && !usedArray) {
-                            usedArray = true;
-                            $.nl('if (Array.isArray(', source, ')) ').sub(() => {
-                                $.nl('return ')
-                                exportBaseProp(v, source, $, insideArr, allNodes)
-                            })
-                            prop.splice(i, 1);
-                            continue;
-                        }
-                        ++i;
-                    }
-                    else {
-                        throw Error('not supported')
-                    }
-                }
-                for (let i = 0, len = prop.length; i < len; ++i) {
-                    const v = prop[i];
-                    if (v.type === 'node') {
-                        const n = allNodes.get(v.val);
-                        if (!n) throw new Error('not find node ' + v.val);
-                        if (n.schemaId) {
-                            $.fmt(`if (${source}.typeId === "${n.schemaId}") {
-                                ${insideArr && n && n.schemaId && COMPATIBLE_NON_CRDT_TYPES.has(n.schemaId) ? `if (!${source}.crdtidx) ${source}.crdtidx = [i]` : ''}
-                                return import${v.val}(${source} as types.${v.val}, ctx)
-                            }`)
-                        } else {
-                            throw new Error('oneOf elements need typeId or unique type ' + JSON.stringify(n));
-                        }
-                    }
-                }
-                $.nl('throw new Error("unknow typeId: " + ', source, '.typeId)')
-            }).append(')()')
+            generateOneOfImport(prop, sourceExpression, writer, insideArray, allNodes);
             break;
     }
 }
 
-function exportObject(n: Node, $: Writer) {
-    if (n.value.type !== 'object') throw new Error();
+/**
+ * 生成Map类型的导入代码
+ * 生成代码将JSON对象转换为BasicMap实例
+ */
+function generateMapImport(
+    prop: BaseProp & { type: 'map' }, 
+    sourceExpression: string, 
+    writer: Writer, 
+    insideArray: boolean, 
+    allNodes: Map<string, Node>
+): void {
+    const keyType = prop.key;
+    
+    writer.append('(() => ').sub(() => {
+        // 创建新的BasicMap实例
+        writer.nl(`const ret = new BasicMap<${keyType}, `);
+        exportBasePropType(prop.val, writer, allNodes);
+        writer.append('>()');
+        
+        // 处理源数据
+        writer.nl(`const _val = ${sourceExpression} as any`);
+        writer.nl('objkeys(_val).forEach((val, k) => ').sub(() => {
+            writer.nl('ret.set(k, ');
+            generateBasePropImport(prop.val, 'val', writer, insideArray, allNodes);
+            writer.append(')');
+        }).append(')');
+        
+        writer.nl('return ret');
+    }).append(')()');
+}
 
-    // import optional
-    const props = n.value.props;
-    const chain: Node[] = [];
-    let p = n;
-    while (p.extend) {
-        const n = p.root.get(p.extend);
-        if (!n) throw new Error('extend not find: ' + p.extend);
-        chain.push(n);
-        p = n;
-    }
-    const localrequired: NamedProp[] = [];
-    const localoptional: NamedProp[] = [];
-    for (let j = 0; j < props.length; ++j) {
-        const pr = props[j];
-        if (pr.required) localrequired.push(pr);
-        else localoptional.push(pr);
-    }
-    const superrequired: NamedProp[] = [];
-    const superoptional: NamedProp[] = [];
-    for (let i = chain.length - 1; i >= 0; --i) {
-        const n = chain[i];
-        if (n.value.type !== 'object') continue;
-        const props = n.value.props;
-        for (let j = 0; j < props.length; ++j) {
-            const pr = props[j];
-            if (pr.required) superrequired.push(pr);
-            else superoptional.push(pr);
-        }
-    }
-    const required = superrequired.concat(...localrequired);
-    const extend = n.extend;
-    if (localoptional.length > 0) {
-        $.nl('function import', n.name, 'Optional(tar: ', (n.inner ? '' : 'impl.'), n.name, ', source: types.', n.name, ', ctx?: IImportContext) ').sub(() => {
-            if (extend && superoptional.length > 0) $.nl('import', extend, 'Optional(tar, source)')
-            localoptional.forEach((v) => {
-                $.nl('if (source.', v.name, ' !== undefined) ', 'tar.', v.name, ' = ');
-                exportBaseProp(v, 'source.' + v.name, $, false, n.root);
-            })
-        })
-    } else if (extend && superoptional.length > 0) {
-        $.nl('const import', n.name, 'Optional = import', extend, 'Optional');
-    }
+/**
+ * 生成OneOf类型的导入代码
+ * 生成代码根据typeId或类型判断选择正确的导入分支
+ */
+function generateOneOfImport(
+    prop: BaseProp & { type: 'oneOf' }, 
+    sourceExpression: string, 
+    writer: Writer, 
+    insideArray: boolean, 
+    allNodes: Map<string, Node>
+): void {
+    writer.append('(() => ').sub(() => {
+        const propTypes = Array.from(prop.val);
+        
+        // 处理undefined类型分支
+        handleUndefinedImport(propTypes, sourceExpression, writer);
+        
+        // 处理数组类型分支
+        handleArrayImport(propTypes, sourceExpression, writer, insideArray, allNodes);
+        
+        // 处理其他节点类型分支
+        handleNodeTypesImport(propTypes, sourceExpression, writer, insideArray, allNodes);
+        
+        // 如果没有匹配的类型，抛出错误
+        writer.nl(`throw new Error("unknow typeId: " + ${sourceExpression}.typeId)`);
+    }).append(')()');
+}
 
-    $.nl('export function import', n.name, '(source: types.', n.name, ', ctx?: IImportContext): ', (n.inner ? '' : 'impl.'), n.name, ' ').sub(() => {
-        if (inject[n.name] && inject[n.name]['before']) {
-            $.nl(inject[n.name]['before'])
-        }
-
-        if (COMPATIBLE_OLD_DATA_TYPES.has(n.name)) {
-            $.nl('compatibleOldData(source, ctx)')
-        }
-        if (inject[n.name] && inject[n.name]['content']) {
-            $.nl(inject[n.name]['content']);
-        } else {
-            $.nl('const ret: ', (n.inner ? '' : 'impl.'), n.name, ' = new ', (n.inner ? '' : 'impl.'), n.name, ' (')
-            const hasArgs = required.length > 0 && (!(required.length === 1 && required[0].name === 'typeId'));
-            if (hasArgs) $.indent(1, () => {
-                let j = 0;
-                $.newline();
-                required.forEach((v, i) => {
-                    if (v.name === 'typeId') return;
-                    if (j > 0) $.append(',').newline();
-                    $.indent();
-                    exportBaseProp(v, 'source.' + v.name, $, false, n.root);
-                    ++j;
-                })
+/**
+ * 处理undefined类型的导入分支
+ */
+function handleUndefinedImport(propTypes: BaseProp[], sourceExpression: string, writer: Writer): void {
+    for (let i = 0; i < propTypes.length; i++) {
+        const propType = propTypes[i];
+        if (propType.type === 'undefined') {
+            writer.nl(`if (typeof ${sourceExpression} !== "object" || ${sourceExpression} == null) `).sub(() => {
+                writer.nl(`return ${sourceExpression} == null ? undefined : ${sourceExpression}`);
             });
-            $.append(')');
+            return;
+        }
+    }
+    
+    // 如果没有undefined类型，处理非对象类型
+    writer.fmt(`if (typeof ${sourceExpression} !== "object") {
+        return ${sourceExpression}
+    }`);
+}
 
-            if (localoptional.length > 0 || extend && superoptional.length > 0) {
-                $.nl('import', n.name, 'Optional(ret, source, ctx)')
+/**
+ * 处理数组类型的导入分支
+ */
+function handleArrayImport(
+    propTypes: BaseProp[], 
+    sourceExpression: string, 
+    writer: Writer, 
+    insideArray: boolean, 
+    allNodes: Map<string, Node>
+): void {
+    let usedArray = false;
+    
+    // 从后往前遍历，移除基础类型
+    for (let i = propTypes.length - 1; i >= 0; i--) {
+        const propType = propTypes[i];
+        
+        // 移除已处理的基础类型
+        if (['string', 'number', 'boolean', 'undefined'].includes(propType.type)) {
+            propTypes.splice(i, 1);
+            continue;
+        }
+        
+        // 处理数组类型节点
+        if (propType.type === 'node' && !usedArray) {
+            const node = allNodes.get(propType.val);
+            if (!node) {
+                throw new Error(`Node not found: ${propType.val}`);
+            }
+            
+            if (node.value.type === 'array') {
+                usedArray = true;
+                writer.nl(`if (Array.isArray(${sourceExpression})) `).sub(() => {
+                    writer.nl('return ');
+                    generateBasePropImport(propType, sourceExpression, writer, insideArray, allNodes);
+                });
+                propTypes.splice(i, 1);
             }
         }
-
-        if (inject[n.name] && inject[n.name]['after']) {
-            $.nl(inject[n.name]['after'])
-        }
-        if (inject[n.name] && inject[n.name]['force-type']) {
-            $.nl('return ret ' + inject[n.name]['force-type']);
-        } else {
-            $.nl('return ret');
-        }
-    })
-}
-
-function exportNode(n: Node, $: Writer) {
-    if (n.description) {
-        $.nl('/* ' + n.description + ' */');
-    }
-
-    if (n.value.type === 'enum') {
-        $.nl('export function import', n.name, '(source: types.', n.name, ', ctx?: IImportContext): ', (n.inner ? '' : 'impl.'), n.name, ' ').sub(() => {
-            $.nl('return source')
-        })
-    }
-    else if (n.value.type === 'array') {
-        const item = n.value.item;
-        $.nl('export function import', n.name, '(source: types.', n.name, ', ctx?: IImportContext): ', (n.inner ? '' : 'impl.'), n.name, ' ').sub(() => {
-            $.nl('const ret: ', (n.inner ? '' : 'impl.'), n.name, ' = new BasicArray()')
-            $.nl('source.forEach((source, i) => ').sub(() => {
-                if (item.type === 'node') {
-                    const _n = n.root.get(item.val);
-                    if (_n && _n.schemaId && COMPATIBLE_NON_CRDT_TYPES.has(_n.schemaId)) {
-                        $.nl('if (!source.crdtidx) source.crdtidx = [i]')
-                    }
-                }
-                $.nl('ret.push(')
-                exportBaseProp(item, 'source', $, true, n.root)
-                $.append(')')
-            }).append(')')
-            $.nl('return ret')
-        })
-    }
-    else if (n.value.type === 'object') {
-        exportObject(n, $);
-    }
-    else {
-        throw new Error("wrong value type: " + n.value)
     }
 }
 
-export function gen(allNodes: Map<string, Node>, out: string) {
-    const $ = new Writer(out);
-    const nodes = Array.from(allNodes.values());
-
-    $.nl('import * as impl from "./classes"');
-    $.nl('import * as types from "./typesdefine"')
-    $.nl('import { BasicArray, BasicMap } from "./basic"')
-    $.nl('import { uuid } from "../basic/uuid"')
-    $.nl('import { compatibleOldData } from "./basecompatible"')
-    $.nl('import { is_mac } from "./utils"')
-
-    $.nl('export interface IImportContext ').sub(() => {
-        $.nl('document: impl.Document')
-        $.nl('fmtVer: string')
-    })
-
-    $.fmt(`function objkeys(obj: any) {
-        return obj instanceof Map ? obj : { forEach: (f: (v: any, k: string) => void) => Object.keys(obj).forEach((k) => f(obj[k], k)) };
-    }`)
-
-    // 先将inner类型声明一下
-    for (let i = 0, len = nodes.length; i < len; ++i) {
-        const n = nodes[i];
-        if (!n.inner) continue;
-        exportNodeClass(n, $);
-    }
-
-    let checkExport = allDepsIsGen;
-    // const genType = 'imp'
-    const gented = new Set<string>()
-    while (nodes.length > 0) {
-        let count = 0;
-        for (let i = 0; i < nodes.length;) {
-            const n = nodes[i];
-            if (checkExport(n, gented)) {
-                exportNode(n, $);
-                ++count;
-                nodes.splice(i, 1);
-                // n.gented[genType] = true;
-                gented.add(n.name)
+/**
+ * 处理节点类型的导入分支
+ */
+function handleNodeTypesImport(
+    propTypes: BaseProp[], 
+    sourceExpression: string, 
+    writer: Writer, 
+    insideArray: boolean, 
+    allNodes: Map<string, Node>
+): void {
+    for (const propType of propTypes) {
+        if (propType.type === 'node') {
+            const node = allNodes.get(propType.val);
+            if (!node) {
+                throw new Error(`Node not found: ${propType.val}`);
+            }
+            
+            if (node.schemaId) {
+                writer.fmt(`if (${sourceExpression}.typeId === "${node.schemaId}") {
+                    return import${propType.val}(${sourceExpression} as types.${propType.val}, ctx)
+                }`);
             } else {
-                ++i;
+                throw new Error(`OneOf elements need typeId or unique type: ${JSON.stringify(node)}`);
             }
         }
-        if (count === 0) checkExport = () => true; // export all
+    }
+}
+
+/**
+ * 生成对象类型的导入函数
+ */
+function generateObjectImport(node: Node, writer: Writer): void {
+    if (node.value.type !== 'object') {
+        throw new Error(`Expected object type, got ${node.value.type}`);
+    }
+
+    const properties = node.value.props;
+    const inheritanceChain = buildNodeInheritanceChain(node);
+    const { localRequired, localOptional, superRequired, superOptional } = 
+        categorizeNodeProperties(inheritanceChain, properties);
+    
+    const allRequired = superRequired.concat(localRequired);
+    const hasOptionalProperties = localOptional.length > 0 || 
+        (node.extend && superOptional.length > 0);
+
+    // 生成可选属性处理函数
+    generateOptionalPropertiesFunction(node, writer, localOptional, superOptional);
+
+    // 生成主导入函数
+    const implPrefix = node.inner ? '' : 'impl.';
+    writer.nl(`export function import${node.name}(source: types.${node.name}, ctx?: IImportContext): ${implPrefix}${node.name} `).sub(() => {
+        // 注入前置代码
+        injectCustomCode(node, writer, 'before');
+
+        // 处理自定义内容或默认构造
+        const customContent = inject[node.name]?.content;
+        if (customContent) {
+            writer.nl(customContent);
+        } else {
+            generateNodeConstructorCall(node, writer, allRequired, implPrefix);
+            
+            // 处理可选属性
+            if (hasOptionalProperties) {
+                writer.nl(`import${node.name}Optional(ret, source, ctx)`);
+            }
+        }
+
+        // 注入后置代码
+        injectCustomCode(node, writer, 'after');
+
+        // 生成返回语句
+        generateReturnStatement(node, writer);
+    });
+}
+
+/**
+ * 构建节点继承链
+ */
+function buildNodeInheritanceChain(node: Node): Node[] {
+    const chain: Node[] = [];
+    let current = node;
+    
+    while (current.extend) {
+        const parent = current.root.get(current.extend);
+        if (!parent) {
+            throw new Error(`Parent class not found: ${current.extend}`);
+        }
+        chain.push(parent);
+        current = parent;
+    }
+    
+    return chain;
+}
+
+/**
+ * 分类节点属性（必需/可选，本地/继承）
+ */
+function categorizeNodeProperties(inheritanceChain: Node[], localProperties: NamedProp[]) {
+    const localRequired: NamedProp[] = [];
+    const localOptional: NamedProp[] = [];
+    const superRequired: NamedProp[] = [];
+    const superOptional: NamedProp[] = [];
+
+    // 分类本地属性
+    for (const prop of localProperties) {
+        if (prop.required) {
+            localRequired.push(prop);
+        } else {
+            localOptional.push(prop);
+        }
+    }
+
+    // 分类继承的属性
+    for (let i = inheritanceChain.length - 1; i >= 0; i--) {
+        const node = inheritanceChain[i];
+        if (node.value.type === 'object') {
+            for (const prop of node.value.props) {
+                if (prop.required) {
+                    superRequired.push(prop);
+                } else {
+                    superOptional.push(prop);
+                }
+            }
+        }
+    }
+
+    return { localRequired, localOptional, superRequired, superOptional };
+}
+
+/**
+ * 生成可选属性处理函数
+ */
+function generateOptionalPropertiesFunction(
+    node: Node, 
+    writer: Writer, 
+    localOptional: NamedProp[], 
+    superOptional: NamedProp[]
+): void {
+    const implPrefix = node.inner ? '' : 'impl.';
+    
+    if (localOptional.length > 0) {
+        writer.nl(`function import${node.name}Optional(tar: ${implPrefix}${node.name}, source: types.${node.name}, ctx?: IImportContext) `).sub(() => {
+            // 调用父类的可选属性处理函数
+            if (node.extend && superOptional.length > 0) {
+                writer.nl(`import${node.extend}Optional(tar, source)`);
+            }
+            
+            // 处理本地可选属性
+            for (const prop of localOptional) {
+                writer.nl(`if (source.${prop.name} !== undefined) tar.${prop.name} = `);
+                generateBasePropImport(prop, `source.${prop.name}`, writer, false, node.root);
+            }
+        });
+    } else if (node.extend && superOptional.length > 0) {
+        // 如果没有本地可选属性但有继承的可选属性，直接引用父类函数
+        writer.nl(`const import${node.name}Optional = import${node.extend}Optional`);
+    }
+}
+
+/**
+ * 生成节点构造函数调用代码
+ */
+function generateNodeConstructorCall(
+    node: Node, 
+    writer: Writer, 
+    allRequired: NamedProp[], 
+    implPrefix: string
+): void {
+    writer.nl(`const ret: ${implPrefix}${node.name} = new ${implPrefix}${node.name} (`);
+    
+    const constructorArgs = allRequired.filter(prop => prop.name !== 'typeId');
+    const hasArgs = constructorArgs.length > 0;
+    
+    if (hasArgs) {
+        writer.indent(1, () => {
+            writer.newline();
+            
+            for (let i = 0; i < constructorArgs.length; i++) {
+                const prop = constructorArgs[i];
+                
+                if (i > 0) {
+                    writer.append(',').newline();
+                }
+                
+                writer.indent();
+                generateBasePropImport(prop, `source.${prop.name}`, writer, false, node.root);
+            }
+        });
+    }
+    
+    writer.append(')');
+}
+
+/**
+ * 注入自定义代码
+ */
+function injectCustomCode(node: Node, writer: Writer, phase: 'before' | 'after'): void {
+    const customCode = inject[node.name]?.[phase];
+    if (customCode) {
+        writer.nl(customCode);
+    }
+}
+
+/**
+ * 生成返回语句
+ */
+function generateReturnStatement(node: Node, writer: Writer): void {
+    const forceType = inject[node.name]?.['force-type'];
+    if (forceType) {
+        writer.nl(`return ret ${forceType}`);
+    } else {
+        writer.nl('return ret');
+    }
+}
+
+/**
+ * 生成单个节点的导入函数
+ */
+function generateNodeImport(node: Node, writer: Writer): void {
+    if (node.description) {
+        writer.nl(`/* ${node.description} */`);
+    }
+
+    const implPrefix = node.inner ? '' : 'impl.';
+
+    switch (node.value.type) {
+        case 'enum':
+            // 枚举类型直接返回原值
+            writer.nl(`export function import${node.name}(source: types.${node.name}, ctx?: IImportContext): ${implPrefix}${node.name} `).sub(() => {
+                writer.nl('return source');
+            });
+            break;
+            
+        case 'array':
+            generateArrayImport(node, writer, implPrefix);
+            break;
+            
+        case 'object':
+            generateObjectImport(node, writer);
+            break;
+            
+        default:
+            const exhaustiveCheck: never = node.value;
+            throw new Error(`Unsupported node value type: ${JSON.stringify(exhaustiveCheck)}`);
+    }
+}
+
+/**
+ * 生成数组类型的导入函数
+ */
+function generateArrayImport(node: Node, writer: Writer, implPrefix: string): void {
+    if (node.value.type !== 'array') {
+        throw new Error(`Expected array type, got ${node.value.type}`);
+    }
+    
+    const item = node.value.item;
+    
+    writer.nl(`export function import${node.name}(source: types.${node.name}, ctx?: IImportContext): ${implPrefix}${node.name} `).sub(() => {
+        // 创建新的BasicArray实例
+        writer.nl(`const ret: ${implPrefix}${node.name} = new BasicArray()`);
+        
+        // 遍历源数组
+        writer.nl('source.forEach((source, i) => ').sub(() => {
+            // 导入数组元素
+            writer.nl('ret.push(');
+            generateBasePropImport(item, 'source', writer, true, node.root);
+            writer.append(')');
+        }).append(')');
+        
+        writer.nl('return ret');
+    });
+}
+
+/**
+ * 生成所有导入代码
+ */
+export function gen(allNodes: Map<string, Node>, outputPath: string): void {
+    const writer = new Writer(outputPath);
+    
+    try {
+        const nodes = Array.from(allNodes.values());
+
+        // 导入必要的模块
+        generateImportStatements(writer);
+
+        // 导出接口定义
+        generateInterfaceDefinitions(writer);
+
+        // 生成工具函数
+        generateUtilityFunctions(writer);
+
+        // 先处理内部类型声明
+        generateInnerTypeDeclarations(nodes, writer);
+
+        // 按依赖顺序生成导入函数
+        generateImportFunctionsInOrder(nodes, writer);
+    } finally {
+        // 确保所有内容都被写入文件
+        writer.destroy();
+    }
+}
+
+/**
+ * 生成导入语句
+ */
+function generateImportStatements(writer: Writer): void {
+    writer.nl('import * as impl from "./classes"');
+    writer.nl('import * as types from "./typesdefine"');
+    writer.nl('import { BasicArray, BasicMap } from "./basic"');
+    writer.nl('import { uuid } from "../basic/uuid"');
+    writer.nl('import { compatibleOldData } from "./basecompatible"');
+    writer.nl('import { is_mac } from "./utils"');
+}
+
+/**
+ * 生成接口定义
+ */
+function generateInterfaceDefinitions(writer: Writer): void {
+    writer.nl('export interface IImportContext ').sub(() => {
+        writer.nl('document: impl.Document');
+        writer.nl('fmtVer: string');
+    });
+}
+
+/**
+ * 生成工具函数
+ */
+function generateUtilityFunctions(writer: Writer): void {
+    writer.fmt(`function objkeys(obj: any) {
+        return obj instanceof Map ? obj : { forEach: (f: (v: any, k: string) => void) => Object.keys(obj).forEach((k) => f(obj[k], k)) };
+    }`);
+}
+
+/**
+ * 生成内部类型声明
+ */
+function generateInnerTypeDeclarations(nodes: Node[], writer: Writer): void {
+    for (const node of nodes) {
+        if (node.inner) {
+            exportNodeClass(node, writer);
+        }
+    }
+}
+
+/**
+ * 按依赖顺序生成导入函数
+ */
+function generateImportFunctionsInOrder(nodes: Node[], writer: Writer): void {
+    let checkExport = allDepsIsGen;
+    const generated = new Set<string>();
+
+    while (nodes.length > 0) {
+        let progress = 0;
+        
+        for (let i = 0; i < nodes.length;) {
+            const node = nodes[i];
+            
+            if (checkExport(node, generated)) {
+                generateNodeImport(node, writer);
+                progress++;
+                nodes.splice(i, 1);
+                generated.add(node.name);
+            } else {
+                i++;
+            }
+        }
+        
+        // 如果没有进展，导出所有剩余节点
+        if (progress === 0) {
+            checkExport = () => true;
+        }
     }
 }
