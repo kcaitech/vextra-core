@@ -443,6 +443,7 @@ function getFileName(path: string): string {
 
 import path from 'path';
 import fs from 'fs';
+import { Writer } from './writer'
 
 /**
  * 加载指定目录下的所有schema文件
@@ -594,4 +595,30 @@ type InjectConfig = Record<InjectPhase, string | undefined>;
 
 export interface InjectDefinitions {
     [nodeType: string]: Partial<InjectConfig>;
+}
+
+
+/**
+ * 导入生成配置接口
+ */
+export interface ImportGenerationConfig {
+    /** 基础类型配置 */
+    baseTypes?: {
+        array?: string;
+        map?: string;
+        extends?: string;
+    };
+    extraHeader?(w: Writer): void;
+    /** 额外的导入语句 */
+    // extraImports?: string[];
+    /** Namespace前缀配置 */
+    namespaces?: {
+        /** 实现类的namespace前缀，默认为'impl.' */
+        impl?: string;
+        /** 类型定义的namespace前缀，默认为'types.' */
+        types?: string;
+        extends?: string;
+    };
+    inject?: InjectDefinitions;
+    contextContent?(w: Writer): void;
 }

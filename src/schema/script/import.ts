@@ -8,31 +8,10 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { BaseProp, InjectDefinitions, NamedProp, Node, allDepsIsGen } from "./basic";
+import { BaseProp, ImportGenerationConfig, NamedProp, Node, allDepsIsGen } from "./basic";
 import { Writer } from "./writer";
 import { exportBaseProp as exportBasePropType, exportNode as exportNodeClass } from "./import_class";
 
-/**
- * 导入生成配置接口
- */
-interface ImportGenerationConfig {
-    /** 基础类型配置 */
-    baseTypes?: {
-        array?: string;
-        map?: string;
-    };
-    extraHeader?(w: Writer): void;
-    /** 额外的导入语句 */
-    // extraImports?: string[];
-    /** Namespace前缀配置 */
-    namespaces?: {
-        /** 实现类的namespace前缀，默认为'impl.' */
-        impl?: string;
-        /** 类型定义的namespace前缀，默认为'types.' */
-        types?: string;
-    };
-    inject?: InjectDefinitions;
-}
 
 /**
  * 生成基础属性的导入代码
@@ -44,7 +23,7 @@ function generateBasePropImport(
     writer: Writer, 
     insideArray: boolean, 
     allNodes: Map<string, Node>,
-    config: ImportGenerationConfig = {}
+    config: ImportGenerationConfig
 ): void {
     switch (prop.type) {
         case 'string':
@@ -79,7 +58,7 @@ function generateMapImport(
     writer: Writer, 
     insideArray: boolean, 
     allNodes: Map<string, Node>,
-    config: ImportGenerationConfig = {}
+    config: ImportGenerationConfig
 ): void {
     const keyType = prop.key;
     const mapType = config.baseTypes?.map || 'Map';
@@ -87,7 +66,7 @@ function generateMapImport(
     writer.append('(() => ').sub(() => {
         // 创建新的Map实例
         writer.nl(`const ret = new ${mapType}<${keyType}, `);
-        exportBasePropType(prop.val, writer, allNodes);
+        exportBasePropType(prop.val, writer, allNodes, config);
         writer.append('>()');
         
         // 处理源数据
@@ -112,7 +91,7 @@ function generateOneOfImport(
     writer: Writer, 
     insideArray: boolean, 
     allNodes: Map<string, Node>,
-    config: ImportGenerationConfig = {}
+    config: ImportGenerationConfig
 ): void {
     writer.append('(() => ').sub(() => {
         const propTypes = Array.from(prop.val);
@@ -160,7 +139,7 @@ function handleArrayImport(
     writer: Writer, 
     insideArray: boolean, 
     allNodes: Map<string, Node>,
-    config: ImportGenerationConfig = {}
+    config: ImportGenerationConfig
 ): void {
     let usedArray = false;
     
@@ -202,7 +181,7 @@ function handleNodeTypesImport(
     writer: Writer, 
     insideArray: boolean, 
     allNodes: Map<string, Node>,
-    config: ImportGenerationConfig = {}
+    config: ImportGenerationConfig
 ): void {
     const typesPrefix = config.namespaces?.types || '';
     
@@ -227,7 +206,7 @@ function handleNodeTypesImport(
 /**
  * 生成对象类型的导入函数
  */
-function generateObjectImport(node: Node, writer: Writer, config: ImportGenerationConfig = {}): void {
+function generateObjectImport(node: Node, writer: Writer, config: ImportGenerationConfig): void {
     if (node.value.type !== 'object') {
         throw new Error(`Expected object type, got ${node.value.type}`);
     }
@@ -334,7 +313,7 @@ function generateOptionalPropertiesFunction(
     writer: Writer, 
     localOptional: NamedProp[], 
     superOptional: NamedProp[],
-    config: ImportGenerationConfig = {}
+    config: ImportGenerationConfig
 ): void {
     const implPrefix = node.inner ? ('') : (config.namespaces?.impl || '');
     const typesPrefix = config.namespaces?.types || '';
@@ -366,7 +345,7 @@ function generateNodeConstructorCall(
     writer: Writer, 
     allRequired: NamedProp[], 
     implPrefix: string,
-    config: ImportGenerationConfig = {}
+    config: ImportGenerationConfig
 ): void {
     writer.nl(`const ret: ${implPrefix}${node.name} = new ${implPrefix}${node.name} (`);
     
@@ -418,7 +397,7 @@ function generateReturnStatement(node: Node, writer: Writer, config: ImportGener
 /**
  * 生成单个节点的导入函数
  */
-function generateNodeImport(node: Node, writer: Writer, config: ImportGenerationConfig = {}): void {
+function generateNodeImport(node: Node, writer: Writer, config: ImportGenerationConfig): void {
     if (node.description) {
         writer.nl(`/* ${node.description} */`);
     }
@@ -451,7 +430,7 @@ function generateNodeImport(node: Node, writer: Writer, config: ImportGeneration
 /**
  * 生成数组类型的导入函数
  */
-function generateArrayImport(node: Node, writer: Writer, implPrefix: string, config: ImportGenerationConfig = {}): void {
+function generateArrayImport(node: Node, writer: Writer, implPrefix: string, config: ImportGenerationConfig): void {
     if (node.value.type !== 'array') {
         throw new Error(`Expected array type, got ${node.value.type}`);
     }
@@ -479,7 +458,7 @@ function generateArrayImport(node: Node, writer: Writer, implPrefix: string, con
 /**
  * 生成所有导入代码
  */
-export function gen(allNodes: Map<string, Node>, outputPath: string, config: ImportGenerationConfig = {}): void {
+export function gen(allNodes: Map<string, Node>, outputPath: string, config: ImportGenerationConfig): void {
     const writer = new Writer(outputPath);
     
     try {
@@ -498,7 +477,7 @@ export function gen(allNodes: Map<string, Node>, outputPath: string, config: Imp
         generateUtilityFunctions(writer);
 
         // 先处理内部类型声明
-        generateInnerTypeDeclarations(nodes, writer);
+        generateInnerTypeDeclarations(nodes, writer, config);
 
         // 按依赖顺序生成导入函数
         generateImportFunctionsInOrder(nodes, writer, config);
@@ -511,11 +490,12 @@ export function gen(allNodes: Map<string, Node>, outputPath: string, config: Imp
 /**
  * 生成接口定义
  */
-function generateInterfaceDefinitions(writer: Writer, config: ImportGenerationConfig = {}): void {
+function generateInterfaceDefinitions(writer: Writer, config: ImportGenerationConfig): void {
     const implPrefix = config.namespaces?.impl || '';
     writer.nl('export interface IImportContext ').sub(() => {
-        writer.nl(`document: ${implPrefix}Document`);
-        writer.nl('fmtVer: string');
+        if (config.contextContent) {
+            config.contextContent(writer);
+        }
     });
 }
 
@@ -531,10 +511,10 @@ function generateUtilityFunctions(writer: Writer): void {
 /**
  * 生成内部类型声明
  */
-function generateInnerTypeDeclarations(nodes: Node[], writer: Writer): void {
+function generateInnerTypeDeclarations(nodes: Node[], writer: Writer, config: ImportGenerationConfig): void {
     for (const node of nodes) {
         if (node.inner) {
-            exportNodeClass(node, writer);
+            exportNodeClass(node, writer, config);
         }
     }
 }
@@ -542,7 +522,7 @@ function generateInnerTypeDeclarations(nodes: Node[], writer: Writer): void {
 /**
  * 按依赖顺序生成导入函数
  */
-function generateImportFunctionsInOrder(nodes: Node[], writer: Writer, config: ImportGenerationConfig = {}): void {
+function generateImportFunctionsInOrder(nodes: Node[], writer: Writer, config: ImportGenerationConfig): void {
     let checkExport = allDepsIsGen;
     const generated = new Set<string>();
 

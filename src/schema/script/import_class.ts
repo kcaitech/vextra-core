@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { BaseProp, NamedProp, Node } from "./basic";
+import { BaseProp, ImportGenerationConfig, NamedProp, Node } from "./basic";
 import { Writer } from "./writer";
 
 /**
@@ -19,7 +19,7 @@ import { Writer } from "./writer";
  * @param writer 代码写入器
  * @param allNodes 所有节点的映射
  */
-export function exportBaseProp(prop: BaseProp, writer: Writer, allNodes: Map<string, Node>): void {
+export function exportBaseProp(prop: BaseProp, writer: Writer, allNodes: Map<string, Node>, config: ImportGenerationConfig): void {
     switch (prop.type) {
         case 'string':
         case 'number':
@@ -28,15 +28,15 @@ export function exportBaseProp(prop: BaseProp, writer: Writer, allNodes: Map<str
             break;
             
         case 'node':
-            generateNodeTypeReference(prop, writer, allNodes);
+            generateNodeTypeReference(prop, writer, allNodes, config);
             break;
             
         case 'map':
-            generateMapTypeDeclaration(prop, writer, allNodes);
+            generateMapTypeDeclaration(prop, writer, allNodes, config);
             break;
             
         case 'oneOf':
-            generateUnionTypeDeclaration(prop, writer, allNodes);
+            generateUnionTypeDeclaration(prop, writer, allNodes, config);
             break;
     }
 }
@@ -45,34 +45,34 @@ export function exportBaseProp(prop: BaseProp, writer: Writer, allNodes: Map<str
  * 生成节点类型引用
  * 根据节点是否为内部节点决定是否添加impl前缀
  */
-function generateNodeTypeReference(prop: BaseProp & { type: 'node' }, writer: Writer, allNodes: Map<string, Node>): void {
+function generateNodeTypeReference(prop: BaseProp & { type: 'node' }, writer: Writer, allNodes: Map<string, Node>, config: ImportGenerationConfig): void {
     const node = allNodes.get(prop.val);
     if (!node) {
         throw new Error(`Node not found: ${prop.val}`);
     }
     
-    const typePrefix = node.inner ? '' : 'impl.';
+    const typePrefix = node.inner ? '' : (config.namespaces?.impl || '');
     writer.append(typePrefix + prop.val);
 }
 
 /**
  * 生成Map类型声明
  */
-function generateMapTypeDeclaration(prop: BaseProp & { type: 'map' }, writer: Writer, allNodes: Map<string, Node>): void {
-    writer.append(`BasicMap<${prop.key}, `);
-    exportBaseProp(prop.val, writer, allNodes);
+function generateMapTypeDeclaration(prop: BaseProp & { type: 'map' }, writer: Writer, allNodes: Map<string, Node>, config: ImportGenerationConfig): void {
+    writer.append(`${config.baseTypes?.map || 'Map'}<${prop.key}, `);
+    exportBaseProp(prop.val, writer, allNodes, config);
     writer.append('>');
 }
 
 /**
  * 生成联合类型声明
  */
-function generateUnionTypeDeclaration(prop: BaseProp & { type: 'oneOf' }, writer: Writer, allNodes: Map<string, Node>): void {
+function generateUnionTypeDeclaration(prop: BaseProp & { type: 'oneOf' }, writer: Writer, allNodes: Map<string, Node>, config: ImportGenerationConfig): void {
     const unionTypes = prop.val;
     
     for (let i = 0; i < unionTypes.length; i++) {
         const unionType = unionTypes[i];
-        exportBaseProp(unionType, writer, allNodes);
+        exportBaseProp(unionType, writer, allNodes, config);
         
         if (i !== unionTypes.length - 1) {
             writer.append(' | ');
@@ -84,13 +84,13 @@ function generateUnionTypeDeclaration(prop: BaseProp & { type: 'oneOf' }, writer
  * 生成对象类的声明
  * 处理类继承、构造函数生成和属性声明
  */
-function generateObjectClass(node: Node, writer: Writer): void {
+function generateObjectClass(node: Node, writer: Writer, config: ImportGenerationConfig): void {
     if (node.value.type !== 'object') {
         throw new Error(`Expected object type, got ${node.value.type}`);
     }
     
     const classModifier = node.inner ? '' : 'export ';
-    const baseClass = node.extend ? node.extend : 'Basic';
+    const baseClass = node.extend ? node.extend : config.baseTypes?.extends || '';
     const properties = node.value.props;
 
     // 构建继承链和分析必需属性
@@ -110,11 +110,11 @@ function generateObjectClass(node: Node, writer: Writer): void {
             }
             
             // 生成属性声明
-            generatePropertyDeclarations(properties, writer, node.root);
+            generatePropertyDeclarations(properties, writer, node.root, config);
             
             // 生成构造函数
             if (needsConstructor) {
-                generateConstructor(allRequiredProps, localRequiredProps, writer, node.root);
+                generateConstructor(allRequiredProps, localRequiredProps, writer, node.root, config);
             }
         });
     } else if (node.extend) {
@@ -200,13 +200,13 @@ function shouldGenerateConstructor(localRequiredProps: NamedProp[]): boolean {
 /**
  * 生成属性声明
  */
-function generatePropertyDeclarations(properties: NamedProp[], writer: Writer, allNodes: Map<string, Node>): void {
+function generatePropertyDeclarations(properties: NamedProp[], writer: Writer, allNodes: Map<string, Node>, config: ImportGenerationConfig): void {
     properties.forEach(prop => {
         if (prop.name === 'typeId') return;
         
         writer.newline();
         writer.indent().append(prop.name + (prop.required ? ': ' : '?: '));
-        exportBaseProp(prop, writer, allNodes);
+        exportBaseProp(prop, writer, allNodes, config);
     });
 }
 
@@ -217,11 +217,12 @@ function generateConstructor(
     allRequiredProps: NamedProp[], 
     localRequiredProps: NamedProp[], 
     writer: Writer, 
-    allNodes: Map<string, Node>
+    allNodes: Map<string, Node>,
+    config: ImportGenerationConfig
 ): void {
     // 生成构造函数签名
     writer.nl('constructor(');
-    generateConstructorParameters(allRequiredProps, writer, allNodes);
+    generateConstructorParameters(allRequiredProps, writer, allNodes, config);
     writer.append(') ').sub(() => {
         // 生成super调用
         generateSuperCall(allRequiredProps, localRequiredProps, writer);
@@ -234,7 +235,7 @@ function generateConstructor(
 /**
  * 生成构造函数参数
  */
-function generateConstructorParameters(allRequiredProps: NamedProp[], writer: Writer, allNodes: Map<string, Node>): void {
+function generateConstructorParameters(allRequiredProps: NamedProp[], writer: Writer, allNodes: Map<string, Node>, config: ImportGenerationConfig): void {
     let parameterCount = 0;
     
     for (const prop of allRequiredProps) {
@@ -245,7 +246,7 @@ function generateConstructorParameters(allRequiredProps: NamedProp[], writer: Wr
         }
         
         writer.append(prop.name + ': ');
-        exportBaseProp(prop, writer, allNodes);
+        exportBaseProp(prop, writer, allNodes, config);
         parameterCount++;
     }
 }
@@ -310,7 +311,7 @@ function generateEmptyClassWithInheritance(
  * 生成单个节点的类声明
  * 主入口函数，根据节点类型生成相应的代码
  */
-export function exportNode(node: Node, writer: Writer): void {
+export function exportNode(node: Node, writer: Writer, config: ImportGenerationConfig): void {
     if (node.value.type === 'enum') {
         // 枚举类型在类文件中不需要输出
         return;
@@ -321,9 +322,9 @@ export function exportNode(node: Node, writer: Writer): void {
     }
 
     if (node.value.type === 'array') {
-        generateArrayTypeAlias(node, writer);
+        generateArrayTypeAlias(node, writer, config);
     } else if (node.value.type === 'object') {
-        generateObjectClass(node, writer);
+        generateObjectClass(node, writer, config);
     } else {
         const exhaustiveCheck: never = node.value;
         throw new Error(`Unsupported node value type: ${JSON.stringify(exhaustiveCheck)}`);
@@ -333,7 +334,7 @@ export function exportNode(node: Node, writer: Writer): void {
 /**
  * 生成数组类型别名
  */
-function generateArrayTypeAlias(node: Node, writer: Writer): void {
+function generateArrayTypeAlias(node: Node, writer: Writer, config: ImportGenerationConfig): void {
     if (node.value.type !== 'array') {
         throw new Error(`Expected array type, got ${node.value.type}`);
     }
@@ -345,7 +346,7 @@ function generateArrayTypeAlias(node: Node, writer: Writer): void {
     const typeModifier = node.inner ? '' : 'export ';
     const item = node.value.item;
     
-    writer.nl(`${typeModifier}type ${node.name} = BasicArray<`);
-    exportBaseProp(item, writer, node.root);
+    writer.nl(`${typeModifier}type ${node.name} = ${config.baseTypes?.array || 'Array'}<`);
+    exportBaseProp(item, writer, node.root, config);
     writer.append('>');
 }

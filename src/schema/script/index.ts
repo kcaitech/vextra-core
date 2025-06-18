@@ -71,11 +71,11 @@ const projectConfig: Partial<GenerationConfig> = {
  */
 function generateAll(config: Partial<GenerationConfig> = {}): void {
     const finalConfig = { ...DEFAULT_CONFIG, ...config };
-    
+
     console.log('📝 开始生成代码...');
     console.log(`📂 Schema目录: ${finalConfig.schemaDir}`);
     console.log(`📂 输出目录: ${finalConfig.outputDir}`);
-    
+
     try {
         // 加载所有schema文件
         const allNodes = loadSchemas(path.resolve(finalConfig.schemaDir));
@@ -114,6 +114,16 @@ function generateAll(config: Partial<GenerationConfig> = {}): void {
             outputPath: outputPaths.export,
             inject: exportInject,
             extraHeader(writer) {
+                writer.nl('import * as types from "./typesdefine"');
+            },
+            namespaces: {
+                types: 'types.'
+            },
+            contextContent(writer) {
+                writer.nl('symbols?: Set<string>');
+                writer.nl('medias?: Set<string>');
+                writer.nl('refsymbols?: Set<string>');
+                writer.nl('styles?: Set<string>');
             }
         });
 
@@ -126,18 +136,23 @@ function generateAll(config: Partial<GenerationConfig> = {}): void {
             },
             namespaces: {
                 impl: 'impl.',
-                types: 'types.'
+                types: 'types.',
+                extends: 'Basic'
             },
             extraHeader(writer) {
                 writer.nl('import * as impl from "./classes"')
                 writer.nl('import * as types from "./typesdefine"')
                 writer.nl('import { BasicArray, BasicMap } from "./basic"');
             },
-            inject: importInject
+            inject: importInject,
+            contextContent(writer) {
+                writer.nl(`document: impl.Document`);
+                writer.nl('fmtVer: string');
+            }
         });
 
         console.log('🎉 代码生成完成！');
-        
+
     } catch (error) {
         console.error('❌ 代码生成失败:', (error as Error).message);
         if (error instanceof Error && error.stack) {
