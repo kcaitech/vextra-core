@@ -170,5 +170,5 @@ export async function importDocumentZip(filePack: File | string, repo: IDataGuar
         return Promise.reject(new Error('不支持的环境或文件类型'));
     }
 
-    return importDocument(fileName.replace(/\.(moss|vext)$/i, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
+    return importDocument(fileName, __doc as { [p: string]: string | Uint8Array; }, repo);
 }
