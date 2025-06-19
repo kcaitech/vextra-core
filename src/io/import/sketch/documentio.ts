@@ -10,13 +10,14 @@
 
 
 import { uuid } from "../../../basic/uuid";
-import { BasicArray, BasicMap, IDataGuard } from "../../../data/basic";
+import { BasicArray, IDataGuard } from "../../../data/basic";
 import { Document, PageListItem } from "../../../data/document";
 import { LzData } from "./lzdata";
 import { IJSON } from "./basic";
 import { startLoader } from "./loader";
 import { LzDataLocal } from "./lzdatalocal";
 import { Zip } from "./zip";
+import { isNode } from "../../../basic/consts";
 
 async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicArray<PageListItem>> {
     const metaJson: IJSON = await lzData.loadJson('meta.json');
@@ -64,7 +65,19 @@ export async function importDocument(name: string, lzData: LzData, gurad: IDataG
     return document;
 }
 
-export async function importDocumentZip(file: File, gurad: IDataGuard): Promise<Document> {
+export async function importDocumentZip(file: File | string, gurad: IDataGuard): Promise<Document> {
     const lzdata = new LzDataLocal(new Zip(file));
-    return importDocument(file.name.replace(/.sketch$/, ''), lzdata, gurad);
+    // 获取文件名
+    let fileName: string;
+    if (typeof file === 'string') {
+        if (!isNode) {
+            throw new Error('browser 不支持通过文件路径导入');
+        }
+        // 从文件路径提取文件名
+        const path = await import('path');
+        fileName = path.basename(file);
+    } else {
+        fileName = file.name.replace(/.sketch$/, '');
+    }
+    return importDocument(fileName, lzdata, gurad);
 }

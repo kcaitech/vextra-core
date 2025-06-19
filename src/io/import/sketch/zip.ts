@@ -9,13 +9,35 @@
  */
 
 import JSZip from 'jszip';
+import { isBrowser, isNode } from "../../../basic/consts";
 
 export class Zip {
-    private _file: File;
+    private _buffer: Promise<ArrayBuffer>;
     private _zip: JSZip | undefined;
     private _hs: Map<string, Function> = new Map()
     constructor(file: File | string) {
-        this._file = file instanceof File ? file : new File([], file); // 这个File用法不对的
+        if (isBrowser) {
+            if (!(file instanceof File)) {
+                throw new Error('browser 不支持通过文件路径导入');
+            }
+            //
+            // 浏览器环境处理 File 对象
+            this._buffer = file.arrayBuffer();
+        } else if (isNode) {
+            if (typeof file !== 'string') {
+                throw new Error('node 不支持通过文件对象导入');
+            }
+
+            this._buffer = new Promise(async (resolve, reject) => {
+                const fs = await import('fs');
+                fs.readFile(file, (err, data) => {
+                    if (err) reject(err);
+                    resolve(data.buffer);
+                });
+            });
+        } else {
+            throw new Error('不支持的环境或文件类型');
+        }
         this._load();
     }
     on(event: 'ready', handler: () => void): void;
@@ -25,7 +47,7 @@ export class Zip {
     }
     private async _load() {
         if (this._zip) return;
-        const buffer = await this._file.arrayBuffer();
+        const buffer = await this._buffer;
         let e;
         try {
             this._zip = await JSZip.loadAsync(buffer);

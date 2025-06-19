@@ -22,6 +22,7 @@ import { uuid } from "../../../basic/uuid";
 import { IImportContext, importPage, importDocumentMeta } from "../../../data/baseimport";
 import { base64Encode, base64ToDataUrl } from "../../../basic/utils";
 import JSZip from "jszip";
+import { isBrowser, isNode } from "../../../basic/consts";
 
 function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Document) {
     document.mediasMgr.setLoader(id => loadMedia(id));
@@ -85,9 +86,26 @@ export function importDocument(name: string, mdd: { [p: string]: string | Uint8A
     return document;
 }
 
+function getFiles(filePack: File | string): Promise<{ [p: string]: JSZip.JSZipObject }> {
+    if (isBrowser) {
+        if (!(filePack instanceof File)) {
+            return Promise.reject(new Error('browser 不支持通过文件路径导入'));
+        }
+        //
+        // 浏览器环境处理 File 对象
+        return getFilesBrowser(filePack);
+    } else if (isNode) {
+        if (typeof filePack !== 'string') {
+            return Promise.reject(new Error('node 不支持通过文件对象导入'));
+        }
+        // Node.js 环境处理 Buffer 或文件路径
+        return getFilesNode(filePack);
+    } else {
+        return Promise.reject(new Error('不支持的环境或文件类型'));
+    }
+}
 
-
-function getFiles(filePack: File) {
+function getFilesBrowser(filePack: File): Promise<{ [p: string]: JSZip.JSZipObject }> {
     const reader = new FileReader();
     reader.readAsArrayBuffer(filePack);
     return new Promise((resolve, reject) => {
@@ -96,20 +114,31 @@ function getFiles(filePack: File) {
             if (!buff) reject(new Error('无法获取文档内容'));
             const zip = new JSZip();
             zip.loadAsync(buff).then(res => {
-                resolve(res.files)
-            });
-        }
+                resolve(res.files);
+            }).catch(reject);
+        };
+        reader.onerror = () => reject(new Error('文件读取失败'));
     });
 }
 
-export async function importDocumentZip(filePack: File, repo: IDataGuard) {
-    const __files = await getFiles(filePack) as {
-        [p: string]: JSZip.JSZipObject
-    };
+async function getFilesNode(filePack: string): Promise<{ [p: string]: JSZip.JSZipObject }> {
+    let buffer: Buffer;
+    
+    const fs = await import('fs');
+    buffer = fs.readFileSync(filePack);
+    
+    const zip = new JSZip();
+    const res = await zip.loadAsync(buffer);
+    return res.files;
+}
+
+export async function importDocumentZip(filePack: File | string, repo: IDataGuard) {
+    const __files = await getFiles(filePack);
     const names = Object.keys(__files);
     const __doc: {
         [p: string]: string | Uint8Array | ArrayBuffer;
     } = {};
+    
     for (let name of names) {
         const file = __files[name];
         if (file.dir) continue;
@@ -123,6 +152,23 @@ export async function importDocumentZip(filePack: File, repo: IDataGuard) {
         __doc[name.replace(/images\/|pages\//, '')] = content;
     }
 
-    return importDocument(filePack.name.replace(/\.(moss|vext)$/i, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
+    // 获取文件名
+    let fileName: string;
+    if (isBrowser) {
+        if (!(filePack instanceof File)) {
+            return Promise.reject(new Error('browser 不支持通过文件路径导入'));
+        }
+        fileName = filePack.name;
+    } else if (isNode) {
+        if (typeof filePack !== 'string') {
+            return Promise.reject(new Error('node 不支持通过文件对象导入'));
+        }
+        // 从文件路径提取文件名
+        const path = await import('path');
+        fileName = path.basename(filePack);
+    } else {
+        return Promise.reject(new Error('不支持的环境或文件类型'));
+    }
 
+    return importDocument(fileName.replace(/\.(moss|vext)$/i, ''), __doc as { [p: string]: string | Uint8Array; }, repo);
 }
