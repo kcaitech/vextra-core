@@ -8,6 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
+import { isNode } from "../../../basic/consts";
 import { uuid } from "../../../basic/uuid";
 import { BasicArray, BasicMap, IDataGuard, Document, PageListItem } from "../../../data";
 import { IJSON, LoadContext } from "./basic";
@@ -61,9 +62,24 @@ function insert2childs(
     }
 }
 
-export async function importDocument(file: File, gurad: IDataGuard /*inflateRawSync: (data: Uint8Array)=> Uint8Array*/): Promise<Document> {
+export async function importDocument(file: File | string, gurad: IDataGuard /*inflateRawSync: (data: Uint8Array)=> Uint8Array*/): Promise<Document> {
 
-    const buffer = await file.arrayBuffer();
+    let buffer: ArrayBuffer;
+    let fileName: string;
+    if (typeof file === 'string') {
+        if (!isNode) {
+            throw new Error('browser 不支持通过文件路径导入');
+        }
+        const fs = await import('fs');
+        buffer = fs.readFileSync(file).buffer;
+        // 从文件路径提取文件名
+        const path = await import('path');
+        fileName = path.basename(file);
+    }
+    else {
+        buffer = await file.arrayBuffer();
+        fileName = file.name.replace(/.fig$/, '');
+    }
 
     const json = await figToJson((buffer)) as IJSON;
     const unzipped = await JSZip.loadAsync(buffer);
@@ -125,7 +141,7 @@ export async function importDocument(file: File, gurad: IDataGuard /*inflateRawS
 
     const freesymbols = new BasicMap();
 
-    const document = new Document(uuid(), file.name.replace(/.fig$/, ''), gurad, { pageList });
+    const document = new Document(uuid(), fileName, gurad, { pageList });
 
     const ctx: LoadContext = new LoadContext(document.mediasMgr, document.stylesMgr);
     startLoader(json, pages, document, nodeChangesMap, nodeKeyMap, ctx, unzipped);
