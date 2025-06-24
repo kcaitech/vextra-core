@@ -30,6 +30,9 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
 
     async function loadMedia(id: string): Promise<{ buff: Uint8Array; base64: string; }> {
         const buffer = pack[id] as Uint8Array;
+        if (!buffer) {
+            return { buff: new Uint8Array(), base64: '' };
+        }
         const uInt8Array = buffer;
         let i = uInt8Array.length;
         const binaryString = new Array(i);
