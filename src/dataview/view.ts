@@ -9,7 +9,7 @@
  */
 
 import { DViewCtx, GraphicsLibrary, PropsType } from "./viewctx";
-import { Shape, SymbolRefShape, SymbolShape } from "../data";
+import { Shape, ShapeType, SymbolRefShape, SymbolShape } from "../data";
 import { getShapeViewId, stringh } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";
@@ -146,17 +146,29 @@ export class DataView extends EventEL {
     }
 
     rendererBuilder(gl: GraphicsLibrary): IRenderer {
-        const view = this as unknown as any;
+        const view = this;
         switch (gl) {
             case "SVG":
-                const SVGRendererConstructor = SVGConstructorMap.get(view.type)!;
-                return new SVGRendererConstructor(view);
+                let SVGRendererConstructor = SVGConstructorMap.get(view.type);
+                if (!SVGRendererConstructor) {
+                    console.error(`SVGRendererConstructor not found for type: ${view.type}`);
+                    SVGRendererConstructor = SVGConstructorMap.get(ShapeType.Rectangle)!;
+                }
+                return new SVGRendererConstructor(view as any); // todo: fix type
             case "Canvas":
-                const CanvasRendererConstructor = CanvasConstructorMap.get(view.type)!;
-                return new CanvasRendererConstructor(view);
+                let CanvasRendererConstructor = CanvasConstructorMap.get(view.type);
+                if (!CanvasRendererConstructor) {
+                    console.error(`CanvasRendererConstructor not found for type: ${view.type}`);
+                    CanvasRendererConstructor = CanvasConstructorMap.get(ShapeType.Rectangle)!;
+                }
+                return new CanvasRendererConstructor(view as any); // todo: fix type
             default:
-                const DefaultCon = SVGConstructorMap.get(view.type)!;
-                return new DefaultCon(view);
+                let DefaultCon = SVGConstructorMap.get(view.type);
+                if (!DefaultCon) {
+                    console.error(`DefaultCon not found for type: ${view.type}`);
+                    DefaultCon = SVGConstructorMap.get(ShapeType.Rectangle)!;
+                }
+                return new DefaultCon(view as any); // todo: fix type
         }
     }
 

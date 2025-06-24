@@ -14,6 +14,9 @@ import { ViewCanvasRenderer, Props } from "../painters/view";
 import { Path } from "@kcaitech/path";
 import { stroke } from "../../stroke";
 
+import { Path2D } from "../types";
+
+
 export function render(renderer: ViewCanvasRenderer, view: ShapeView, props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, shadows: Shadow[], border: Border, fills: Fill[]): Function | undefined {
     shadows = shadows.filter(i => i.isEnabled);
     if (!shadows.length) return;

@@ -32,11 +32,11 @@ import {
     WindingRule,
     TextAttr
 } from "./baseclasses";
+import { importGradient } from "./baseimport";
 import { Basic, BasicArray, BasicMap, ResourceMgr, WatchableObject } from "./basic";
 import { Color } from "./color";
 import { StyleSheet_variables } from "./typesdefine";
-import { v4 } from "uuid";
-import { cloneGradient } from "../io/cilpboard";
+
 
 export {
     GradientType,
@@ -358,7 +358,7 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
                     const { crdtidx, id, isEnabled, fillType, color, contextSettings, imageRef, imageScaleMode, rotation, scale, originalImageWidth, originalImageHeight, paintFilter, transform } = s;
                     const new_fill = new Fill(crdtidx, id, isEnabled, fillType, new Color(color.alpha, color.red, color.green, color.blue))
                     if (s.gradient) {
-                        new_fill.gradient = cloneGradient(s.gradient);
+                        new_fill.gradient = importGradient(s.gradient);
                     }
                     new_fill.imageRef = imageRef;
                     new_fill.imageScaleMode = imageScaleMode;

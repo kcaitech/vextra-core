@@ -13,6 +13,9 @@ import { Props } from "../painters/view";
 import { render as renderGradient } from "./gradient";
 import { patternRender } from "./pattern";
 
+import { OffscreenCanvas } from "../types";
+
+
 export function render(props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, fills: Fill[], path2D: Path2D, frame: ShapeSize) {
     for (const fill of fills) {
         if (fill.isEnabled) painter[fill.fillType](props, ctx, fill, path2D, frame);

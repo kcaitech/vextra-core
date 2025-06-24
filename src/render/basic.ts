@@ -9,7 +9,7 @@
  */
 
 import { Color } from "../data";
-import { EL, ShapeView } from "../dataview";
+import { ShapeView } from "../dataview";
 export { findOverrideAndVar } from "../data/utils";
 
 export const DefaultColor = Color.DefaultColor;

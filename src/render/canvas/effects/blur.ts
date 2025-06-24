@@ -13,6 +13,8 @@ import { BlurType, Fill } from "../../../data";
 import { Props } from "../painters/view";
 import { stroke } from "../../stroke";
 
+import { Path2D, OffscreenCanvas, DOMMatrix } from "../types";
+
 export function render(view: ShapeView, props: Props): Function | null {
     const blur = view.blur;
     if (!blur || !blur.isEnabled) return null;

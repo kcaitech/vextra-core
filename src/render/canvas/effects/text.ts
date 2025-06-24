@@ -8,14 +8,15 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-
-
-import { DefaultColor } from "../../basic";
-import { Color, FillType, Gradient, UnderlineType, StrikethroughType, GradientType } from '../../../data/classes';
-import { GraphArray, TextLayout } from "../../../data/text/textlayout";
-import { render as renderGradient } from "./gradient";
+import { TextShapeView } from "../../../dataview";
+import { FillType, Color, TextLayout, GradientType, Gradient, StrikethroughType, UnderlineType } from "../../../data";
 import { Props } from "../painters/view";
-import { TextShapeView } from "src/dataview";
+import { DefaultColor } from "../../basic";
+import { render as renderGradient } from "./gradient";
+import { GraphArray } from "../../../data/text/textlayout";
+
+import { Path2D, OffscreenCanvas } from "../types";
+
 
 interface DecorateRange {
     start: number,
