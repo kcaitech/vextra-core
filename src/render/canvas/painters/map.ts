@@ -38,4 +38,5 @@ export const CanvasConstructorMap = new Map<ShapeType, RendererType>([
     [ShapeType.Polygon, ViewCanvasRenderer],
     [ShapeType.SymbolUnion, ViewCanvasRenderer],
     [ShapeType.Group, ViewCanvasRenderer],
+    [ShapeType.Path, ViewCanvasRenderer],
 ]);
