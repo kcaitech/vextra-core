@@ -125,7 +125,11 @@ export class DataView extends EventEL {
         return this.m_children;
     }
 
-    get renderer() {
+    getRenderer(gl?: GraphicsLibrary) {
+        if (gl && gl !== this.m_gl) {
+            this.m_gl = gl;
+            this.m_renderer = this.rendererBuilder(this.m_gl);
+        }
         return this.m_renderer;
     }
 
@@ -163,12 +167,7 @@ export class DataView extends EventEL {
                 }
                 return new CanvasRendererConstructor(view as any); // todo: fix type
             default:
-                let DefaultCon = SVGConstructorMap.get(view.type);
-                if (!DefaultCon) {
-                    console.error(`DefaultCon not found for type: ${view.type}`);
-                    DefaultCon = SVGConstructorMap.get(ShapeType.Rectangle)!;
-                }
-                return new DefaultCon(view as any); // todo: fix type
+                throw new Error(`Unsupported graphics library: ${gl}`);
         }
     }
 

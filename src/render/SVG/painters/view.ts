@@ -120,7 +120,7 @@ export class ViewSVGRenderer extends IRenderer {
         for (let i = 1; i < group.length; i++) {
             const __s = group[i];
             if (!__s.isVisible) continue;
-            const dom = (__s.renderer as ViewSVGRenderer).DOM;
+            const dom = (__s.getRenderer('SVG') as ViewSVGRenderer).DOM;
             if (!dom.elattr['style']) {
                 dom.elattr['style'] = {};
             }
