@@ -20,12 +20,7 @@ import * as types from "../../../data/typesdefine";
 import { BasicArray, Document, Shape } from "../../../data";
 import { transform_data } from "../../cilpboard";
 
-// type SkiaCanvas = InstanceType<typeof import('skia-canvas').Canvas>;
-let Canvas: typeof import('skia-canvas').Canvas;
-if (typeof window === 'undefined') {
-    // Node.js environment
-    Canvas = require('skia-canvas').Canvas;
-}
+import { OffscreenCanvas } from "../../../basic/canvas"
 
 export async function exportImg(document: Document, view: ShapeView | ShapeView[] | Shape | Shape[], size?: { width: number, height: number }) {
 
@@ -44,7 +39,7 @@ export async function exportImg(document: Document, view: ShapeView | ShapeView[
         throw new Error("Size too large for rendering: " + JSON.stringify(size));
     }
 
-    const canvas = new Canvas(size.width, size.height);
+    const canvas = new OffscreenCanvas(size.width, size.height);
     const canvasCtx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
 
     wrapview.ctx.setCanvas(canvasCtx);

@@ -20,7 +20,6 @@ import { stroke } from "../../stroke";
 
 import { Path2D } from "../types";
 
-
 export type Props = {
     transform: [number, number, number, number, number, number];
     opacity?: number;

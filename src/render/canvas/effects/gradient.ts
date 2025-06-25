@@ -75,7 +75,7 @@ export function render(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingC
         const realTo = { x: 0, y: 0 } as Point2D;
         toPoint(value.from, frame, realFrom);
         toPoint(value.to, frame, realTo);
-        const angle = getAngle(realFrom, realTo);
+        const angle = getAngle(realFrom, realTo) + 90 /** skia-canvas */;
         const gradient = ctx.createConicGradient(angle * OneRadian, realFrom.x, realFrom.y);
         applyStops(gradient, value.stops);
         return gradient;
