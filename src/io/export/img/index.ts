@@ -15,14 +15,14 @@ import {
 import { Shape } from "../../../data";
 import { OffscreenCanvas } from "../../../basic/canvas"
 
-export async function exportImg(shape: ShapeView | Shape, pngScale: number = 1) {
+export async function exportImg(shape: ShapeView | Shape, pngScale: number = 1, maxSize: number = 4096) {
     const view = shape instanceof Shape ? layoutShape(shape).view as ShapeView : (shape);
     const frame = view.frame;
     let width = frame.width * pngScale;
     let height = frame.height * pngScale;
 
     if (width <= 0 || height <= 0) return;
-    const max_size = 4096
+    const max_size = maxSize
     if (width > max_size || height > max_size) {
         // 等比缩小到4k大小
         const scale = Math.min(max_size / width, max_size / height);
