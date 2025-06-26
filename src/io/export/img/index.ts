@@ -40,5 +40,7 @@ export async function exportImg(shape: ShapeView | Shape, pngScale: number = 1) 
 
     view.ctx.setCanvas(tempCtx as any);
     view.render('Canvas'); // render to canvas
+
+    if (shape instanceof Shape) view.destroy();
     return tempCanvas;
 }
