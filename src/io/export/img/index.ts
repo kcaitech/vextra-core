@@ -9,41 +9,36 @@
  */
 
 import {
-    adapt2Shape,
-    layoutShape, 
-    PageView, 
+    layoutShape,
     ShapeView
-    } from "../../../dataview";
-import { importPage } from "../../../data/baseimport";
-import template_page from "../../../editor/template/page.json";
-import * as types from "../../../data/typesdefine";
-import { BasicArray, Document, Shape } from "../../../data";
-import { transform_data } from "../../cilpboard";
-
+} from "../../../dataview";
+import { Shape } from "../../../data";
 import { OffscreenCanvas } from "../../../basic/canvas"
 
-export async function exportImg(document: Document, view: ShapeView | ShapeView[] | Shape | Shape[], size?: { width: number, height: number }) {
+export async function exportImg(shape: ShapeView | Shape, pngScale: number = 1) {
+    const view = shape instanceof Shape ? layoutShape(shape).view as ShapeView : (shape);
+    const frame = view.frame;
+    let width = frame.width * pngScale;
+    let height = frame.height * pngScale;
 
-    const views = Array.isArray(view) ? view : [view];
-    const data = importPage(template_page as types.Page);
-    const source = transform_data(document, views.map(i => i instanceof Shape ? i : adapt2Shape(i)));
-    data.childs = source as BasicArray<any>;
-    const wrapview = layoutShape(data).view as PageView;
-    if (size === undefined) size = wrapview.size;
-
-    if (size.width <= 0 || size.height <= 0) {
-        throw new Error("Invalid size for rendering: " + JSON.stringify(size));
+    if (width <= 0 || height <= 0) return;
+    const max_size = 4096
+    if (width > max_size || height > max_size) {
+        // 等比缩小到4k大小
+        const scale = Math.min(max_size / width, max_size / height);
+        width = Math.floor(width * scale);
+        height = Math.floor(height * scale);
+        pngScale = pngScale * scale;
     }
 
-    if (size.width > 10000 || size.height > 10000) {
-        throw new Error("Size too large for rendering: " + JSON.stringify(size));
-    }
+    const tempCanvas = new OffscreenCanvas(width, height);
+    const tempCtx = tempCanvas.getContext('2d')!;
+    tempCtx.translate(-frame.x, -frame.y);
+    tempCtx.scale(pngScale, pngScale);
+    const transform = view.transform
+    tempCtx.translate(-transform.translateX, -transform.translateY);
 
-    const canvas = new OffscreenCanvas(size.width, size.height);
-    const canvasCtx = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
-
-    wrapview.ctx.setCanvas(canvasCtx);
-    wrapview.render('Canvas');
-    wrapview.destroy();
-    return canvasCtx.getImageData(0, 0, size.width, size.height).data.buffer as ArrayBuffer;
+    view.ctx.setCanvas(tempCtx as any);
+    view.render('Canvas'); // render to canvas
+    return tempCanvas;
 }
