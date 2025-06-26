@@ -9,15 +9,8 @@
  */
 
 import {
-    BasicArray, IDataGuard, Document, Transform, Page, ShapeType, Style,
-    BorderSideSetting,
-    SideType,
-    Border,
-    BorderPosition,
-    BorderStyle,
-    CornerType,
-    Fill
-} from "../../../data";
+    IDataGuard, Document, Page
+    } from "../../../data";
 import { uuid } from "../../../basic/uuid";
 import { IImportContext, importPage, importDocumentMeta } from "../../../data/baseimport";
 import { base64Encode, base64ToDataUrl } from "../../../basic/utils";
@@ -67,14 +60,17 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
             curPage: string = id;
             fmtVer: string = document.fmtVer;
         };
-        const page = JSON.parse(pack[id] as string) as Page;
-        if (!page) {
-            const trans = new Transform();
-            const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
-            const strokePaints = new BasicArray<Fill>();
-            const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
-            return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), border), new BasicArray());
+        if (!pack[id]) {
+            throw new Error(`Page ${id} not found`);
         }
+        const page = JSON.parse(pack[id] as string) as Page;
+        // if (!page) {
+        //     const trans = new Transform();
+        //     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
+        //     const strokePaints = new BasicArray<Fill>();
+        //     const border = new Border(BorderPosition.Inner, new BorderStyle(0, 0), CornerType.Miter, side, strokePaints);
+        //     return new Page(new BasicArray(), id, "", ShapeType.Page, trans, new Style(new BasicArray(), new BasicArray(), border), new BasicArray());
+        // }
         return importPage(page, ctx);
     }
 }

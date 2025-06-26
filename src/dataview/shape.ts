@@ -39,7 +39,7 @@ import {
     Variable,
     VariableType
 } from "../data";
-import { findOverrideAndVar } from "./basic";
+import { findOverrideAndVar, stringh } from "./basic";
 import { DataView } from "./view"
 import { DViewCtx, PropsType } from "./viewctx";
 import { objectId } from "../basic/objectid";
@@ -725,5 +725,21 @@ export class ShapeView extends DataView {
 
     get frameMaskDisabled(): boolean | undefined {
         return undefined;
+    }
+
+    toSVGString(): string {
+        const frame = this.frame;
+        const attrs: { [kye: string]: string | number } = {};
+        attrs['version'] = "1.1";
+        attrs['xmlns'] = "http://www.w3.org/2000/svg";
+        attrs['xmlns:xlink'] = "http://www.w3.org/1999/xlink";
+        attrs['xmlns:xhtml'] = "http://www.w3.org/1999/xhtml";
+        attrs['preserveAspectRatio'] = "xMinYMin meet";
+        attrs.width = frame.width;
+        attrs.height = frame.height;
+        attrs.overflow = "visible";
+        const transform = this.transform;
+        attrs['viewBox'] = `${transform.translateX + frame.x} ${transform.translateY + frame.y} ${frame.width} ${frame.height}`;
+        return stringh('svg', attrs, this.outerHTML);
     }
 }

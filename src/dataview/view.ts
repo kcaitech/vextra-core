@@ -10,7 +10,7 @@
 
 import { DViewCtx, GraphicsLibrary, PropsType } from "./viewctx";
 import { Shape, ShapeType, SymbolRefShape, SymbolShape } from "../data";
-import { getShapeViewId, stringh } from "./basic";
+import { getShapeViewId } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";
 import { IRenderer } from "../render/basic";
@@ -369,20 +369,6 @@ export class DataView extends EventEL {
             });
         }
         return dom;
-    }
-
-    toSVGString(): string {
-        const frame = this.m_data.size;
-        const attrs: { [kye: string]: string | number } = {};
-        attrs['version'] = "1.1";
-        attrs['xmlns'] = "http://www.w3.org/2000/svg";
-        attrs['xmlns:xlink'] = "http://www.w3.org/1999/xlink";
-        attrs['xmlns:xhtml'] = "http://www.w3.org/1999/xhtml";
-        attrs['preserveAspectRatio'] = "xMinYMin meet";
-        attrs.width = frame.width;
-        attrs.height = frame.height;
-        attrs.overflow = "visible";
-        return stringh('svg', attrs, this.outerHTML);
     }
 
     destroy() {

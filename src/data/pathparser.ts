@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { CurvePoint } from "./baseclasses";
+import { CurvePoint } from "./typesdefine";
 import { Point2D } from "./typesdefine"
 import { Path, PathBuilder } from "@kcaitech/path"
 
