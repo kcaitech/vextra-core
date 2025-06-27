@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { ArrayOp, ArrayOpAttr, ArrayOpInsert, ArrayOpRemove, ArrayOpType } from "./arrayop";
+import { ArrayOpAttr, ArrayOpInsert, ArrayOpRemove } from "./arrayop";
 import { ParaAttr, SpanAttr, Text } from "../../data/text/text";
 import { importParaAttr, importSpanAttr, importText } from "../../data/baseimport";
 
@@ -193,101 +193,12 @@ export class TextOpAttrRecord extends TextOpAttr {
         this.origin = merged
     }
 
-    _cloneOrigin() {
-        return this.origin.map(o => {
+    clone(): ArrayOpAttr {
+        const origin = this.origin.map(o => {
             return { index: o.index, len: o.len, value: o.value }
         });
-    }
-    _clone(origin: { index: number, len: number, value: any }[]) {
         return new TextOpAttrRecord(
             this.id, this.path, this.order, this.start, this.length, this.props, origin, this.target
         )
-    }
-
-    clone(): ArrayOpAttr {
-        return this._clone(this._cloneOrigin());
-    }
-
-    _transByInsert(op: ArrayOpInsert): ArrayOp {
-        const trans = super._transByInsert(op) as TextOpAttrRecord;
-
-        const lhs_start = op.start
-        const lhs_len = op.length
-        let origin = trans.origin;
-        for (let i = 0; i < origin.length; ++i) {
-            const rhs = origin[i];
-            const rhs_start = rhs.index;
-            const rhs_len = rhs.len;
-            if (lhs_start > rhs_start && lhs_start < rhs_start + rhs_len) { // op在中间
-                if (origin === this.origin) origin = this._cloneOrigin();
-                const t_op = origin[i];
-                t_op.len += lhs_len
-                continue;
-            }
-            if (lhs_start <= rhs_start) { // op在左边
-                if (origin === this.origin) origin = this._cloneOrigin();
-                const t_op = origin[i];
-                t_op.index += lhs_len
-                continue;
-            }
-        }
-        if (trans !== this) return trans; // 已经clone
-        if (origin === this.origin) return this; // 无需clone
-        return this._clone(origin);
-    }
-
-    _transByRemove(op: ArrayOpRemove): ArrayOp {
-        const trans = super._transByRemove(op) as TextOpAttrRecord;
-        if (trans.type1 !== ArrayOpType.Attr) return trans; // none
-
-        const lhs_start = op.start
-        const lhs_len = op.length
-        let origin = trans.origin;
-        for (let i = 0; i < origin.length; ++i) {
-            const rhs = origin[i];
-            const rhs_start = rhs.index;
-            const rhs_len = rhs.len;
-            if (lhs_start + lhs_len <= rhs_start) { // 不相交，op在左边
-                if (origin === this.origin) origin = this._cloneOrigin();
-                const t_op = origin[i];
-                t_op.index -= lhs_len
-                continue;
-            }
-            if (lhs_start >= rhs_start + rhs_len) { // 不相交，op在右边
-                continue;
-            }
-            if (lhs_start <= rhs_start && lhs_start + lhs_len >= rhs_start + rhs_len) { // 被op包含
-                if (origin === this.origin) origin = this._cloneOrigin();
-                const t_op = origin[i];
-                t_op.index = -1;
-                t_op.len = -1;
-                continue;
-            }
-            if (lhs_start >= rhs_start && lhs_start + lhs_len <= rhs_start + rhs_len) { // 包含op
-                if (origin === this.origin) origin = this._cloneOrigin();
-                const t_op = origin[i];
-                t_op.len -= lhs_len
-                continue;
-            }
-            if (lhs_start < rhs_start) { // 相交，op在左边
-                if (origin === this.origin) origin = this._cloneOrigin();
-                const t_op = origin[i];
-                const inter_len = lhs_start + lhs_len - rhs_start // 相交部分的长度
-                t_op.index -= op.length - inter_len
-                t_op.len -= inter_len
-                continue;
-            }
-            if (lhs_start > rhs_start) { // 相交，op在右边
-                if (origin === this.origin) origin = this._cloneOrigin();
-                const t_op = origin[i];
-                const inter_len = lhs_start + lhs_len - rhs_start // 相交部分的长度
-                t_op.len -= inter_len
-                continue;
-            }
-            throw new Error("Cant be here")
-        }
-        if (trans !== this) return trans; // 已经clone
-        if (origin === this.origin) return this; // 无需clone
-        return this._clone(origin);
     }
 }
