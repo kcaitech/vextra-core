@@ -542,7 +542,7 @@ export class RadiusMask extends WatchableObject implements classes.RadiusMask {
 }
 
 export class TextMask extends WatchableObject implements classes.TextMask {
-    typeId = 'text-mask-living';
+    typeId = 'text-mask';
     crdtidx: BasicArray<number>;
     id: string;
     sheet: string;
