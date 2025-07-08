@@ -17,6 +17,8 @@ import { SymbolRefShape } from "./symbolref";
 import { SymbolMgr } from "./symbolmgr";
 import { FMT_VER_latest } from "./fmtver";
 import { StyleMangerMember, StyleSheet } from "./style";
+import { uuid } from "../basic/uuid";
+import { DataGuard } from "./notransact";
 
 export { DocumentMeta, PageListItem } from "./baseclasses";
 
@@ -113,10 +115,21 @@ export class Document extends DocumentMeta {
     private __versionId: string;
     private __name: string;
 
+    constructor();
+    constructor(id: string, name: string, guard?: IDataGuard);
+    constructor(id: string, name: string, guard?: IDataGuard, source?: {
+        versionId?: string, /* 版本id */
+        lastCmdVer?: number, /* 此版本最后一个cmd的version */
+        pageList?: BasicArray<PageListItem>,
+        symbolRegister?: BasicMap<string, string>,
+        freeSymbols?: BasicMap<string, SymbolShape>,
+        connection?: ResourceMgr<Shape>,
+        stylelib?: BasicArray<StyleSheet>,
+    });
     constructor(
-        id: string,
-        name: string,
-        guard: IDataGuard,
+        _id?: string,
+        _name?: string,
+        _guard?: IDataGuard,
         source?: {
             versionId?: string, /* 版本id */
             lastCmdVer?: number, /* 此版本最后一个cmd的version */
@@ -132,6 +145,10 @@ export class Document extends DocumentMeta {
         const freesymbols = source?.freeSymbols ?? new BasicMap<string, SymbolShape>();
         const versionId = source?.versionId ?? "";
         const lastCmdVer = source?.lastCmdVer ?? 0;
+
+        const id = _id ?? uuid();
+        const name = _name ?? "New Document";
+        const guard = _guard ?? new DataGuard()
 
         super(id, name, FMT_VER_latest, pagesList, lastCmdVer, symbolRegister)
 

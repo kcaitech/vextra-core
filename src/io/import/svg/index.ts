@@ -39,22 +39,27 @@ export async function importDocument(file: File | string, repo: IDataGuard) {
     }
 
     const { shape, mediaResourceMgr } = parse(content)
-    const document = new Document(uuid(), name, repo);
-    if (!shape) return document;
+    if (!shape) return new Document(uuid(), name, repo);
 
+    const pageList = new BasicArray<PageListItem>();
+    let page: Page;
     if (shape instanceof Page) {
-        document.pagesList.push(new PageListItem(new BasicArray(document.pagesList.length), shape.id, shape.name));
-        document.pagesMgr.add(shape.id, shape)
+        pageList.push(new PageListItem([0] as BasicArray<number>, shape.id, shape.name));
+        page = shape;
     } else {
-        const page = newPage("Page1");
+        page = newPage("Page1");
         page.addChild(shape);
-        document.pagesMgr.add(page.id, page);
-        document.pagesList.push(new PageListItem(new BasicArray(document.pagesList.length), page.id, page.name));
+        pageList.push(new PageListItem([0] as BasicArray<number>, page.id, page.name));
     }
+    const document = new Document(uuid(), name, repo, {
+        pageList,
+    })
 
     mediaResourceMgr.forEach((media: { buff: Uint8Array, base64: string }, id: string) => {
         document.mediasMgr.add(id, media);
     });
+
+    document.pagesMgr.add(page.id, page);
 
     return document;
 }
