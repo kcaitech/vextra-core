@@ -50,7 +50,7 @@ import {
 import { fixTextShapeFrameByLayout } from "../utils/other";
 import { TidyUpAlign, tidyUpLayout } from "../utils/auto_layout";
 import { modifyPathByArc } from "./arc";
-import { Api } from "../../repo";
+import { Operator } from "../../operator";
 import { importBorder } from "../../data/baseimport";
 
 export class LockMouseHandler extends AsyncApiCaller {
@@ -73,7 +73,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeX(shapes: ShapeView[], dx: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
@@ -81,7 +81,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                 const parent = shape.parent;
                 if (parent && (parent as ArtboardView).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
-                translate(api, page, adapt2Shape(shape), dx, 0);
+                translate(op, page, adapt2Shape(shape), dx, 0);
             }
             this.updateView();
         } catch (e) {
@@ -92,7 +92,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeY(shapes: ShapeView[], dy: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
@@ -100,7 +100,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                 const parent = shape.parent;
                 if (parent && (parent as ArtboardView).autoLayout) continue;
                 if (shape.isVirtualShape) continue;
-                translate(api, page, adapt2Shape(shape), 0, dy);
+                translate(op, page, adapt2Shape(shape), 0, dy);
             }
             this.updateView();
         } catch (e) {
@@ -111,7 +111,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeW(shapes: ShapeView[], dw: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const whRatioMap = this.whRatioMap;
             for (let i = 0; i < shapes.length; i++) {
@@ -128,23 +128,23 @@ export class LockMouseHandler extends AsyncApiCaller {
                     const ratio = whRatioMap.get(shape.id);
                     if (ratio) dh = dw / ratio;
                 }
-                api.shapeModifyWidth(page, shape, size.width + dw)
-                if (dh) api.shapeModifyHeight(page, shape, size.height + dh);
+                op.shapeModifyWidth(page, shape, size.width + dw)
+                if (dh) op.shapeModifyHeight(page, shape, size.height + dh);
                 if (shape instanceof TextShape) {
                     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
                     if (textBehaviour === TextBehaviour.Flexible) {
-                        api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
+                        op.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
                     }
-                    fixTextShapeFrameByLayout(api, page, shape);
+                    fixTextShapeFrameByLayout(op, page, shape);
                 } else {
                     if ((view as ArtboardView).autoLayout) {
-                        const _shape = shape4Autolayout(api, view, this._page);
-                        api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
+                        const _shape = shape4Autolayout(op, view, this._page);
+                        op.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
                     }
                 }
 
                 if (view instanceof GroupShapeView) {
-                    reLayoutBySizeChanged(api, page, view, {
+                    reLayoutBySizeChanged(op, page, view, {
                         x: Math.abs(size.width / (size.width - dw)),
                         y: Math.abs(size.height / (size.height - dh))
                     });
@@ -159,7 +159,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeH(shapes: ShapeView[], dh: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const whRatioMap = this.whRatioMap;
             for (let i = 0; i < shapes.length; i++) {
@@ -176,22 +176,22 @@ export class LockMouseHandler extends AsyncApiCaller {
                     const ratio = whRatioMap.get(shape.id);
                     if (ratio) dw = dh * ratio;
                 }
-                api.shapeModifyHeight(page, shape, size.height + dh);
-                if (dw) api.shapeModifyWidth(page, shape, size.width + dw);
+                op.shapeModifyHeight(page, shape, size.height + dh);
+                if (dw) op.shapeModifyWidth(page, shape, size.width + dw);
                 if (shape instanceof TextShape) {
                     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
                     if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
-                        api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
+                        op.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
                     }
-                    fixTextShapeFrameByLayout(api, page, shape);
+                    fixTextShapeFrameByLayout(op, page, shape);
                 } else {
                     if ((view as ArtboardView).autoLayout) {
-                        const _shape = shape4Autolayout(api, view, this._page);
-                        api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
+                        const _shape = shape4Autolayout(op, view, this._page);
+                        op.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
                     }
                 }
                 if (view instanceof GroupShapeView) {
-                    reLayoutBySizeChanged(api, page, view, {
+                    reLayoutBySizeChanged(op, page, view, {
                         x: Math.abs(size.width / (size.width - dw)),
                         y: Math.abs(size.height / (size.height - dh))
                     });
@@ -206,7 +206,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeCounts(shapes: ShapeView[], count: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
@@ -217,9 +217,9 @@ export class LockMouseHandler extends AsyncApiCaller {
                 const offset = shape.type === ShapeType.Star ? (shape as StarShape).innerAngle : undefined;
                 const counts = getPolygonVertices(shape.type === ShapeType.Star ? count * 2 : count, offset);
                 const points = getPolygonPoints(counts, view.radius[0]);
-                api.deletePoints(page, shape, 0, shape.type === ShapeType.Star ? shape.counts * 2 : shape.counts, 0);
-                api.addPoints(page, shape, points, 0);
-                api.shapeModifyCounts(page, shape, count);
+                op.deletePoints(page, shape, 0, shape.type === ShapeType.Star ? shape.counts * 2 : shape.counts, 0);
+                op.addPoints(page, shape, points, 0);
+                op.shapeModifyCounts(page, shape, count);
             }
             this.updateView();
         } catch (e) {
@@ -230,7 +230,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeInnerAngle(shapes: ShapeView[], value: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
@@ -248,9 +248,9 @@ export class LockMouseHandler extends AsyncApiCaller {
                     if (index % 2 === 0) continue;
                     const angle = ((2 * Math.PI) / points.length) * index;
                     const p = calculateInnerAnglePosition(offset, angle);
-                    api.shapeModifyCurvPoint(page, shape, index, p, 0);
+                    op.shapeModifyCurvPoint(page, shape, index, p, 0);
                 }
-                api.shapeModifyInnerAngle(page, shape, offset);
+                op.shapeModifyInnerAngle(page, shape, offset);
             }
             this.updateView();
         } catch (e) {
@@ -261,7 +261,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeRotate(shapes: ShapeView[], deg: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
@@ -280,7 +280,7 @@ export class LockMouseHandler extends AsyncApiCaller {
                 t.rotateInLocal(angle - os, width / 2, height / 2);
 
                 const transform = (t);
-                api.shapeModifyRotate(page, adapt2Shape(shape), transform)
+                op.shapeModifyRotate(page, adapt2Shape(shape), transform)
             }
             this.updateView();
         } catch (e) {
@@ -289,13 +289,13 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
-    getRadiusMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
+    getRadiusMaskVariable(op: Operator, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, op);
     }
 
     executeRadius(shapes: ShapeView[], values: number[]) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
@@ -303,11 +303,11 @@ export class LockMouseHandler extends AsyncApiCaller {
 
                 if (shape.isVirtualShape) continue;
                 if (shape.radiusMask) {
-                    const variable = this.getRadiusMaskVariable(api, this._page, shapes[i], undefined);
+                    const variable = this.getRadiusMaskVariable(op, this._page, shapes[i], undefined);
                     if (variable) {
-                        api.shapeModifyVariable(page, variable, undefined);
+                        op.shapeModifyVariable(page, variable, undefined);
                     } else {
-                        api.delradiusmask(shape);
+                        op.delradiusmask(shape);
                     }
                 }
 
@@ -319,8 +319,8 @@ export class LockMouseHandler extends AsyncApiCaller {
                     const [lt, rt, rb, lb] = values;
 
                     if (shape instanceof SymbolRefShape) {
-                        const _shape = shape4cornerRadius(api, this.pageView, shapes[i] as SymbolRefView);
-                        api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
+                        const _shape = shape4cornerRadius(op, this.pageView, shapes[i] as SymbolRefView);
+                        op.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
                     }
 
                     if (shape instanceof PathShape) {
@@ -328,21 +328,21 @@ export class LockMouseHandler extends AsyncApiCaller {
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
                             if (points[_i].radius === val || val < 0) continue;
-                            api.modifyPointCornerRadius(page, shape, _i, val, 0);
+                            op.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         this.updateFrameTargets.add(shape);
                     } else {
                         const __shape = shape as Artboard | SymbolShape;
-                        api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
+                        op.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
                     }
                 } else {
                     if (shape instanceof ContactShape || !(shape instanceof PathShape)) {
-                        api.shapeModifyFixedRadius(page, shape as ContactShape | GroupShape | TextShape, values[0]);
+                        op.shapeModifyFixedRadius(page, shape as ContactShape | GroupShape | TextShape, values[0]);
                     } else {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) continue;
-                                api.modifyPointCornerRadius(page, shape, _i, values[0], index);
+                                op.modifyPointCornerRadius(page, shape, _i, values[0], index);
                             }
                         });
                         this.updateFrameTargets.add(shape);
@@ -358,10 +358,10 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeShadowX(actions: { shadow: Shadow, value: number }[]) {
         try {
-            const api = this.api;
+            const op = this.operator;
             for (let i = 0; i < actions.length; i++) {
                 const { shadow, value } = actions[i];
-                api.setShadowOffsetX(shadow, value);
+                op.setShadowOffsetX(shadow, value);
             }
 
             this.updateView();
@@ -373,10 +373,10 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeShadowY(actions: { shadow: Shadow, value: number }[]) {
         try {
-            const api = this.api;
+            const op = this.operator;
             for (let i = 0; i < actions.length; i++) {
                 const { shadow, value } = actions[i];
-                api.setShadowOffsetY(shadow, value);
+                op.setShadowOffsetY(shadow, value);
             }
 
             this.updateView();
@@ -388,10 +388,10 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeShadowB(actions: { shadow: Shadow, value: number }[]) {
         try {
-            const api = this.api;
+            const op = this.operator;
             for (let i = 0; i < actions.length; i++) {
                 const { shadow, value } = actions[i];
-                api.setShadowBlur(shadow, value);
+                op.setShadowBlur(shadow, value);
             }
 
             this.updateView();
@@ -403,10 +403,10 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeShadowS(actions: { shadow: Shadow, value: number }[]) {
         try {
-            const api = this.api;
+            const op = this.operator;
             for (let i = 0; i < actions.length; i++) {
                 const { shadow, value } = actions[i];
-                api.setShadowSpread(shadow, value);
+                op.setShadowSpread(shadow, value);
             }
 
             this.updateView();
@@ -418,9 +418,9 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     executeTidyup(shapes: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlign) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
-            tidyUpLayout(page, api, shapes, hor, ver, dir, algin);
+            tidyUpLayout(page, op, shapes, hor, ver, dir, algin);
             this.updateView();
         } catch (e) {
             this.exception = true;
@@ -431,7 +431,7 @@ export class LockMouseHandler extends AsyncApiCaller {
     modifyStartingAngleBy(shapes: ShapeView[], delta: number) {
         try {
             const round = Math.PI * 2;
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (const view of shapes) {
@@ -449,10 +449,10 @@ export class LockMouseHandler extends AsyncApiCaller {
 
                 const targetEnd = targetStart + d;
 
-                api.ovalModifyStartingAngle(page, shape, targetStart);
-                api.ovalModifyEndingAngle(page, shape, targetEnd);
+                op.ovalModifyStartingAngle(page, shape, targetStart);
+                op.ovalModifyEndingAngle(page, shape, targetEnd);
 
-                modifyPathByArc(api, page, shape);
+                modifyPathByArc(op, page, shape);
             }
             this.updateView();
         } catch (error) {
@@ -464,7 +464,7 @@ export class LockMouseHandler extends AsyncApiCaller {
     modifySweepBy(shapes: ShapeView[], delta: number) {
         try {
             const round = Math.PI * 2;
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (const view of shapes) {
@@ -478,9 +478,9 @@ export class LockMouseHandler extends AsyncApiCaller {
                 if (targetEnd - start < -round) targetEnd = -round + start;
                 else if (targetEnd - start > round) targetEnd = round + start;
 
-                api.ovalModifyEndingAngle(page, shape, targetEnd);
+                op.ovalModifyEndingAngle(page, shape, targetEnd);
 
-                modifyPathByArc(api, page, shape);
+                modifyPathByArc(op, page, shape);
             }
 
             this.updateView();
@@ -492,7 +492,7 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     modifyInnerRadiusBy(shapes: ShapeView[], delta: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (const view of shapes) {
@@ -504,9 +504,9 @@ export class LockMouseHandler extends AsyncApiCaller {
                 if (targetInnerRadius < 0) targetInnerRadius = 0;
                 else if (targetInnerRadius > 1) targetInnerRadius = 1;
 
-                api.ovalModifyInnerRadius(page, shape, targetInnerRadius);
+                op.ovalModifyInnerRadius(page, shape, targetInnerRadius);
 
-                modifyPathByArc(api, page, shape);
+                modifyPathByArc(op, page, shape);
             }
 
             this.updateView();
@@ -516,51 +516,51 @@ export class LockMouseHandler extends AsyncApiCaller {
         }
     }
 
-    private getBorderVariable(api: Api, page: PageView, view: ShapeView) {
+    private getBorderVariable(op: Operator, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
             return importBorder(_var?.value ?? view.style.borders);
-        }, api, view);
+        }, op, view);
     }
 
-    private getStrokeMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, api);
+    private getStrokeMaskVariable(op: Operator, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, op);
     }
 
     modifyBorderThickness(shapes: ShapeView[], thickness: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             for (const view of shapes) {
                 const border = view.getBorder();
-                const linkedVariable = this.getBorderVariable(api, this._page, view);
+                const linkedVariable = this.getBorderVariable(op, this._page, view);
                 const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 if (view.bordersMask) {
-                    const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, this._page, view, undefined);
+                    const linkedBorderMaskVariable = this.getStrokeMaskVariable(op, this._page, view, undefined);
                     if (linkedBorderMaskVariable) {
-                        api.shapeModifyVariable(this.page, linkedBorderMaskVariable, undefined);
+                        op.shapeModifyVariable(this.page, linkedBorderMaskVariable, undefined);
                     } else {
-                        api.modifyBorderMask(adapt2Shape(view).style, undefined);
+                        op.modifyBorderMask(adapt2Shape(view).style, undefined);
                     }
-                    api.setBorderPosition(source, border.position);
+                    op.setBorderPosition(source, border.position);
                 }
                 const sideType = border.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(source, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                        op.setBorderSide(source, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
                         break;
                     case SideType.Top:
-                        api.setBorderThicknessTop(source, thickness);
+                        op.setBorderThicknessTop(source, thickness);
                         break
                     case SideType.Right:
-                        api.setBorderThicknessRight(source, thickness);
+                        op.setBorderThicknessRight(source, thickness);
                         break
                     case SideType.Bottom:
-                        api.setBorderThicknessBottom(source, thickness);
+                        op.setBorderThicknessBottom(source, thickness);
                         break
                     case SideType.Left:
-                        api.setBorderThicknessLeft(source, thickness);
+                        op.setBorderThicknessLeft(source, thickness);
                         break
                     default:
-                        api.setBorderSide(source, new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness));
+                        op.setBorderSide(source, new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness));
                         break;
                 }
             }
@@ -573,22 +573,22 @@ export class LockMouseHandler extends AsyncApiCaller {
 
     modifyBorderCustomThickness(shapes: ShapeView[], thickness: number, type: SideType) {
         try {
-            const api = this.api;
+            const op = this.operator;
             for (const view of shapes) {
-                const linkedVariable = this.getBorderVariable(api, this._page, view);
+                const linkedVariable = this.getBorderVariable(op, this._page, view);
                 const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 switch (type) {
                     case SideType.Top:
-                        api.setBorderThicknessTop(source, thickness);
+                        op.setBorderThicknessTop(source, thickness);
                         break
                     case SideType.Right:
-                        api.setBorderThicknessRight(source, thickness);
+                        op.setBorderThicknessRight(source, thickness);
                         break
                     case SideType.Bottom:
-                        api.setBorderThicknessBottom(source, thickness);
+                        op.setBorderThicknessBottom(source, thickness);
                         break
                     case SideType.Left:
-                        api.setBorderThicknessLeft(source, thickness);
+                        op.setBorderThicknessLeft(source, thickness);
                         break
                     default:
                         break;

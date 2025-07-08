@@ -14,26 +14,27 @@ import { v4 } from "uuid";
 import { Matrix } from "../../basic/matrix";
 import { uuid } from "../../basic/uuid";
 import { AsyncApiCaller } from "./basic/asyncapi";
-import { Api, IRepository } from "../../repo";
+import { Operator } from "../../operator";
+import { IRepository } from "../../repo";
 
-export function modifySweep(api: Api, page: Page, shapes: ShapeView[], value: number) {
+export function modifySweep(op: Operator, page: Page, shapes: ShapeView[], value: number) {
     const end = Math.PI * 2 * (value / 100);
     for (const view of shapes) {
         const shape = adapt2Shape(view) as OvalShape;
         let startingAngle: number = shape.startingAngle!;
 
         if (shape.startingAngle === undefined) {
-            api.ovalModifyStartingAngle(page, shape, 0);
+            op.ovalModifyStartingAngle(page, shape, 0);
             startingAngle = 0;
         }
 
         const target = startingAngle + end;
-        api.ovalModifyEndingAngle(page, shape, target);
-        modifyPathByArc(api, page, shape);
+        op.ovalModifyEndingAngle(page, shape, target);
+        modifyPathByArc(op, page, shape);
     }
 }
 
-export function modifyStartingAngle(api: Api, page: Page, shapes: ShapeView[], value: number) {
+export function modifyStartingAngle(op: Operator, page: Page, shapes: ShapeView[], value: number) {
     const round = Math.PI * 2;
     for (const view of shapes) {
         const shape = adapt2Shape(view);
@@ -41,23 +42,23 @@ export function modifyStartingAngle(api: Api, page: Page, shapes: ShapeView[], v
         const end = shape.endingAngle ?? round;
         const start = shape.startingAngle ?? 0;
         const delta = end - start;
-        api.ovalModifyStartingAngle(page, shape, value);
-        api.ovalModifyEndingAngle(page, shape, value + delta);
+        op.ovalModifyStartingAngle(page, shape, value);
+        op.ovalModifyEndingAngle(page, shape, value + delta);
 
-        modifyPathByArc(api, page, shape);
+        modifyPathByArc(op, page, shape);
     }
 }
 
-export function modifyRadius(api: Api, page: Page, shapes: ShapeView[], value: number) {
+export function modifyRadius(op: Operator, page: Page, shapes: ShapeView[], value: number) {
     for (const view of shapes) {
         const shape = adapt2Shape(view);
         if (!(shape instanceof OvalShape)) continue;
-        api.ovalModifyInnerRadius(page, shape, value);
-        modifyPathByArc(api, page, shape);
+        op.ovalModifyInnerRadius(page, shape, value);
+        modifyPathByArc(op, page, shape);
     }
 }
 
-export function modifyPathByArc(api: Api, page: Page, shape: Shape) {
+export function modifyPathByArc(op: Operator, page: Page, shape: Shape) {
     if (!(shape instanceof OvalShape)) return;
 
     const round = Math.PI * 2;
@@ -79,12 +80,12 @@ export function modifyPathByArc(api: Api, page: Page, shape: Shape) {
                 }
             }
         }
-        while (shape.pathsegs.length) api.deleteSegmentAt(page, shape, shape.pathsegs.length - 1);
+        while (shape.pathsegs.length) op.deleteSegmentAt(page, shape, shape.pathsegs.length - 1);
         while (segments.length) {
             const { points, isClosed } = segments.pop()!;
             if (cornerRadius) points.forEach(i => i.radius = cornerRadius);
             points.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
-            api.addSegmentAt(page, shape, 0, new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), isClosed));
+            op.addSegmentAt(page, shape, 0, new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), isClosed));
         }
     }
 }
@@ -385,47 +386,47 @@ export class OvalModifier extends AsyncApiCaller {
     }
 
     modifyStart(value: number, shapes: ShapeView[]) {
-        const api = this.api;
+        const op = this.operator;
         const page = this.page;
         for (const view of shapes) {
             const oval = adapt2Shape(view);
             if (!(oval instanceof OvalShape)) continue;
             const delta = this.getDelta(view);
 
-            api.ovalModifyStartingAngle(page, oval, value);
-            api.ovalModifyEndingAngle(page, oval, value + delta);
+            op.ovalModifyStartingAngle(page, oval, value);
+            op.ovalModifyEndingAngle(page, oval, value + delta);
 
-            modifyPathByArc(api, page, oval);
+            modifyPathByArc(op, page, oval);
         }
         this.updateView();
     }
 
     modifyEnd(value: number, shapes: ShapeView[]) {
-        const api = this.api;
+        const op = this.operator;
         const page = this.page;
         for (const view of shapes) {
             const oval = adapt2Shape(view);
             if (!(oval instanceof OvalShape)) continue;
-            api.ovalModifyEndingAngle(page, oval, value);
-            modifyPathByArc(api, page, oval);
+            op.ovalModifyEndingAngle(page, oval, value);
+            modifyPathByArc(op, page, oval);
         }
         this.updateView();
     }
 
     modifyRadius(value: number, shapes: ShapeView[]) {
-        const api = this.api;
+        const op = this.operator;
         const page = this.page;
         for (const view of shapes) {
             const oval = adapt2Shape(view);
             if (!(oval instanceof OvalShape)) continue;
-            api.ovalModifyInnerRadius(page, oval, value);
-            modifyPathByArc(api, page, oval);
+            op.ovalModifyInnerRadius(page, oval, value);
+            modifyPathByArc(op, page, oval);
         }
         this.updateView();
     }
 
     swapGap(view: ShapeView) {
-        const api = this.api;
+        const op = this.operator;
         const page = this.page;
 
         const shape = adapt2Shape(view);
@@ -437,12 +438,12 @@ export class OvalModifier extends AsyncApiCaller {
         const sweep = (end - start) / round;
 
         if (sweep === 1) return;
-        if (sweep === 0) return api.ovalModifyEndingAngle(page, shape, start + round);
+        if (sweep === 0) return op.ovalModifyEndingAngle(page, shape, start + round);
 
         const targetSweep = sweep < 0 ? sweep + 1 : sweep - 1;
         const targetEnd = start + targetSweep * round;
 
-        api.ovalModifyEndingAngle(page, shape, targetEnd);
+        op.ovalModifyEndingAngle(page, shape, targetEnd);
     }
 
     commit() {

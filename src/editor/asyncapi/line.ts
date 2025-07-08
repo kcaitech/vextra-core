@@ -36,14 +36,14 @@ export class LineHandleApiCaller extends AsyncApiCaller {
             const __start = points[0];
             const __end = points[1];
 
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             if ((__start.x !== start.x) || (__start.y !== start.y)) {
-                api.shapeModifyCurvPoint(page, shape, 0, start, 0);
+                op.shapeModifyCurvPoint(page, shape, 0, start, 0);
             }
             if ((__end.x !== end.x) || (__end.y !== end.y)) {
-                api.shapeModifyCurvPoint(page, shape, 1, end, 0);
+                op.shapeModifyCurvPoint(page, shape, 1, end, 0);
             }
 
             this.updateView();
@@ -55,7 +55,7 @@ export class LineHandleApiCaller extends AsyncApiCaller {
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
-            update_frame_by_points(this.api, this.page, adapt2Shape(this.line) as PathShape, true);
+            update_frame_by_points(this.operator, this.page, adapt2Shape(this.line) as PathShape, true);
             this.__repo.commit();
         } else {
             this.__repo.rollback();

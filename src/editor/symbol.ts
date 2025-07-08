@@ -144,15 +144,15 @@ function _varsContainer(view: ShapeView) {
     return varsContainer;
 }
 
-function _ov_newvar(host: SymbolRefShape | SymbolShape, name: string, value: any, type: VariableType, page: Page, api: Operator) {
+function _ov_newvar(host: SymbolRefShape | SymbolShape, name: string, value: any, type: VariableType, page: Page, op: Operator) {
     const _var2 = new Variable(uuid(), type, name, value);
-    api.shapeAddVariable(page, host, _var2); // create var
+    op.shapeAddVariable(page, host, _var2); // create var
     return _var2;
 }
 
 
-export function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: PageView, api: Operator) {
-    return prepareVar(api, page, view, overrideType, varType, valuefun)?.var
+export function _ov(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, view: ShapeView, page: PageView, op: Operator) {
+    return prepareVar(op, page, view, overrideType, varType, valuefun)?.var
 }
 
 function _clone_value(_var: Variable, document: Document, page: Page) {
@@ -206,52 +206,52 @@ function _clone_value(_var: Variable, document: Document, page: Page) {
     }
 }
 
-export function shape4contextSettings(api: Operator, _shape: ShapeView, page: PageView) {
+export function shape4contextSettings(op: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const contextSettings = _var?.value ?? _shape.contextSettings;
         return contextSettings && importContextSettings(contextSettings) || new ContextSettings(BlendMode.Normal, 1);
     };
-    const _var = _ov(VariableType.ContextSettings, OverrideType.ContextSettings, valuefun, _shape, page, api);
+    const _var = _ov(VariableType.ContextSettings, OverrideType.ContextSettings, valuefun, _shape, page, op);
     return _var || _shape.data;
 }
 
-export function shape4exportOptions(api: Operator, _shape: ShapeView, page: PageView) {
+export function shape4exportOptions(op: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const options = _var?.value ?? _shape.exportOptions;
         return options && importExportOptions(options) || new ExportOptions(new BasicArray(), 0, false, false, false, false);
     };
-    const _var = _ov(VariableType.ExportOptions, OverrideType.ExportOptions, valuefun, _shape, page, api);
+    const _var = _ov(VariableType.ExportOptions, OverrideType.ExportOptions, valuefun, _shape, page, op);
     return _var || _shape.data;
 }
 
-export function shape4blur(api: Operator, _shape: ShapeView, page: PageView) {
+export function shape4blur(op: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const blur = _var?.value ?? _shape.blur;
         return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
     };
-    const _var = _ov(VariableType.Blur, OverrideType.Blur, valuefun, _shape, page, api);
+    const _var = _ov(VariableType.Blur, OverrideType.Blur, valuefun, _shape, page, op);
     return _var || _shape.data;
 }
 
-export function shape4Autolayout(api: Operator, _shape: ShapeView, page: PageView) {
+export function shape4Autolayout(op: Operator, _shape: ShapeView, page: PageView) {
     const valuefun = (_var: Variable | undefined) => {
         const autolayout = _var?.value ?? (_shape as ArtboardView).autoLayout;
         return autolayout && importAutoLayout(autolayout) || new AutoLayout(10, 10, 0, 0, 0, 0, types.StackSizing.Auto);
     };
-    const _var = _ov(VariableType.AutoLayout, OverrideType.AutoLayout, valuefun, _shape, page, api);
+    const _var = _ov(VariableType.AutoLayout, OverrideType.AutoLayout, valuefun, _shape, page, op);
     return _var || _shape.data;
 }
 
 // 变量可能的情况
 // 1. 存在于symbolref中，则变量一定是override某个属性或者变量的。此时如果symbolref非virtual，可以直接修改，否则要再override
 // 2. 存在于symbol中，则变量一定是用户定义的某个变量。当前环境如在ref中，则需要override，否则可直接修改。
-export function modify_variable(document: Document, page: Page, view: ShapeView, _var: Variable, attr: { name?: string, value?: any }, api: Operator) {
+export function modify_variable(document: Document, page: Page, view: ShapeView, _var: Variable, attr: { name?: string, value?: any }, op: Operator) {
     const p = varParent(_var);
     if (!p) throw new Error();
     const varsContainer = _varsContainer(view);
     if (!varsContainer || varsContainer.length === 0) {
-        if (attr.name && _var.name !== attr.name) api.shapeModifyVariableName(page, _var, attr.name);
-        if (attr.hasOwnProperty('value')) api.shapeModifyVariable(page, _var, attr.value);
+        if (attr.name && _var.name !== attr.name) op.shapeModifyVariableName(page, _var, attr.name);
+        if (attr.hasOwnProperty('value')) op.shapeModifyVariable(page, _var, attr.value);
         return;
     }
 
@@ -260,8 +260,8 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
     const hostIdx = varsContainer.findIndex((v) => v instanceof SymbolRefShape);
     // if (hostIdx < 0) throw new Error();
     if (hostIdx < 0 || pIdx >= 0 && pIdx <= hostIdx) {
-        if (attr.name && _var.name !== attr.name) api.shapeModifyVariableName(page, _var, attr.name);
-        if (attr.hasOwnProperty('value')) api.shapeModifyVariable(page, _var, attr.value);
+        if (attr.name && _var.name !== attr.name) op.shapeModifyVariableName(page, _var, attr.name);
+        if (attr.hasOwnProperty('value')) op.shapeModifyVariable(page, _var, attr.value);
         return;
     }
 
@@ -322,7 +322,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
             // 判断是否可以修改，如可以则直接修改。否则走override
             const pIdx = varsContainer.findIndex((v) => v.id === p.id);
             if (pIdx >= 0 && pIdx <= hostIdx) {
-                api.shapeModifyVariable(page, _vars[_vars.length - 1], value);
+                op.shapeModifyVariable(page, _vars[_vars.length - 1], value);
                 return;
             }
         }
@@ -336,7 +336,7 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
             // 判断是否可以修改，如可以则直接修改。否则走override
             const pIdx = varsContainer.findIndex((v) => v.id === p.id);
             if (pIdx >= 0 && pIdx <= hostIdx) {
-                api.shapeModifyVariable(page, _vars[_vars.length - 1], value);
+                op.shapeModifyVariable(page, _vars[_vars.length - 1], value);
                 return;
             }
         }
@@ -352,26 +352,26 @@ export function modify_variable(document: Document, page: Page, view: ShapeView,
         if (c instanceof SymbolRefShape) override_id = c.id + '/' + override_id;
     }
 
-    const _var2 = _ov_newvar(host, attr.name ?? _var.name, value ?? _clone_value(_var.value, document, page), _var.type, page, api);
-    api.shapeAddOverride(page, host, override_id, _var2.id);
+    const _var2 = _ov_newvar(host, attr.name ?? _var.name, value ?? _clone_value(_var.value, document, page), _var.type, page, op);
+    op.shapeAddOverride(page, host, override_id, _var2.id);
 }
 
 
 /**
  * @description override "editor/shape/overrideVariable"
  */
-export function override_variable(page: PageView, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Operator, view: ShapeView) {
+export function override_variable(page: PageView, varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, op: Operator, view: ShapeView) {
     // view = view ?? this.__shape;
-    return _ov(varType, overrideType, valuefun, view, page, api);
+    return _ov(varType, overrideType, valuefun, view, page, op);
 }
 
 /**
  * @description 由外引入api的变量修改函数
  */
-export function modify_variable_with_api(api: Operator, page: PageView, shape: ShapeView, varType: VariableType, overrideType: OverrideType, value: any) {
-    const _var = _ov(varType, overrideType, () => value, shape, page, api);
+export function modify_variable_with_api(op: Operator, page: PageView, shape: ShapeView, varType: VariableType, overrideType: OverrideType, value: any) {
+    const _var = _ov(varType, overrideType, () => value, shape, page, op);
     if (_var && _var.value !== value) {
-        api.shapeModifyVariable(page.data, _var, value);
+        op.shapeModifyVariable(page.data, _var, value);
     }
     return !!_var;
 }
@@ -379,15 +379,15 @@ export function modify_variable_with_api(api: Operator, page: PageView, shape: S
 /**
  * @description override "editor/shape/shape4border"
  */
-export function shape4border(api: Operator, page: PageView, shape: ShapeView) {
+export function shape4border(op: Operator, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
         const borders = _var?.value ?? shape.getBorder();
         return importBorder(borders);
-    }, api, shape)
+    }, op, shape)
     return _var || shape.data;
 }
 
-export function shape4fill(api: Operator, page: PageView, shape: ShapeView) {
+export function shape4fill(op: Operator, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
         const fills = _var?.value ?? shape.getFills();
         return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -397,10 +397,10 @@ export function shape4fill(api: Operator, page: PageView, shape: ShapeView) {
             return ret;
         }
         ))
-    }, api, shape)
+    }, op, shape)
     return _var || shape.data;
 }
-export function shape4fill2(api: Operator, page: PageView, shape: ShapeView) {
+export function shape4fill2(op: Operator, page: PageView, shape: ShapeView) {
     return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
         const fills = _var?.value ?? shape.getFills();
         return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -410,25 +410,25 @@ export function shape4fill2(api: Operator, page: PageView, shape: ShapeView) {
                 return ret;
             }
         ))
-    }, api, shape)!;
+    }, op, shape)!;
 }
 
-export function shape4shadow(api: Operator, page: PageView, shape: ShapeView) {
+export function shape4shadow(op: Operator, page: PageView, shape: ShapeView) {
     const _var = override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {
         const shadows = _var?.value ?? shape.getShadows();
         return new BasicArray(...(shadows as Array<Shadow>).map((v) => {
             return importShadow(v);
         }
         ))
-    }, api, shape)
+    }, op, shape)
     return _var || shape.data;
 }
 
-export function shape4cornerRadius(api: Operator, page: PageView, shape: ArtboardView | SymbolView | SymbolRefView) {
+export function shape4cornerRadius(op: Operator, page: PageView, shape: ArtboardView | SymbolView | SymbolRefView) {
     const _var = override_variable(page, VariableType.CornerRadius, OverrideType.CornerRadius, (_var) => {
         const cornerRadius = _var?.value ?? shape.cornerRadius;
         return cornerRadius ? importCornerRadius(cornerRadius) : new CornerRadius(v4(),0, 0, 0, 0);
-    }, api, shape)
+    }, op, shape)
     const ret = _var || shape.data;
     if (ret instanceof SymbolRefShape) throw new Error();
     return ret;
@@ -487,7 +487,7 @@ export function get_state_name(state: SymbolShape, dlt: string) {
     return name_slice.toString();
 }
 
-export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView, api: Operator): Variable | undefined {
+export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView, op: Operator): Variable | undefined {
     // cell id 要重新生成
     const index = view.indexOfCell(_cell);
     if (!index) throw new Error();
@@ -511,14 +511,14 @@ export function cell4edit2(page: PageView, view: TableView, _cell: TableCellView
             newTableCellText(view.data.textAttr));
     };
     // const refId = view.data.id + '/' + cellId;
-    const _var = overrideTableCell(api, page, view, _cell, valuefun);
+    const _var = overrideTableCell(op, page, view, _cell, valuefun);
     if (_var?.var) return _var.var;
-    api.tableInitCell(page.data, view.data, rowIdx, colIdx);
+    op.tableInitCell(page.data, view.data, rowIdx, colIdx);
     // return _cell.data;
     // return _var;
 }
 
-export function cell4edit(page: PageView, view: TableView, rowIdx: number, colIdx: number, api: Operator): TableCellView {
+export function cell4edit(page: PageView, view: TableView, rowIdx: number, colIdx: number, op: Operator): TableCellView {
     const cell = view.getCellAt(rowIdx, colIdx);
     if (!cell) throw new Error("cell init fail?");
 
@@ -541,15 +541,15 @@ export function cell4edit(page: PageView, view: TableView, rowIdx: number, colId
             newTableCellText(view.data.textAttr));
     };
     // const refId = view.data.id + '/' + cellId;
-    // const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, api, view);
-    const _var = overrideTableCell(api, page, view, cell, valuefun);
+    // const _var = override_variable2(page, VariableType.TableCell, OverrideType.TableCell, refId, valuefun, op, view);
+    const _var = overrideTableCell(op, page, view, cell, valuefun);
     if (_var?.var) {
         cell.setData(_var.var.value);
         // return _var;
         return cell;
     }
 
-    if (api.tableInitCell(page.data, view.data, rowIdx, colIdx)) {
+    if (op.tableInitCell(page.data, view.data, rowIdx, colIdx)) {
         // 更新下data
         const _cell = view._getCellAt2(rowIdx, colIdx);
         if (!_cell) throw new Error();

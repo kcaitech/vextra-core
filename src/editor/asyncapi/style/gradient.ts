@@ -8,7 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { IRepository, Api } from "../../../repo";
+import { IRepository } from "../../../repo";
+import { Operator } from "../../../operator";
 import { BasicArray, Fill, OverrideType, VariableType } from "../../../data";
 import { PageView, ShapeView } from "../../../dataview";
 import { override_variable } from "../../symbol";
@@ -21,7 +22,7 @@ export class GradientEditor {
     importGradient = importGradient;
     importStop = importStop;
 
-    getFillsVariable(api: Api, page: PageView, view: ShapeView) {
+    getFillsVariable(op: Operator, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
             const fills = _var?.value ?? view.getFills();
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -31,13 +32,13 @@ export class GradientEditor {
                     return ret;
                 }
             ))
-        }, api, view)!;
+        }, op, view)!;
     }
 
-    getBorderVariable(api: Api, page: PageView, view: ShapeView) {
+    getBorderVariable(op: Operator, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
             return importBorder(_var?.value ?? view.getBorder());
-        }, api, view)!;
+        }, op, view)!;
     }
 
     constructor(repo: IRepository) {
@@ -48,15 +49,15 @@ export class GradientEditor {
         return this.__repo.start('async-gradient-editor');
     }
 
-    private m_api: Api | undefined;
+    private m_operator: Operator | undefined;
 
-    get api(): Api {
-        return this.m_api ?? (this.m_api = this.__repo.start('async-gradient-editor'));
+    get operator(): Operator {
+        return this.m_operator ?? (this.m_operator = this.__repo.start('async-gradient-editor'));
     }
 
     createStop(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -66,7 +67,7 @@ export class GradientEditor {
 
     modifyFrom(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -76,7 +77,7 @@ export class GradientEditor {
 
     modifyTo(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -86,7 +87,7 @@ export class GradientEditor {
 
     modifyEllipseLength(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -96,7 +97,7 @@ export class GradientEditor {
 
     modifyStopPosition(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -114,6 +115,6 @@ export class GradientEditor {
         } else {
             this.__repo.rollback();
         }
-        this.m_api = undefined;
+        this.m_operator = undefined;
     }
 }

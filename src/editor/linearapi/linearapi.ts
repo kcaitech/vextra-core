@@ -11,7 +11,8 @@
 import { Document, OvalShape, Fill, Blur, Variable, StackSizing, PaddingDir } from "../../data";
 import { adapt2Shape, ArtboardView, PageView, ShapeView, SymbolRefView, SymbolView, TableCellView, TableView, TextShapeView } from "../../dataview";
 import { modifyPathByArc } from "../asyncapi";
-import { Api, IRepository } from "../../repo";
+import { IRepository } from "../../repo";
+import { Operator } from "../../operator";
 import { modify_shapes_height, modify_shapes_width } from "../utils/common";
 import {
     Artboard,
@@ -49,7 +50,7 @@ export class LinearApi {
 
     private exception: boolean = false;
 
-    private api: Api | undefined;
+    private op: Operator | undefined;
 
     constructor(repo: IRepository, document: Document, page: PageView) {
         this.__repo = repo;
@@ -88,7 +89,7 @@ export class LinearApi {
         if (this.__connected) return true;
         else if (this.__repo.isInTransact()) return false;
         else {
-            this.api = this.__repo.start(desc);
+            this.op = this.__repo.start(desc);
             this.__connected = true;
             return true;
         }
@@ -130,7 +131,7 @@ export class LinearApi {
      */
     modifyStartingAngle(shapes: ShapeView[], value: number) {
         this.execute('modify-starting-angle-linear', () => {
-            const api = this.api!;
+            const op = this.op!;
             const round = Math.PI * 2;
             const page = this.page;
 
@@ -140,10 +141,10 @@ export class LinearApi {
                 const end = shape.endingAngle ?? round;
                 const start = shape.startingAngle ?? 0;
                 const delta = end - start;
-                api.ovalModifyStartingAngle(page, shape, value);
-                api.ovalModifyEndingAngle(page, shape, value + delta);
+                op.ovalModifyStartingAngle(page, shape, value);
+                op.ovalModifyEndingAngle(page, shape, value + delta);
 
-                modifyPathByArc(api, page, shape);
+                modifyPathByArc(op, page, shape);
             }
         });
     }
@@ -153,15 +154,15 @@ export class LinearApi {
      */
     modifySweep(shapes: ShapeView[], value: number) {
         this.execute('modify-sweep-linear', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
 
             for (const view of shapes) {
                 const shape = adapt2Shape(view);
                 if (!(shape instanceof OvalShape)) continue;
                 const start = shape.startingAngle ?? 0;
-                api.ovalModifyEndingAngle(page, shape, start + value);
-                modifyPathByArc(api, page, shape);
+                op.ovalModifyEndingAngle(page, shape, start + value);
+                modifyPathByArc(op, page, shape);
             }
         });
     }
@@ -171,15 +172,15 @@ export class LinearApi {
      */
     modifyInnerRadius(shapes: ShapeView[], value: number) {
         this.execute('modify-inner-radius-linear', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
 
             for (const view of shapes) {
                 const shape = adapt2Shape(view);
                 if (!(shape instanceof OvalShape)) continue;
 
-                api.ovalModifyInnerRadius(page, shape, value);
-                modifyPathByArc(api, page, shape);
+                op.ovalModifyInnerRadius(page, shape, value);
+                modifyPathByArc(op, page, shape);
             }
         });
     }
@@ -192,12 +193,12 @@ export class LinearApi {
         x: number
     }[]) {
         this.execute('modify-shapes-x', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 const shape = adapt2Shape(action.target)
-                api.shapeModifyXY(page, shape, action.x, shape.transform.translateY);
+                op.shapeModifyXY(page, shape, action.x, shape.transform.translateY);
             }
         });
     }
@@ -210,12 +211,12 @@ export class LinearApi {
         y: number
     }[]) {
         this.execute('modify-shapes-y', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 const shape = adapt2Shape(action.target)
-                api.shapeModifyXY(page, shape, shape.transform.translateX, action.y);
+                op.shapeModifyXY(page, shape, shape.transform.translateX, action.y);
             }
         });
     }
@@ -229,12 +230,12 @@ export class LinearApi {
         dy: number
     }[]) {
         this.execute('modify-shapes-xy', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (const action of actions) {
                 const { target, dx, dy } = action;
                 if (target.isVirtualShape) continue;
-                api.shapeModifyXY(page, adapt2Shape(target), target.transform.translateX + dx, target.transform.translateY + dy);
+                op.shapeModifyXY(page, adapt2Shape(target), target.transform.translateX + dx, target.transform.translateY + dy);
             }
         });
     }
@@ -245,9 +246,9 @@ export class LinearApi {
 
     modifyShapesWidth(shapes: ShapeView[], val: number) {
         this.execute('modify-shapes-width', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
-            modify_shapes_width(api, this.__document, page, shapes, val)
+            modify_shapes_width(op, this.__document, page, shapes, val)
         });
     }
 
@@ -257,9 +258,9 @@ export class LinearApi {
 
     modifyShapesHeight(shapes: ShapeView[], val: number) {
         this.execute('modify-shapes-height', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
-            modify_shapes_height(api, this.__document, page, shapes, val)
+            modify_shapes_height(op, this.__document, page, shapes, val)
         });
     }
 
@@ -272,12 +273,12 @@ export class LinearApi {
         transform: Transform
     }[]) {
         this.execute('set-shapes-rotate', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (const action of actions) {
                 const { shape: shapeView, transform } = action;
                 const s = adapt2Shape(shapeView);
-                api.shapeModifyRotate(page, s, transform);
+                op.shapeModifyRotate(page, s, transform);
             }
         });
     }
@@ -285,22 +286,22 @@ export class LinearApi {
     /**
      * @description 修改图形圆角
      */
-    getRadiusMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
+    getRadiusMaskVariable(op: Operator, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, op);
     }
     shapesModifyRadius(shapes: ShapeView[], values: number[]) {
         this.execute('set-shapes-rotate', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
                 const shape = adapt2Shape(shapes[i]);
 
                 if (shape.radiusMask) {
-                    const variable = this.getRadiusMaskVariable(api, this._page, shapes[i], undefined);
+                    const variable = this.getRadiusMaskVariable(op, this._page, shapes[i], undefined);
                     if (variable) {
-                        api.shapeModifyVariable(page, variable, undefined);
+                        op.shapeModifyVariable(page, variable, undefined);
                     } else {
-                        api.delradiusmask(shape);
+                        op.delradiusmask(shape);
                     }
                 }
                 let needUpdateFrame = false;
@@ -312,8 +313,8 @@ export class LinearApi {
 
                     const [lt, rt, rb, lb] = values;
                     if (shape instanceof SymbolRefShape) {
-                        const _shape = shape4cornerRadius(api, this._page, shapes[i] as SymbolRefView);
-                        api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
+                        const _shape = shape4cornerRadius(op, this._page, shapes[i] as SymbolRefView);
+                        op.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
                     }
 
                     if (shape.isVirtualShape) continue;
@@ -323,12 +324,12 @@ export class LinearApi {
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
                             if (points[_i].radius === val || val < 0) continue;
-                            api.modifyPointCornerRadius(page, shape, _i, val, 0);
+                            op.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         needUpdateFrame = true;
                     } else {
                         const __shape = shape as Artboard | SymbolShape;
-                        api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
+                        op.shapeModifyRadius2(page, __shape, lt, rt, rb, lb)
                     }
                 } else {
                     if (shape.isVirtualShape || shape.radiusType === RadiusType.None) continue;
@@ -336,16 +337,16 @@ export class LinearApi {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) continue;
-                                api.modifyPointCornerRadius(page, shape, _i, values[0], index);
+                                op.modifyPointCornerRadius(page, shape, _i, values[0], index);
                             }
                         });
                         needUpdateFrame = true;
                     } else {
-                        api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
+                        op.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
                     }
                 }
                 if (needUpdateFrame) {
-                    update_frame_by_points(api, page, shape as PathShape);
+                    update_frame_by_points(op, page, shape as PathShape);
                 }
             }
         });
@@ -357,11 +358,11 @@ export class LinearApi {
 
     modifyShapesOpacity(shapes: ShapeView[], value: number) {
         this.execute('modify-shapes-opacity', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0, l = shapes.length; i < l; i++) {
-                const shape = shape4contextSettings(api, shapes[i], this._page);
-                api.shapeModifyContextSettingsOpacity(page, shape, value);
+                const shape = shape4contextSettings(op, shapes[i], this._page);
+                op.shapeModifyContextSettingsOpacity(page, shape, value);
             }
         });
     }
@@ -372,7 +373,7 @@ export class LinearApi {
 
     modifyGradientOpacity(actions: BatchAction5[]) {
         this.execute('modify-gradient-opacity', () => {
-            const api = this.api!;
+            const op = this.op!;
             for (let i = 0, l = actions.length; i < l; i++) {
                 const { target, index, type, value } = actions[i];
                 const grad_type = type === 'fills' ? target.getFills() : target.getBorder().strokePaints;
@@ -383,13 +384,13 @@ export class LinearApi {
                 const new_gradient = importGradient(gradient);
                 new_gradient.gradientOpacity = value;
                 if (type === "fills") {
-                    const _tar = shape4fill(api, this._page, target);
+                    const _tar = shape4fill(op, this._page, target);
                     const fills = _tar instanceof Variable ? _tar.value : target.getFills();
-                    api.setFillGradient(fills[index], new_gradient);
+                    op.setFillGradient(fills[index], new_gradient);
                 } else {
-                    const _tar = shape4border(api, this._page, target);
+                    const _tar = shape4border(op, this._page, target);
                     const fills = _tar instanceof Variable ? _tar.value.strokePaints : target.getBorder().strokePaints;
-                    api.setFillGradient(fills[index], new_gradient);
+                    op.setFillGradient(fills[index], new_gradient);
                 }
             }
         });
@@ -400,10 +401,10 @@ export class LinearApi {
     */
     modifyFillOpacity(actions: { fill: Fill, color: Color }[]) {
         this.execute('modify-fill-opacity', () => {
-            const api = this.api!;
+            const op = this.op!;
             for (const action of actions) {
                 const { fill, color } = action;
-                api.setFillColor(fill, color);
+                op.setFillColor(fill, color);
             }
         });
     }
@@ -424,12 +425,12 @@ export class LinearApi {
     modifyFillOpacity4Cell(idx: number, color: Color, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, table: TableView) {
         const editor = this.getTableEditor(table);
         this.execute('modify-fill-opacity-4Cell', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             editor.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
-                    const c = editor.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    // api.setFillColor(page, c.data, idx, color);
+                    const c = editor.cell4edit(cell.rowIdx, cell.colIdx, op);
+                    // op.setFillColor(page, c.data, idx, color);
                 }
             })
         });
@@ -441,12 +442,12 @@ export class LinearApi {
 
     modifyBorderOpacity(actions: BatchAction[]) {
         this.execute('modify-border-opacity', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, index, value } = actions[i];
-                const s = shape4border(api, this._page, target);
-                api.setBorderColor(page, s, index, value);
+                const s = shape4border(op, this._page, target);
+                op.setBorderColor(page, s, index, value);
             }
         });
     }
@@ -458,12 +459,12 @@ export class LinearApi {
     modifyBorderOpacity4Cell(idx: number, color: Color, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, table: TableView) {
         const editor = this.getTableEditor(table);
         this.execute('modify-border-opacity-4Cell', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             editor.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
-                    const c = editor.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setBorderColor(page, c.data, idx, color);
+                    const c = editor.cell4edit(cell.rowIdx, cell.colIdx, op);
+                    op.setBorderColor(page, c.data, idx, color);
                 }
             })
         });
@@ -473,52 +474,52 @@ export class LinearApi {
      *  @description 修改边框粗细
      */
 
-    private getBorderVariable(api: Api, page: PageView, view: ShapeView) {
+    private getBorderVariable(op: Operator, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
             const border = _var?.value ?? view.getBorder();
             return border;
-        }, api, view);
+        }, op, view);
     }
 
-    private getStrokeMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, api);
+    private getStrokeMaskVariable(op: Operator, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, op);
     }
 
     modifyShapesBorderThickness(shapes: ShapeView[], thickness: number) {
         this.execute('modify-shapes-border-Thickness', () => {
-            const api = this.api!;
+            const op = this.op!;
             for (const view of shapes) {
                 const border = view.getBorder();
-                const linkedVariable = this.getBorderVariable(api, this._page, view);
+                const linkedVariable = this.getBorderVariable(op, this._page, view);
                 const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
                 if (view.bordersMask) {
-                    const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, this._page, view, undefined);
+                    const linkedBorderMaskVariable = this.getStrokeMaskVariable(op, this._page, view, undefined);
                     if (linkedBorderMaskVariable) {
-                        api.shapeModifyVariable(this.page, linkedBorderMaskVariable, undefined);
+                        op.shapeModifyVariable(this.page, linkedBorderMaskVariable, undefined);
                     } else {
-                        api.modifyBorderMask(adapt2Shape(view).style, undefined);
+                        op.modifyBorderMask(adapt2Shape(view).style, undefined);
                     }
-                    api.setBorderPosition(source, border.position);
+                    op.setBorderPosition(source, border.position);
                 }
                 const sideType = border.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
-                        api.setBorderSide(source, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
+                        op.setBorderSide(source, new BorderSideSetting(sideType, thickness, thickness, thickness, thickness));
                         break;
                     case SideType.Top:
-                        api.setBorderThicknessTop(source, thickness);
+                        op.setBorderThicknessTop(source, thickness);
                         break
                     case SideType.Right:
-                        api.setBorderThicknessRight(source, thickness);
+                        op.setBorderThicknessRight(source, thickness);
                         break
                     case SideType.Bottom:
-                        api.setBorderThicknessBottom(source, thickness);
+                        op.setBorderThicknessBottom(source, thickness);
                         break
                     case SideType.Left:
-                        api.setBorderThicknessLeft(source, thickness);
+                        op.setBorderThicknessLeft(source, thickness);
                         break
                     default:
-                        api.setBorderSide(source, new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness));
+                        op.setBorderSide(source, new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness));
                         break;
                 }
             }
@@ -527,22 +528,22 @@ export class LinearApi {
 
     modifyBorderCustomThickness(shapes: ShapeView[], thickness: number, sideType: SideType) {
         this.execute('modify-shapes-border-Thickness', () => {
-            const api = this.api!;
+            const op = this.op!;
             for (const view of shapes) {
-                const linkedVariable = this.getBorderVariable(api, this._page, view);
+                const linkedVariable = this.getBorderVariable(op, this._page, view);
                 const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 switch (sideType) {
                     case SideType.Top:
-                        api.setBorderThicknessTop(source, thickness);
+                        op.setBorderThicknessTop(source, thickness);
                         break
                     case SideType.Right:
-                        api.setBorderThicknessRight(source, thickness);
+                        op.setBorderThicknessRight(source, thickness);
                         break
                     case SideType.Bottom:
-                        api.setBorderThicknessBottom(source, thickness);
+                        op.setBorderThicknessBottom(source, thickness);
                         break
                     case SideType.Left:
-                        api.setBorderThicknessLeft(source, thickness);
+                        op.setBorderThicknessLeft(source, thickness);
                         break
                     default:
                         break;
@@ -558,12 +559,12 @@ export class LinearApi {
     modifyBorderThickness4Cell(thickness: number, range: { rowStart: number, rowEnd: number, colStart: number, colEnd: number }, table: TableView) {
         const editor = this.getTableEditor(table);
         this.execute('modify-border-thickness-4Cell', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             editor.view._getVisibleCells(range.rowStart, range.rowEnd, range.colStart, range.colEnd).forEach((cell) => {
                 if (cell.cell) {
-                    const c = editor.cell4edit(cell.rowIdx, cell.colIdx, api);
-                    api.setBorderSide(c.data.getBorders(), new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+                    const c = editor.cell4edit(cell.rowIdx, cell.colIdx, op);
+                    op.setBorderSide(c.data.getBorders(), new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
                 }
             })
         });
@@ -575,10 +576,10 @@ export class LinearApi {
 
     modifyShapeBlurSaturation(actions: { blur: Blur, value: number }[]) {
         this.execute('modify-shape-blur-saturation', () => {
-            const api = this.api!;
+            const op = this.op!;
             for (let i = 0; i < actions.length; i++) {
                 const { blur, value } = actions[i];
-                api.shapeModifyBlurSaturation(blur, value);
+                op.shapeModifyBlurSaturation(blur, value);
             }
         })
     }
@@ -587,16 +588,16 @@ export class LinearApi {
      * @description 修改图形阴影位置 X
      */
     private shape: undefined | ShapeView
-    private shape4shadow(api: Api, shape?: ShapeView) {
+    private shape4shadow(op: Operator, shape?: ShapeView) {
         if (!this.shape || this.shape !== shape) this.shape = shape;
-        return shape4shadow(api, this._page, this.shape!);
+        return shape4shadow(op, this._page, this.shape!);
     }
     modifyShapesShadowOffsetX(actions: { shadow: Shadow, value: number }[]) {
         this.execute('modify-shapes-shadow-offset-x', () => {
-            const api = this.api!;
+            const op = this.op!;
             for (let i = 0; i < actions.length; i++) {
                 const { shadow, value } = actions[i];
-                api.setShadowOffsetX(shadow, value);
+                op.setShadowOffsetX(shadow, value);
             }
         })
     }
@@ -607,10 +608,10 @@ export class LinearApi {
 
     modifyShapesShadowOffsetY(actions: { shadow: Shadow, value: number }[]) {
         this.execute('modify-shapes-shadow-offset-y', () => {
-            const api = this.api!;
+            const op = this.op!;
             for (let i = 0; i < actions.length; i++) {
                 const { shadow, value } = actions[i];
-                api.setShadowOffsetY(shadow, value);
+                op.setShadowOffsetY(shadow, value);
             }
         })
     }
@@ -620,10 +621,10 @@ export class LinearApi {
      */
     modifyShapesShadowBlur(actions: { shadow: Shadow, value: number }[]) {
         this.execute('modify-shapes-shadow-blur', () => {
-            const api = this.api!;
+            const op = this.op!;
             for (let i = 0; i < actions.length; i++) {
                 const { shadow, value } = actions[i];
-                api.setShadowBlur(shadow, value);
+                op.setShadowBlur(shadow, value);
             }
         })
     }
@@ -633,10 +634,10 @@ export class LinearApi {
     */
     modifyShapesShadowSpread(actions: { shadow: Shadow, value: number }[]) {
         this.execute('modify-shapes-shadow-spread', () => {
-            const api = this.api!;
+            const op = this.op!;
             for (let i = 0; i < actions.length; i++) {
                 const { shadow, value } = actions[i];
-                api.setShadowSpread(shadow, value);
+                op.setShadowSpread(shadow, value);
             }
         })
     }
@@ -647,22 +648,22 @@ export class LinearApi {
 
     modifyShadowColor(idx: number, color: Color, s: ShapeView) {
         this.execute('modify-shadow-color', () => {
-            const api = this.api!;
-            const target = this.shape4shadow(api, s);
+            const op = this.op!;
+            const target = this.shape4shadow(op, s);
             const shadow = target instanceof Variable ? target.value[idx] : s.getShadows()[idx];
-            api.setShadowColor(shadow, color);
+            op.setShadowColor(shadow, color);
         })
     }
 
     modifyShapesShadowColor(actions: BatchAction[]) {
         this.execute('modify-shapes-shadow-color', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0; i < actions.length; i++) {
                 const { target, value, index } = actions[i];
-                const _tar = this.shape4shadow(api, target);
+                const _tar = this.shape4shadow(op, target);
                 const shadow = _tar instanceof Variable ? _tar.value[index] : target.getShadows()[index];
-                api.setShadowColor(shadow, value);
+                op.setShadowColor(shadow, value);
             }
         })
     }
@@ -673,9 +674,9 @@ export class LinearApi {
 
     tidyUpShapesLayout(shape_rows: ShapeView[][], hor: number, ver: number, dir: boolean, algin: TidyUpAlign) {
         this.execute('tidyup-shapes-layout', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
-            tidyUpLayout(page, api, shape_rows, hor, ver, dir, algin);
+            tidyUpLayout(page, op, shape_rows, hor, ver, dir, algin);
         })
     }
 
@@ -686,7 +687,7 @@ export class LinearApi {
 
     reLayout(env: ArtboardView | SymbolView, sort: Map<string, number>) {
         this.execute('re-layout-linear', () => {
-            const parent = shape4Autolayout(this.api!, env, this._page) as GroupShape;
+            const parent = shape4Autolayout(this.op!, env, this._page) as GroupShape;
             const childs = parent.childs.filter(s => s.isVisible);
             const hidden_childs = parent.childs.filter(s => !s.isVisible);
             const shapesSorted: Shape[] = [...childs].sort((a, b) => sort.get(a.id)! < sort.get(b.id)! ? -1 : 1);
@@ -695,7 +696,7 @@ export class LinearApi {
                 const s = shapesSorted[i];
                 const currentIndex = parent.indexOfChild(s);
                 if (currentIndex === i || !s.isVisible) continue;
-                this.api!.shapeMove(this.page, parent, currentIndex, parent, i);
+                this.op!.shapeMove(this.page, parent, currentIndex, parent, i);
             }
         });
     }
@@ -726,26 +727,26 @@ export class LinearApi {
             }
         }
         this.execute('modify-text-color', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
-            const shape = editor4text.shape4edit(api);
-            api.textModifyColor(page, shape, index, len, color)
+            const shape = editor4text.shape4edit(op);
+            op.textModifyColor(page, shape, index, len, color)
         })
     }
 
     modifyTextColorMulti(shapes: (TextShapeView | TableCellView)[], color: Color | undefined) {
         this.execute('modify-text-color-multi', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const editor4text = this.getTextEditor(text_shape as TextShapeView)
-                const shape = editor4text.shape4edit(api, text_shape);
+                const shape = editor4text.shape4edit(op, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
                 if (text_length === 0) continue;
-                api.textModifyColor(page, shape, 0, text_length, color);
+                op.textModifyColor(page, shape, 0, text_length, color);
             }
         })
     }
@@ -762,26 +763,26 @@ export class LinearApi {
             return;
         }
         this.execute('modify-text-highlight-color', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
-            const shape = editor4text.shape4edit(api);
-            api.textModifyHighlightColor(page, shape, index, len, color)
+            const shape = editor4text.shape4edit(op);
+            op.textModifyHighlightColor(page, shape, index, len, color)
         })
     }
 
     modifyTextHighlightColorMulti(shapes: (TextShapeView | TableCellView)[], color: Color | undefined) {
         this.execute('modify-text-highlight-color-multi', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const editor4text = this.getTextEditor(text_shape as TextShapeView)
-                const shape = editor4text.shape4edit(api, text_shape);
+                const shape = editor4text.shape4edit(op, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
                 if (text_length === 0) continue;
-                api.textModifyHighlightColor(page, shape, 0, text_length, color);
+                op.textModifyHighlightColor(page, shape, 0, text_length, color);
             }
         })
     }
@@ -801,32 +802,31 @@ export class LinearApi {
             return;
         }
         this.execute('modify-text-font-size', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
-            const shape = editor4text.shape4edit(api);
+            const shape = editor4text.shape4edit(op);
             const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
             const text_length = text.length;
             if (len === text_length - 1) {
                 len = text_length;
             }
-            api.textModifyFontSize(page, shape, index, len, fontSize)
-            editor4text.fixFrameByLayout(api);
+            op.textModifyFontSize(page, shape, index, len, fontSize)
         })
     }
 
     modifyTextFontSizeMulti(shapes: (TextShapeView | TableCellView)[], fontSize: number) {
         this.execute('modify-text-font-size-multi', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const editor4text = this.getTextEditor(text_shape as TextShapeView)
-                const shape = editor4text.shape4edit(api, text_shape);
+                const shape = editor4text.shape4edit(op, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
                 if (text_length === 0) continue;
-                api.textModifyFontSize(page, shape, 0, text_length, fontSize);
+                op.textModifyFontSize(page, shape, 0, text_length, fontSize);
             }
         })
     }
@@ -838,31 +838,29 @@ export class LinearApi {
     modifyTextLineHeight(lineHeight: number | undefined, isAuto: boolean, index: number, len: number, text: TextShapeView) {
         const editor4text = this.getTextEditor(text)
         this.execute('modify-text-line-height', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
-            const shape = editor4text.shape4edit(api);
-            api.textModifyAutoLineHeight(page, shape, isAuto, index, len)
-            api.textModifyMinLineHeight(page, shape, lineHeight, index, len)
-            api.textModifyMaxLineHeight(page, shape, lineHeight, index, len)
-            editor4text.fixFrameByLayout(api);
+            const shape = editor4text.shape4edit(op);
+            op.textModifyAutoLineHeight(page, shape, isAuto, index, len)
+            op.textModifyMinLineHeight(page, shape, lineHeight, index, len)
+            op.textModifyMaxLineHeight(page, shape, lineHeight, index, len)
         })
     }
 
     modifyTextLineHeightMulti(shapes: (TextShapeView | TableCellView)[], lineHeight: number | undefined, isAuto: boolean) {
         this.execute('modify-text-line-height-mulit', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
                 const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const editor4text = this.getTextEditor(text_shape as TextShapeView)
-                const shape = editor4text.shape4edit(api, text_shape);
+                const shape = editor4text.shape4edit(op, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
-                api.textModifyAutoLineHeight(page, shape, isAuto, 0, text_length)
-                api.textModifyMinLineHeight(page, shape, lineHeight, 0, text_length)
-                api.textModifyMaxLineHeight(page, shape, lineHeight, 0, text_length)
-                editor4text.fixFrameByLayout2(api, shape);
+                op.textModifyAutoLineHeight(page, shape, isAuto, 0, text_length)
+                op.textModifyMinLineHeight(page, shape, lineHeight, 0, text_length)
+                op.textModifyMaxLineHeight(page, shape, lineHeight, 0, text_length)
             }
         })
     }
@@ -879,70 +877,68 @@ export class LinearApi {
             return;
         }
         this.execute('modify-text-char-spacing', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
-            const shape = editor4text.shape4edit(api);
-            api.textModifyKerning(page, shape, kerning, index, len)
-            editor4text.fixFrameByLayout(api);
+            const shape = editor4text.shape4edit(op);
+            op.textModifyKerning(page, shape, kerning, index, len)
         })
     }
 
     modifyTextCharSpacingMulti(shapes: (TextShapeView | TableCellView)[], kerning: number) {
         this.execute('modify-text-char-spacing-multi', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (let i = 0; i < shapes.length; i++) {
                 const text_shape = shapes[i];
                 if (text_shape.type !== ShapeType.Text) continue;
                 const editor4text = this.getTextEditor(text_shape as TextShapeView)
-                const shape = editor4text.shape4edit(api, text_shape);
+                const shape = editor4text.shape4edit(op, text_shape);
                 const text = shape instanceof ShapeView ? shape.text : shape.value as Text;
                 const text_length = text.length;
-                api.textModifyKerning(page, shape, kerning, 0, text_length);
-                editor4text.fixFrameByLayout2(api, shape);
+                op.textModifyKerning(page, shape, kerning, 0, text_length);
             }
         })
     }
 
     modifyAutoLayoutSpace(views: ShapeView[], direction: PaddingDir, value: number) {
         this.execute('modify-auto-layout-space', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             const space = Math.round(value);
             for (const view of views) {
-                const shape = shape4Autolayout(api, view, this._page);
-                api.shapeModifyAutoLayoutSpace(page, shape, space, direction);
-                api.shapeModifyAutoLayoutGapSizing(page, shape, StackSizing.Fixed, direction);
+                const shape = shape4Autolayout(op, view, this._page);
+                op.shapeModifyAutoLayoutSpace(page, shape, space, direction);
+                op.shapeModifyAutoLayoutGapSizing(page, shape, StackSizing.Fixed, direction);
             }
         })
     }
     modifyAutoLayoutPadding(views: ShapeView[], direction: PaddingDir, value: number) {
         this.execute('modify-auto-layout-hor-padding', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (const view of views) {
-                const shape = shape4Autolayout(api, view, this._page);
-                api.shapeModifyAutoLayoutPadding(page, shape, value, direction);
+                const shape = shape4Autolayout(op, view, this._page);
+                op.shapeModifyAutoLayoutPadding(page, shape, value, direction);
             }
         })
     }
     modifyAutoLayoutHorPadding(views: ShapeView[], left: number, right: number) {
         this.execute('modify-auto-layout-hor-padding', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (const view of views) {
-                const shape = shape4Autolayout(api, view, this._page);
-                api.shapeModifyAutoLayoutHorPadding(page, shape, left, right);
+                const shape = shape4Autolayout(op, view, this._page);
+                op.shapeModifyAutoLayoutHorPadding(page, shape, left, right);
             }
         })
     }
     modifyAutoLayoutVerPadding(views: ShapeView[], top: number, bottom: number) {
         this.execute('modify-auto-layout-ver-padding', () => {
-            const api = this.api!;
+            const op = this.op!;
             const page = this.page;
             for (const view of views) {
-                const shape = shape4Autolayout(api, view, this._page);
-                api.shapeModifyAutoLayoutVerPadding(page, shape, top, bottom);
+                const shape = shape4Autolayout(op, view, this._page);
+                op.shapeModifyAutoLayoutVerPadding(page, shape, top, bottom);
             }
         })
     }

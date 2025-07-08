@@ -37,7 +37,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
                 index = page.guides.length;
             }
 
-            this.api.insertGuideToPage(this.page, new Guide([index] as BasicArray<number>, uuid(), axis, offset));
+            this.operator.insertGuideToPage(this.page, new Guide([index] as BasicArray<number>, uuid(), axis, offset));
 
             this.updateView();
             this.__recovery = false;
@@ -53,7 +53,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
     modifyOffset(_env: ShapeView, index: number, offset: number, recovery: boolean) {
         try {
             const env = adapt2Shape(_env);
-            this.api.modifyGuideOffset(env, index, offset);
+            this.operator.modifyGuideOffset(env, index, offset);
             this.__recovery = recovery;
             this.updateView();
         } catch (e) {
@@ -70,9 +70,9 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
             if (!gui) return false;
 
             if (env.type === ShapeType.Page) {
-                this.api.deleteGuideFromPage(env as Page, index);
+                this.operator.deleteGuideFromPage(env as Page, index);
             } else {
-                this.api.deleteGuide(env, index);
+                this.operator.deleteGuide(env, index);
             }
 
             this.updateView();
@@ -102,13 +102,13 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
                 return result;
             }
 
-            const api = this.api;
+            const op = this.operator;
 
             let gui;
             if (env1.type === ShapeType.Page) {
-                gui = api.deleteGuideFromPage(env1 as Page, index);
+                gui = op.deleteGuideFromPage(env1 as Page, index);
             } else {
-                gui = api.deleteGuide(env1, index);
+                gui = op.deleteGuide(env1, index);
             }
 
             if (!gui) {
@@ -120,16 +120,16 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
 
             let __index;
             if (env2.type === ShapeType.Page) {
-                __index = api.insertGuideToPage(env2 as Page, gui);
+                __index = op.insertGuideToPage(env2 as Page, gui);
             } else {
-                __index = api.insertGuide(env2, gui);
+                __index = op.insertGuide(env2, gui);
             }
             const afterGui = (env2 as Artboard).guides?.[__index];
             if (!afterGui) {
                 return result;
             }
 
-            api.modifyGuideOffset(env2, __index, targetOffset);
+            op.modifyGuideOffset(env2, __index, targetOffset);
 
             result.env = __env2;
             result.index = __index;

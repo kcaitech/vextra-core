@@ -20,29 +20,29 @@ import {
     VariableType
 } from "../../data";
 import { adapt2Shape, PageView, ShapeView } from "../../dataview";
-import { Api } from "../../repo";
+import { Operator } from "../../operator";
 import { _ov } from "../symbol";
 import { importBlur } from "../../data/baseimport";
 
 export class BlurModifier extends Modifier {
     importBlur = importBlur;
 
-    getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.BlursMask, OverrideType.BlursMask, () => value, view, page, api);
+    getMaskVariable(op: Operator, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.BlursMask, OverrideType.BlursMask, () => value, view, page, op);
     }
 
-    getBlurVariable(api: Api, page: PageView, view: ShapeView) {
+    getBlurVariable(op: Operator, page: PageView, view: ShapeView) {
         const valueFun = (_var: Variable | undefined) => {
             const blur = _var?.value ?? view.blur;
             return blur && importBlur(blur) || new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
         };
-        return _ov(VariableType.Blur, OverrideType.Blur, valueFun, view, page, api)!;
+        return _ov(VariableType.Blur, OverrideType.Blur, valueFun, view, page, op)!;
     }
 
     createBlur(missions: Function[]) {
         try {
-            const api = this.getOperator('createBlur');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('createBlur');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -52,8 +52,8 @@ export class BlurModifier extends Modifier {
 
     unifyShapesBlur(missions: Function[]) {
         try {
-            const api = this.getOperator('unifyShapesBlurMask');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('unifyShapesBlurMask');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -63,8 +63,8 @@ export class BlurModifier extends Modifier {
 
     modifyBlurType(missions: Function[]) {
         try {
-            const api = this.getOperator('modifyBlurType');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('modifyBlurType');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -73,8 +73,8 @@ export class BlurModifier extends Modifier {
     }
     modifyBlurEnabled(missions: Function[]) {
         try {
-            const api = this.getOperator('modifyBlurEnabled');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('modifyBlurEnabled');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -83,8 +83,8 @@ export class BlurModifier extends Modifier {
     }
     modifyBlurSaturation(missions: Function[]) {
         try {
-            const api = this.getOperator('modifyBlurSaturation');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('modifyBlurSaturation');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -94,8 +94,8 @@ export class BlurModifier extends Modifier {
 
     removeBlur(missions: Function[]) {
         try {
-            const api = this.getOperator('removeBlur');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('removeBlur');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -106,12 +106,12 @@ export class BlurModifier extends Modifier {
     unifyShapesBlurMask(views: ShapeView[], mask: string) {
         if (!views.length) return;
         try {
-            const api = this.getOperator('unifyShapesBlurMask');
+            const op = this.getOperator('unifyShapesBlurMask');
             const pageView = views[0].getPage() as PageView;
             const page = pageView.data;
             for (const view of views) {
-                const linked = this.getMaskVariable(api, pageView, view, mask);
-                linked ? api.shapeModifyVariable(page, linked, mask) : api.modifyBlurMask(page, adapt2Shape(view), mask);
+                const linked = this.getMaskVariable(op, pageView, view, mask);
+                linked ? op.shapeModifyVariable(page, linked, mask) : op.modifyBlurMask(page, adapt2Shape(view), mask);
             }
             this.commit();
         } catch (error) {
@@ -122,20 +122,20 @@ export class BlurModifier extends Modifier {
 
     createBlurMask(document: Document, mask: BlurMask, pageView: PageView, views?: ShapeView[]) {
         try {
-            const api = this.getOperator('createBlurMask');
-            api.styleInsert(document, mask);
+            const op = this.getOperator('createBlurMask');
+            op.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
                 const shapes: Shape[] = [];
                 for (const view of views) {
-                    const variable = this.getMaskVariable(api, pageView, view, mask.id);
+                    const variable = this.getMaskVariable(op, pageView, view, mask.id);
                     variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
                 }
                 const page = pageView.data;
                 for (const variable of variables) {
-                    if (variable.value !== mask.id) api.shapeModifyVariable(page, variable, mask.id);
+                    if (variable.value !== mask.id) op.shapeModifyVariable(page, variable, mask.id);
                 }
-                for (const shape of shapes) api.modifyBlurMask(page, shape, mask.id);
+                for (const shape of shapes) op.modifyBlurMask(page, shape, mask.id);
             }
             this.commit();
         } catch (error) {
@@ -147,17 +147,17 @@ export class BlurModifier extends Modifier {
     setShapesBlurMask(pageView: PageView, views: ShapeView[], value: string) {
         try {
             const page = adapt2Shape(pageView) as Page;
-            const api = this.getOperator('setShapesBlurMask');
+            const op = this.getOperator('setShapesBlurMask');
             const variables: Variable[] = [];
             const shapes: Shape[] = [];
             for (const view of views) {
-                const variable = this.getMaskVariable(api, pageView, view, value);
+                const variable = this.getMaskVariable(op, pageView, view, value);
                 variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
             }
             for (const variable of variables) {
-                if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
+                if (variable.value !== value) op.shapeModifyVariable(page, variable, value);
             }
-            for (const shape of shapes) api.modifyBlurMask(page, shape, value);
+            for (const shape of shapes) op.modifyBlurMask(page, shape, value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -169,25 +169,25 @@ export class BlurModifier extends Modifier {
         try {
             if (!views.length) return;
 
-            const api = this.getOperator('unbindShapesBlurMask');
+            const op = this.getOperator('unbindShapesBlurMask');
             const blur = importBlur(views.find(i => i.blur)?.blur!);
 
             const blurMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const linkedBlurMaskVariable = this.getMaskVariable(api, pageView, view, undefined);
+                const linkedBlurMaskVariable = this.getMaskVariable(op, pageView, view, undefined);
                 linkedBlurMaskVariable ? blurMaskVariables.push(linkedBlurMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
             const page = adapt2Shape(pageView) as Page;
-            blurMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.modifyBlurMask(page, shape, undefined));
+            blurMaskVariables.forEach(variable => op.shapeModifyVariable(page, variable, undefined));
+            shapes4mask.forEach(shape => op.modifyBlurMask(page, shape, undefined));
 
             for (const view of views) {
-                const linkedVariable = this.getBlurVariable(api, pageView, view);
+                const linkedVariable = this.getBlurVariable(op, pageView, view);
                 if (linkedVariable) {
-                    api.shapeModifyVariable(page, linkedVariable, importBlur(blur));
+                    op.shapeModifyVariable(page, linkedVariable, importBlur(blur));
                 } else {
-                    api.addBlur(view.style, importBlur(blur));
+                    op.addBlur(view.style, importBlur(blur));
                 }
             }
             this.commit();
@@ -199,25 +199,25 @@ export class BlurModifier extends Modifier {
 
     removeShapesBlurMask(pageView: PageView, views: ShapeView[]) {
         try {
-            const api = this.getOperator('removeShapesBlurMask');
+            const op = this.getOperator('removeShapesBlurMask');
 
             const blurMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const linkedBlurMaskVariable = this.getMaskVariable(api, pageView, view, undefined);
+                const linkedBlurMaskVariable = this.getMaskVariable(op, pageView, view, undefined);
                 linkedBlurMaskVariable ? blurMaskVariables.push(linkedBlurMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
 
             const page = adapt2Shape(pageView) as Page;
-            blurMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.modifyBlurMask(page, shape, undefined));
+            blurMaskVariables.forEach(variable => op.shapeModifyVariable(page, variable, undefined));
+            shapes4mask.forEach(shape => op.modifyBlurMask(page, shape, undefined));
 
             for (const view of views) {
-                const linkedVariable = this.getBlurVariable(api, pageView, view);
+                const linkedVariable = this.getBlurVariable(op, pageView, view);
                 if (linkedVariable) {
-                    api.shapeModifyVariable(page, linkedVariable, undefined);
+                    op.shapeModifyVariable(page, linkedVariable, undefined);
                 } else {
-                    api.deleteBlur(view.style);
+                    op.deleteBlur(view.style);
                 }
             }
             this.commit();
@@ -229,8 +229,8 @@ export class BlurModifier extends Modifier {
 
     disableMask(mask: StyleMangerMember) {
         try {
-            const api = this.getOperator('modifyMaskStatus');
-            api.disableMask(mask);
+            const op = this.getOperator('modifyMaskStatus');
+            op.disableMask(mask);
             this.commit();
         } catch (error) {
             this.rollback();

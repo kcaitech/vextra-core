@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api } from "../../../repo";
+import { Operator } from "../../../operator";
 import { ContactShape, GroupShape, Page, Shape, Document, OverrideType, SymbolShape, SymbolUnionShape, BoolShape } from "../../../data";
 import { find_layers_by_varid } from "../../utils/other";
 
@@ -17,7 +17,7 @@ import { find_layers_by_varid } from "../../utils/other";
  */
 export class ShapeCleaner {
 
-    constructor(private document: Document, private api: Api, private page: Page) {
+    constructor(private document: Document, private op: Operator, private page: Page) {
     }
 
     // 删除前
@@ -32,7 +32,7 @@ export class ShapeCleaner {
     // 去除空的组件状态合集
 
     private removeContact(shape: Shape) {
-        const api = this.api;
+        const op = this.op;
         const page = this.page;
         const contacts = shape.style.contacts;
         if (contacts && contacts.length) {
@@ -48,13 +48,13 @@ export class ShapeCleaner {
                         break;
                     }
                 }
-                if (idx > -1) api.shapeDelete(this.document, page, p as GroupShape, idx);
+                if (idx > -1) op.shapeDelete(this.document, page, p as GroupShape, idx);
             }
         }
     }
 
     private removeContactSides(shape: ContactShape) {
-        const api = this.api;
+        const op = this.op;
         const page = this.page;
 
         if (shape.from) {
@@ -69,7 +69,7 @@ export class ShapeCleaner {
                         break;
                     }
                 }
-                if (idx > -1) api.removeContactRoleAt(page, fromShape, idx);
+                if (idx > -1) op.removeContactRoleAt(page, fromShape, idx);
             }
         }
         if (shape.to) {
@@ -84,33 +84,33 @@ export class ShapeCleaner {
                         break;
                     }
                 }
-                if (idx > -1) api.removeContactRoleAt(page, toShape, idx);
+                if (idx > -1) op.removeContactRoleAt(page, toShape, idx);
             }
         }
     }
 
     private removeBindsEffect(shape: Shape, symbol: SymbolShape) {
         const page = this.page;
-        const api = this.api;
+        const op = this.op;
         if (!shape.varbinds) return;
         const v1 = shape.varbinds.get(OverrideType.Visible);
         if (v1) {
             const layers = find_layers_by_varid(symbol, v1, OverrideType.Visible);
-            if (layers.length < 2) api.shapeRemoveVariable(page, symbol, v1);
+            if (layers.length < 2) op.shapeRemoveVariable(page, symbol, v1);
         }
         const v2 = shape.varbinds.get(OverrideType.SymbolID);
         if (v2) {
             const layers = find_layers_by_varid(symbol, v2, OverrideType.SymbolID);
-            if (layers.length < 2) api.shapeRemoveVariable(page, symbol, v2);
+            if (layers.length < 2) op.shapeRemoveVariable(page, symbol, v2);
         }
         const v3 = shape.varbinds.get(OverrideType.Text);
         if (v3) {
             const layers = find_layers_by_varid(symbol, v3, OverrideType.Text);
-            if (layers.length < 2) api.shapeRemoveVariable(page, symbol, v3);
+            if (layers.length < 2) op.shapeRemoveVariable(page, symbol, v3);
         }
     }
 
-    action(shape: Shape, api?: Api) {
+    action(shape: Shape, op?: Operator) {
 
     }
 

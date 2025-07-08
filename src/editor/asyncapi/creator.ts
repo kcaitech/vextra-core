@@ -46,11 +46,10 @@ import {
 } from "../creator/creator";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../repo";
 import { uuid } from "../../basic/uuid";
-import { Api } from "../../repo";
+import { Operator } from "../../operator";
 import { Point2D, ScrollBehavior } from "../../data/typesdefine";
 import { update_frame_by_points } from "../utils/path";
 import { translateTo } from "../frame";
-import { Transform as Transform2 } from "../../basic/transform";
 
 export interface GeneratorParams {
     parent: GroupShapeView;
@@ -122,19 +121,19 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 }
             } else {
                 const shape = adapt2Shape(params.shape);
-                const api = this.api;
+                const op = this.operator;
                 const page = this.page;
                 const f = params.frame;
 
-                api.shapeModifyWH(page, shape, f.width, f.height);
-                this.api.shapeModifyTransform(this.page, shape, (params.transform2.clone()));
+                op.shapeModifyWH(page, shape, f.width, f.height);
+                this.operator.shapeModifyTransform(this.page, shape, (params.transform2.clone()));
 
-                api.shapeModifyConstrainerProportions(page, shape, params.isFixedRatio);
+                op.shapeModifyConstrainerProportions(page, shape, params.isFixedRatio);
 
                 if (shape instanceof TextShape) {
                     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
                     if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
-                        api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
+                        op.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
                     }
                 }
 
@@ -163,13 +162,13 @@ export class CreatorApiCaller extends AsyncApiCaller {
             let toIdx = target.childs.length;
             if (origin.id === target.id) --toIdx;
 
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
-            api.shapeMove(page, origin, origin.indexOfChild(shape), target, toIdx);
+            op.shapeMove(page, origin, origin.indexOfChild(shape), target, toIdx);
 
             const { x, y } = this.__contactXY!;
-            translateTo(api, page, shape, x, y);
+            translateTo(op, page, shape, x, y);
 
             this.updateView();
         } catch (e) {
@@ -192,16 +191,16 @@ export class CreatorApiCaller extends AsyncApiCaller {
             if (!(this.shape instanceof ContactShape)) {
                 return;
             }
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const shape = this.shape;
 
-            api.shapeModifyCurvPoint(page, shape, 1, end, 0);
+            op.shapeModifyCurvPoint(page, shape, 1, end, 0);
 
             const _to = this.shape.to;
 
             if ((_to && !to) || (to && !_to)) {
-                api.shapeModifyContactTo(page, shape, to);
+                op.shapeModifyContactTo(page, shape, to);
             }
 
             this.updateView();
@@ -221,15 +220,15 @@ export class CreatorApiCaller extends AsyncApiCaller {
             if (!baseStart || !baseEnd) return;
 
             const page = this.page;
-            const api = this.api;
+            const op = this.operator;
             const shape = this.shape;
 
             if (baseStart.x !== start.x || baseStart.y !== start.y) {
-                api.shapeModifyCurvPoint(page, shape, 0, start, 0);
+                op.shapeModifyCurvPoint(page, shape, 0, start, 0);
             }
 
             if (baseEnd.x !== end.x || baseEnd.y !== end.y) {
-                api.shapeModifyCurvPoint(page, shape, 1, end, 0);
+                op.shapeModifyCurvPoint(page, shape, 1, end, 0);
             }
 
             this.updateView();
@@ -246,21 +245,21 @@ export class CreatorApiCaller extends AsyncApiCaller {
             if (this.__params?.parent.type === ShapeType.Page) {
                 const color = new Color(1, 255, 255, 255);
                 const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color);
-                this.api.addFillAt(shape.style.fills, fill, 0);
+                this.operator.addFillAt(shape.style.fills, fill, 0);
             }
 
             if (!shape || !shapes.length) return;
 
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
                 const s = adapt2Shape(shapes[i]);
                 const p = s.parent as any as GroupShape;
                 const idx = p.indexOfChild(s);
-                api.shapeMove(page, p, idx, shape, 0);
+                op.shapeMove(page, p, idx, shape, 0);
                 if (p.childs.length <= 0) {
-                    deleteEmptyGroupShape(this.__document, page, s, api);
+                    deleteEmptyGroupShape(this.__document, page, s, op);
                 }
             }
             const realXY = shapes.map((s) => s.matrix2Root().computeCoord(0, 0));
@@ -271,15 +270,15 @@ export class CreatorApiCaller extends AsyncApiCaller {
                 const target = m.computeCoord(r.x, r.y);
                 const cur = c.data.matrix2Parent().computeCoord(0, 0);
                 const transform = c.data.transform;
-                api.shapeModifyXY(page, c.data, transform.translateX + target.x - cur.x, transform.translateY + target.y - cur.y);
+                op.shapeModifyXY(page, c.data, transform.translateX + target.x - cur.x, transform.translateY + target.y - cur.y);
             }
 
-            function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Api): boolean {
+            function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, op: Operator): boolean {
                 const p = shape.parent as GroupShape;
                 if (!p) return false;
-                api.shapeDelete(document, page, p, p.indexOfChild(shape))
+                op.shapeDelete(document, page, p, p.indexOfChild(shape))
                 if (p.childs.length <= 0) {
-                    deleteEmptyGroupShape(document, page, p, api)
+                    deleteEmptyGroupShape(document, page, p, op)
                 }
                 return true;
             }
@@ -292,7 +291,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             if (this.shape instanceof LineShape) { // 线条的宽高最后根据两个点的位置计算
-                update_frame_by_points(this.api, this.page, this.shape, true);
+                update_frame_by_points(this.operator, this.page, this.shape, true);
             }
             this.__repo.commit();
         } else {
@@ -309,10 +308,10 @@ export class CreatorApiCaller extends AsyncApiCaller {
             const fixed_index = parent.childs.findIndex(s => s.scrollBehavior === Fixed);
             targetIndex = fixed_index === -1 ? parent.childs.length : fixed_index;
         }
-        this.api.shapeInsert(this.__document, this.page, parent, shape, targetIndex);
+        this.operator.shapeInsert(this.__document, this.page, parent, shape, targetIndex);
         this.shape = parent.childs[targetIndex];
         const name = assign(this.shape);
-        this.api.shapeModifyName(this.page, this.shape, name);
+        this.operator.shapeModifyName(this.page, this.shape, name);
     }
 
     private getCount(type: ShapeType) {

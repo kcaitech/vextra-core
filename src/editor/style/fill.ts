@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api } from "../../repo";
+import { Operator } from "../../operator";
 import { Modifier } from "../basic/modifier";
 import {
     BasicArray,
@@ -29,11 +29,11 @@ import { importFill } from "../../data/baseimport";
 export class FillModifier extends Modifier {
     importFill = importFill;
 
-    getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, api);
+    getMaskVariable(op: Operator, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.FillsMask, OverrideType.FillsMask, () => value, view, page, op);
     }
 
-    getFillsVariable(api: Api, page: PageView, view: ShapeView) {
+    getFillsVariable(op: Operator, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
             const fills = _var?.value ?? view.getFills();
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -43,14 +43,14 @@ export class FillModifier extends Modifier {
                     return ret;
                 }
             ))
-        }, api, view)!;
+        }, op, view)!;
     }
 
     /* 创建一个填充 */
     createFill(missions: Function[]) {
         try {
-            const api = this.getOperator('createFill');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('createFill');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -61,8 +61,8 @@ export class FillModifier extends Modifier {
     /* 隐藏与显示一条填充 */
     setFillsEnabled(missions: Function[]) {
         try {
-            const api = this.getOperator('setFillsEnabled');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setFillsEnabled');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -73,8 +73,8 @@ export class FillModifier extends Modifier {
     /* 修改填充颜色 */
     setFillsColor(missions: Function[]) {
         try {
-            const api = this.getOperator('setFillsColor');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setFillsColor');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -85,8 +85,8 @@ export class FillModifier extends Modifier {
     /* 修改渐变色透明度 */
     setGradientOpacity(missions: Function[]) {
         try {
-            const api = this.getOperator('setGradientOpacity');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setGradientOpacity');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -97,8 +97,8 @@ export class FillModifier extends Modifier {
     /* 删除一个填充 */
     removeFill(missions: Function[]) {
         try {
-            const api = this.getOperator('removeFill');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('removeFill');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -109,8 +109,8 @@ export class FillModifier extends Modifier {
     /* 统一多个fills */
     unifyShapesFills(missions: Function[]) {
         try {
-            const api = this.getOperator('unifyShapesFills');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('unifyShapesFills');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -122,12 +122,12 @@ export class FillModifier extends Modifier {
     unifyShapesFillsMask(views: ShapeView[], fillsMask: string) {
         if (!views.length) return;
         try {
-            const api = this.getOperator('unifyShapesFillsMask');
+            const op = this.getOperator('unifyShapesFillsMask');
             const pageView = views[0].getPage() as PageView;
             const page = pageView.data;
             for (const view of views) {
-                const linked = this.getMaskVariable(api, pageView, view, fillsMask);
-                linked ? api.shapeModifyVariable(page, linked, fillsMask) : api.modifyFillsMask(page, adapt2Shape(view), fillsMask);
+                const linked = this.getMaskVariable(op, pageView, view, fillsMask);
+                linked ? op.shapeModifyVariable(page, linked, fillsMask) : op.modifyFillsMask(page, adapt2Shape(view), fillsMask);
             }
             this.commit();
         } catch (error) {
@@ -139,25 +139,25 @@ export class FillModifier extends Modifier {
     /* 创建一个填充遮罩 */
     createFillsMask(document: Document, mask: FillMask, pageView: PageView, views?: ShapeView[]) {
         try {
-            const api = this.getOperator('createFillsMask');
+            const op = this.getOperator('createFillsMask');
             mask.fills = new BasicArray(...mask.fills.map(i => {
                 const fill = importFill(i);
                 fill.setImageMgr(document.mediasMgr);
                 return fill;
             }));
-            api.styleInsert(document, mask);
+            op.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
                 const shapes: Shape[] = [];
                 for (const view of views) {
-                    const variable = this.getMaskVariable(api, pageView, view, mask.id);
+                    const variable = this.getMaskVariable(op, pageView, view, mask.id);
                     variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
                 }
                 const page = pageView.data;
                 for (const variable of variables) {
-                    if (variable.value !== mask.id) api.shapeModifyVariable(page, variable, mask.id);
+                    if (variable.value !== mask.id) op.shapeModifyVariable(page, variable, mask.id);
                 }
-                for (const shape of shapes) api.modifyFillsMask(page, shape, mask.id);
+                for (const shape of shapes) op.modifyFillsMask(page, shape, mask.id);
             }
             this.commit();
         } catch (error) {
@@ -170,17 +170,17 @@ export class FillModifier extends Modifier {
     setShapesFillMask(pageView: PageView, views: ShapeView[], value: string) {
         try {
             const page = adapt2Shape(pageView) as Page;
-            const api = this.getOperator('setShapesFillMask');
+            const op = this.getOperator('setShapesFillMask');
             const variables: Variable[] = [];
             const shapes: Shape[] = [];
             for (const view of views) {
-                const variable = this.getMaskVariable(api, pageView, view, value);
+                const variable = this.getMaskVariable(op, pageView, view, value);
                 variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
             }
             for (const variable of variables) {
-                if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
+                if (variable.value !== value) op.shapeModifyVariable(page, variable, value);
             }
-            for (const shape of shapes) api.modifyFillsMask(page, shape, value);
+            for (const shape of shapes) op.modifyFillsMask(page, shape, value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -193,23 +193,23 @@ export class FillModifier extends Modifier {
         try {
             if (!views.length) return;
 
-            const api = this.getOperator('unbindShapesFillMask');
+            const op = this.getOperator('unbindShapesFillMask');
             const fillsCopy = views[0].getFills().map(i => importFill(i));
             // 处理遮罩
             const fillMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const linkedFillMaskVariable = this.getMaskVariable(api, pageView, view, undefined);
+                const linkedFillMaskVariable = this.getMaskVariable(op, pageView, view, undefined);
                 linkedFillMaskVariable ? fillMaskVariables.push(linkedFillMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
             const page = adapt2Shape(pageView) as Page;
-            fillMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.modifyFillsMask(page, shape, undefined));
+            fillMaskVariables.forEach(variable => op.shapeModifyVariable(page, variable, undefined));
+            shapes4mask.forEach(shape => op.modifyFillsMask(page, shape, undefined));
 
             // 固定现有填充到本地
             const fillsContainer: BasicArray<Fill>[] = [];
             for (const view of views) {
-                const linkedVariable = this.getFillsVariable(api, pageView, view);
+                const linkedVariable = this.getFillsVariable(op, pageView, view);
                 fillsContainer.push(linkedVariable ? linkedVariable.value : adapt2Shape(view).style.fills);
             }
 
@@ -219,8 +219,8 @@ export class FillModifier extends Modifier {
                     fill.setImageMgr(document.mediasMgr);
                     return fill;
                 });
-                api.deleteFills(source, 0, source.length);
-                api.addFills(source, __fillsCopy);
+                op.deleteFills(source, 0, source.length);
+                op.addFills(source, __fillsCopy);
             });
             this.commit();
         } catch (error) {
@@ -232,23 +232,23 @@ export class FillModifier extends Modifier {
     /* 删除填充遮罩(与解绑有所不同) */
     removeShapesFillMask(pageView: PageView, views: ShapeView[]) {
         try {
-            const api = this.getOperator('removeShapesFillMask');
+            const op = this.getOperator('removeShapesFillMask');
             const fillMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const linkedFillMaskVariable = this.getMaskVariable(api, pageView, view, undefined);
+                const linkedFillMaskVariable = this.getMaskVariable(op, pageView, view, undefined);
                 linkedFillMaskVariable ? fillMaskVariables.push(linkedFillMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
             const page = adapt2Shape(pageView) as Page;
-            fillMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.modifyFillsMask(page, shape, undefined));
+            fillMaskVariables.forEach(variable => op.shapeModifyVariable(page, variable, undefined));
+            shapes4mask.forEach(shape => op.modifyFillsMask(page, shape, undefined));
 
             const fillsContainer: BasicArray<Fill>[] = [];
             for (const view of views) {
-                const linkedVariable = this.getFillsVariable(api, pageView, view);
+                const linkedVariable = this.getFillsVariable(op, pageView, view);
                 fillsContainer.push(linkedVariable ? linkedVariable.value : adapt2Shape(view).style.fills);
             }
-            fillsContainer.forEach(source => api.deleteFills(source, 0, source.length));
+            fillsContainer.forEach(source => op.deleteFills(source, 0, source.length));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -259,8 +259,8 @@ export class FillModifier extends Modifier {
     // 修改填充遮罩状态(弱删除)
     disableMask(mask: StyleMangerMember) {
         try {
-            const api = this.getOperator('disableMask');
-            api.disableMask(mask);
+            const op = this.getOperator('disableMask');
+            op.disableMask(mask);
             this.commit();
         } catch (error) {
             this.rollback();

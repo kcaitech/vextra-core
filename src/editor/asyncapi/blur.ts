@@ -28,9 +28,9 @@ export class blurModifyHandler extends AsyncApiCaller {
 
     executeSaturation(actions: { blur: Blur, value: number }[]) {
         try {
-            const api = this.api;
+            const op = this.operator;
             for (const blur of actions) {
-                api.shapeModifyBlurSaturation(blur.blur, blur.value);
+                op.shapeModifyBlurSaturation(blur.blur, blur.value);
             }
             this.updateView();
         } catch (e) {

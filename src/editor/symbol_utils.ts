@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api } from "../repo";
+import { Operator } from "../operator";
 import { uuid } from "../basic/uuid";
 import {
     OverrideType,
@@ -141,7 +141,7 @@ function _isNeedOverride4SymbolRef(overrideType: OverrideType) {
     }
 }
 
-function _override(api: Api, page: PageView, view: ShapeView, overrideType: OverrideType, varType: VariableType, varValue: (_var: Variable | undefined) => any) {
+function _override(op: Operator, page: PageView, view: ShapeView, overrideType: OverrideType, varType: VariableType, varValue: (_var: Variable | undefined) => any) {
     // tablecell 单独处理, @overrideTableCell
     if (view.data instanceof TableCell) {
         throw new Error("call wrong function")
@@ -152,9 +152,9 @@ function _override(api: Api, page: PageView, view: ShapeView, overrideType: Over
         if (override.view.isVirtualShape) {
             const _var = _newVar(varType, varValue(override.var))
             const _ref = _getRefView(override.view, override.refId)
-            api.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
+            op.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
             const refId = _ref.refId
-            api.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId.length > 0 ? (refId + '/' + overrideType) : overrideType, _var.id)
+            op.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId.length > 0 ? (refId + '/' + overrideType) : overrideType, _var.id)
             return {
                 view: _ref.view,
                 var: _var,
@@ -175,9 +175,9 @@ function _override(api: Api, page: PageView, view: ShapeView, overrideType: Over
             if (override.view.isVirtualShape) {
                 const _var = _newVar(varType, varValue(override.var))
                 const _ref = _getRefView(override.view, override.refId)
-                api.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
+                op.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
                 const refId = _ref.refId
-                api.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId, _var.id)
+                op.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId, _var.id)
                 return {
                     view: _ref.view,
                     var: _var,
@@ -196,9 +196,9 @@ function _override(api: Api, page: PageView, view: ShapeView, overrideType: Over
                 // 当成没有varbind来处理
                 const _var = _newVar(varType, varValue(undefined))
                 const _ref = _getRefView(view)
-                api.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
+                op.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
                 const refId = _ref.refId
-                api.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId.length > 0 ? (refId + '/' + overrideType) : overrideType, _var.id)
+                op.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId.length > 0 ? (refId + '/' + overrideType) : overrideType, _var.id)
                 return {
                     view: _ref.view,
                     var: _var,
@@ -207,9 +207,9 @@ function _override(api: Api, page: PageView, view: ShapeView, overrideType: Over
             } else {
                 const _var = _newVar(varType, varValue(_varShape.var))
                 const _ref = _getRefView(view, varId)
-                api.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
+                op.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
                 const refId = _ref.refId
-                api.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId, _var.id)
+                op.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId, _var.id)
                 return {
                     view: _ref.view,
                     var: _var,
@@ -220,9 +220,9 @@ function _override(api: Api, page: PageView, view: ShapeView, overrideType: Over
     } else {
         const _var = _newVar(varType, varValue(undefined))
         const _ref = _getRefView(view)
-        api.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
+        op.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
         const refId = _ref.refId
-        api.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId.length > 0 ? (refId + '/' + overrideType) : overrideType, _var.id)
+        op.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId.length > 0 ? (refId + '/' + overrideType) : overrideType, _var.id)
         return {
             view: _ref.view,
             var: _var,
@@ -231,7 +231,7 @@ function _override(api: Api, page: PageView, view: ShapeView, overrideType: Over
     }
 }
 
-export function prepareVar(api: Api, page: PageView, view: ShapeView, overrideType: OverrideType, varType: VariableType, varValue: (_var: Variable | undefined) => any): {
+export function prepareVar(op: Operator, page: PageView, view: ShapeView, overrideType: OverrideType, varType: VariableType, varValue: (_var: Variable | undefined) => any): {
     view: ShapeView,
     var: Variable,
     isNew: boolean
@@ -242,7 +242,7 @@ export function prepareVar(api: Api, page: PageView, view: ShapeView, overrideTy
     }
 
     if (view.isVirtualShape) {
-        return _override(api, page, view, overrideType, varType, varValue)
+        return _override(op, page, view, overrideType, varType, varValue)
     } else if (view.data instanceof SymbolRefShape) {
         if (!_isNeedOverride4SymbolRef(overrideType)) {
             return
@@ -258,8 +258,8 @@ export function prepareVar(api: Api, page: PageView, view: ShapeView, overrideTy
         }
 
         const _var = _newVar(varType, varValue(undefined))
-        api.shapeAddVariable(page.data, view.data as SymbolRefShape, _var)
-        api.shapeAddOverride(page.data, view.data as SymbolRefShape, overrideType, _var.id)
+        op.shapeAddVariable(page.data, view.data as SymbolRefShape, _var)
+        op.shapeAddOverride(page.data, view.data as SymbolRefShape, overrideType, _var.id)
         return {
             view: view,
             var: _var,
@@ -280,7 +280,7 @@ export function prepareVar(api: Api, page: PageView, view: ShapeView, overrideTy
 }
 
 // override shape?
-export function overrideTableCell(api: Api, page: PageView, table: TableView, view: TableCellView, varValue: (_var: Variable | undefined) => any): {
+export function overrideTableCell(op: Operator, page: PageView, table: TableView, view: TableCellView, varValue: (_var: Variable | undefined) => any): {
     view: ShapeView,
     var: Variable,
     isNew: boolean
@@ -298,9 +298,9 @@ export function overrideTableCell(api: Api, page: PageView, table: TableView, vi
         if (override.view.isVirtualShape) {
             const _var = _newVar(VariableType.TableCell, varValue(override.var))
             const _ref = _getRefView(override.view, override.refId)
-            api.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
+            op.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
             const refId = _ref.refId
-            api.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId, _var.id)
+            op.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId, _var.id)
             return {
                 view: _ref.view,
                 var: _var,
@@ -316,9 +316,9 @@ export function overrideTableCell(api: Api, page: PageView, table: TableView, vi
     } else {
         const _var = _newVar(VariableType.TableCell, varValue(undefined))
         const _ref = _getRefView(table, table.data.id + '/' + view.data.id)
-        api.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
+        op.shapeAddVariable(page.data, _ref.view.data as SymbolRefShape, _var)
         const refId = _ref.refId
-        api.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId, _var.id)
+        op.shapeAddOverride(page.data, _ref.view.data as SymbolRefShape, refId, _var.id)
         return {
             view: _ref.view,
             var: _var,

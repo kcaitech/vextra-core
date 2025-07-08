@@ -38,13 +38,13 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
     executePadding(shapes: ArtboardView[], value: number, direction: PaddingDir) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const padding = Math.max(0, Math.round(value));
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
-                const __shape = shape4Autolayout(api, view, this._page);
-                api.shapeModifyAutoLayoutPadding(page, __shape, padding, direction);
+                const __shape = shape4Autolayout(op, view, this._page);
+                op.shapeModifyAutoLayoutPadding(page, __shape, padding, direction);
             }
             this.updateView();
         } catch (e) {
@@ -55,14 +55,14 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
     executeHorPadding(shapes: ArtboardView[], value: number, right: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const padding = Math.max(0, Math.round(value));
             const r_padding = Math.max(0, Math.round(right));
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
-                const __shape = shape4Autolayout(api, view, this._page);
-                api.shapeModifyAutoLayoutHorPadding(page, __shape, padding, r_padding);
+                const __shape = shape4Autolayout(op, view, this._page);
+                op.shapeModifyAutoLayoutHorPadding(page, __shape, padding, r_padding);
             }
             this.updateView();
         } catch (e) {
@@ -73,14 +73,14 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
     executeVerPadding(shapes: ArtboardView[], value: number, bottom: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const padding = Math.max(0, Math.round(value));
             const b_padding = Math.max(0, Math.round(bottom));
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
-                const __shape = shape4Autolayout(api, view, this._page);
-                api.shapeModifyAutoLayoutVerPadding(page, __shape, padding, b_padding);
+                const __shape = shape4Autolayout(op, view, this._page);
+                op.shapeModifyAutoLayoutVerPadding(page, __shape, padding, b_padding);
             }
             this.updateView();
         } catch (e) {
@@ -91,14 +91,14 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
     executeSpace(shapes: ArtboardView[], value: number, direction: PaddingDir) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const space = Math.round(value);
             for (let i = 0; i < shapes.length; i++) {
                 const view = shapes[i];
-                const __shape = shape4Autolayout(api, view, this._page);
-                api.shapeModifyAutoLayoutSpace(page, __shape, space, direction);
-                api.shapeModifyAutoLayoutGapSizing(page, __shape, StackSizing.Fixed, direction);
+                const __shape = shape4Autolayout(op, view, this._page);
+                op.shapeModifyAutoLayoutSpace(page, __shape, space, direction);
+                op.shapeModifyAutoLayoutGapSizing(page, __shape, StackSizing.Fixed, direction);
             }
             this.updateView();
         } catch (e) {
@@ -109,12 +109,12 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
     swapShapeLayout(shape: ArtboardView, targets: ShapeView[], x: number, y: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             for (let index = 0; index < targets.length; index++) {
                 const target = targets[index];
                 const frame = target.relativeFrame;
-                translate(api, page, adapt2Shape(target), x - frame.x, y - frame.y);
+                translate(op, page, adapt2Shape(target), x - frame.x, y - frame.y);
             }
             this.updateView();
         } catch (e) {
@@ -123,7 +123,7 @@ export class AutoLayoutModify extends AsyncApiCaller {
         }
     }
 
-    private __migrate(document: Document, api: Operator, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number) {
+    private __migrate(document: Document, op: Operator, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number) {
         const error = unable_to_migrate(targetParent, shape);
         if (error) {
             console.log('migrate error:', error);
@@ -135,15 +135,15 @@ export class AutoLayoutModify extends AsyncApiCaller {
 
         if (is_state(shape)) {
             const name = get_state_name(shape as any, dlt);
-            api.shapeModifyName(page, shape, `${origin.name}/${name}`);
+            op.shapeModifyName(page, shape, `${origin.name}/${name}`);
         }
         const transform = (shape.matrix2Root());
         const __t = (targetParent.matrix2Root());
 
         transform.addTransform(__t.getInverse());
 
-        api.shapeModifyTransform(page, shape, (transform));
-        api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
+        op.shapeModifyTransform(page, shape, (transform));
+        op.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
 
         //标记容器是否被移动到其他容器
         if (shape.parent?.isContainer && shape.parent.type !== ShapeType.Page) {
@@ -151,14 +151,14 @@ export class AutoLayoutModify extends AsyncApiCaller {
         } else {
             this.prototype.clear()
         }
-        after_migrate(document, page, api, origin);
+        after_migrate(document, page, op, origin);
     }
 
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             if (this.prototype.size) {
                 this.prototype.forEach((v) => {
-                    this.api.delShapeProtoStart(this.page, v)
+                    this.operator.delShapeProtoStart(this.page, v)
                 })
             }
             this.__repo.commit();

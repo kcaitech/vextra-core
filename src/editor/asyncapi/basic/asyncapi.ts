@@ -19,7 +19,7 @@ import { PageView, adapt2Shape } from "../../../dataview";
 export class AsyncApiCaller {
     __repo: IRepository;
     __document: Document;
-    api: Operator;
+    operator: Operator;
     page: Page;
     pageView: PageView;
 
@@ -30,7 +30,7 @@ export class AsyncApiCaller {
         this.__document = document;
         this.pageView = page;
         this.page = adapt2Shape(page) as Page;
-        this.api = this.start()
+        this.operator = this.start()
     }
 
     start() {

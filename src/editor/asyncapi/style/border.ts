@@ -23,7 +23,7 @@ import { exportGradient } from "../../../data/baseexport";
 import { importBorder, importGradient, importStop } from "../../../data/baseimport";
 import * as types from "../../../data/typesdefine";
 import { Matrix } from "../../../basic/matrix";
-import { Api } from "../../../repo";
+import { Operator } from "../../../operator";
 import { uuid } from "../../../basic/uuid";
 
 export class BorderPaintsAsyncApi extends AsyncApiCaller {
@@ -42,23 +42,23 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
         }
     }
 
-    getBorderVariable(api: Api, page: PageView, view: ShapeView) {
+    getBorderVariable(op: Operator, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
             return importBorder(_var?.value ?? view.getBorder());
-        }, api, view)!;
+        }, op, view)!;
     }
 
     // 修改填充类型
     modifyFillType(mission: Function[]) {
         try {
-            mission.forEach((call) => call(this.api));
+            mission.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
 
-    initGradient(api: Api, action: { fill: Fill, type: string }) {
+    initGradient(op: Operator, action: { fill: Fill, type: string }) {
         const gradient = action.fill.gradient;
         if (gradient) {
             const gCopy = importGradient(exportGradient(gradient));
@@ -71,7 +71,7 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
             }
             if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) gCopy.elipseLength = 1;
             gCopy.gradientType = action.type as GradientType;
-            api.setFillGradient(action.fill, gCopy);
+            op.setFillGradient(action.fill, gCopy);
         } else {
             const stops = new BasicArray<Stop>();
             const { alpha, red, green, blue } = action.fill.color;
@@ -90,13 +90,13 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
                 v.crdtidx = idx;
             })
             gradient.gradientType = action.type as GradientType;
-            api.setFillGradient(action.fill, gradient);
+            op.setFillGradient(action.fill, gradient);
         }
     }
 
     modifySolidColor(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -107,7 +107,7 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
     // 新增一个渐变色站点
     createGradientStop(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -117,7 +117,7 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
     // 删除一个渐变色站点
     removeGradientStop(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -138,7 +138,7 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
     /* 修改站点位置 */
     modifyStopPosition(missions: Function[]): void {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -148,13 +148,13 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
 
     /* 修改一次站点颜色 */
     modifyStopColorOnce(missions: Function[]) {
-        missions.forEach((call) => call(this.api));
+        missions.forEach((call) => call(this.operator));
     }
 
     /* 逆转站点 */
     reverseGradientStops(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -183,7 +183,7 @@ export class BorderPaintsAsyncApi extends AsyncApiCaller {
                     m.trans(from.x, from.y);
                     gradientCopy.to = m.computeCoord3(to) as any;
                 }
-                this.api.setFillGradient(fill, gradientCopy);
+                this.operator.setFillGradient(fill, gradientCopy);
             }
         } catch (error) {
             console.error(error);

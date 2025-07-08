@@ -31,7 +31,7 @@ import {
     getPolygonPoints,
     getPolygonVertices,
 } from "../utils/path";
-import { Api } from "../../repo";
+import { Operator } from "../../operator";
 
 export class PointModifyHandler extends AsyncApiCaller {
     updateFrameTargets: Set<Shape> = new Set();
@@ -46,7 +46,7 @@ export class PointModifyHandler extends AsyncApiCaller {
 
     executeCounts(shapes: ShapeView[], count: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
@@ -59,9 +59,9 @@ export class PointModifyHandler extends AsyncApiCaller {
                 const offset = shape.type === ShapeType.Star ? (shape as StarShape).innerAngle : undefined;
                 const counts = getPolygonVertices(shape.type === ShapeType.Star ? count * 2 : count, offset);
                 const points = getPolygonPoints(counts, view.radius[0]);
-                api.deletePoints(page, shape, 0, shape.type === ShapeType.Star ? shape.counts * 2 : shape.counts, 0);
-                api.addPoints(page, shape, points, 0);
-                api.shapeModifyCounts(page, shape, count);
+                op.deletePoints(page, shape, 0, shape.type === ShapeType.Star ? shape.counts * 2 : shape.counts, 0);
+                op.addPoints(page, shape, points, 0);
+                op.shapeModifyCounts(page, shape, count);
             }
             this.updateView();
         } catch (e) {
@@ -72,7 +72,7 @@ export class PointModifyHandler extends AsyncApiCaller {
 
     executeInnerAngle(shapes: ShapeView[], offset: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
@@ -87,9 +87,9 @@ export class PointModifyHandler extends AsyncApiCaller {
                     if (index % 2 === 0) continue;
                     const angle = ((2 * Math.PI) / points.length) * index;
                     const p = calculateInnerAnglePosition(offset, angle);
-                    api.shapeModifyCurvPoint(page, shape, index, p, 0);
+                    op.shapeModifyCurvPoint(page, shape, index, p, 0);
                 }
-                api.shapeModifyInnerAngle(page, shape, offset);
+                op.shapeModifyInnerAngle(page, shape, offset);
             }
             this.updateView();
         } catch (e) {
@@ -97,12 +97,12 @@ export class PointModifyHandler extends AsyncApiCaller {
             console.log('PointModifyHandler.executeCounts', e);
         }
     }
-    getRadiusMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, api);
+    getRadiusMaskVariable(op: Operator, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.RadiusMask, OverrideType.RadiusMask, () => value, view, page, op);
     }
     executeRadius(shapes: ShapeView[], values: number[]) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             for (let i = 0; i < shapes.length; i++) {
@@ -110,11 +110,11 @@ export class PointModifyHandler extends AsyncApiCaller {
 
                 if (shape.isVirtualShape) continue;
                 if (shape.radiusMask) {
-                    const variable = this.getRadiusMaskVariable(api, this.pageView, shapes[i], undefined);
+                    const variable = this.getRadiusMaskVariable(op, this.pageView, shapes[i], undefined);
                     if (variable) {
-                        api.shapeModifyVariable(page, variable, undefined);
+                        op.shapeModifyVariable(page, variable, undefined);
                     } else {
-                        api.delradiusmask(shape);
+                        op.delradiusmask(shape);
                     }
                 }
 
@@ -126,8 +126,8 @@ export class PointModifyHandler extends AsyncApiCaller {
                     const [lt, rt, rb, lb] = values;
 
                     if (shape instanceof SymbolRefShape) {
-                        const _shape = shape4cornerRadius(api, this.pageView, shapes[i] as SymbolRefView);
-                        api.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
+                        const _shape = shape4cornerRadius(op, this.pageView, shapes[i] as SymbolRefView);
+                        op.shapeModifyRadius2(page, _shape, lt, rt, rb, lb);
                     }
 
                     if (shape instanceof PathShape) {
@@ -135,24 +135,24 @@ export class PointModifyHandler extends AsyncApiCaller {
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
                             if (points[_i].radius === val || val < 0) continue;
-                            api.modifyPointCornerRadius(page, shape, _i, val, 0);
+                            op.modifyPointCornerRadius(page, shape, _i, val, 0);
                         }
                         this.updateFrameTargets.add(shape);
                     } else {
                         const __shape = shape as Artboard | SymbolShape;
-                        api.shapeModifyRadius2(page, __shape, lt, rt, rb, lb);
+                        op.shapeModifyRadius2(page, __shape, lt, rt, rb, lb);
                     }
                 } else {
                     if (shape instanceof PathShape) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) continue;
-                                api.modifyPointCornerRadius(page, shape, _i, values[0], index);
+                                op.modifyPointCornerRadius(page, shape, _i, values[0], index);
                             }
                         });
                         this.updateFrameTargets.add(shape);
                     } else {
-                        api.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
+                        op.shapeModifyFixedRadius(page, shape as GroupShape | TextShape, values[0]);
                     }
                 }
             }

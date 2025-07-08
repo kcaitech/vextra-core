@@ -12,7 +12,7 @@ import { AsyncApiCaller } from "../basic/asyncapi";
 import { importShadow } from "../../../data/baseimport";
 import { BasicArray, OverrideType, Shadow, VariableType } from "../../../data";
 import { PageView, ShapeView } from "../../../dataview";
-import { Api } from "../../../repo";
+import { Operator } from "../../../operator";
 import { override_variable } from "../../symbol";
 
 export class ShadowAsyncApi extends AsyncApiCaller {
@@ -20,18 +20,18 @@ export class ShadowAsyncApi extends AsyncApiCaller {
         return this.__repo.start('modify-fills-color');
     }
 
-    getShadowsVariable(api: Api, page: PageView, view: ShapeView) {
+    getShadowsVariable(op: Operator, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {
             const shadows = _var?.value ?? view.getShadows();
             return new BasicArray(...(shadows as Array<Shadow>).map((v) => {
                 return importShadow(v);
             }))
-        }, api, view)!;
+        }, op, view)!;
     }
 
     modifySolidColor(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (err) {
             this.exception = true;

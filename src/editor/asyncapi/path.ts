@@ -59,7 +59,7 @@ export class PathModifier extends AsyncApiCaller {
 
         if (needStoreSelection) {
             this.__repo.rollback();
-            this.api = this.__repo.start('create-path', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            this.operator = this.__repo.start('create-path', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
                 if (!isUndo) state.shapes = this.shape ? [this.shape.id] : [];
                 else state.shapes = cmd.saveselection?.shapes || [];
@@ -78,8 +78,8 @@ export class PathModifier extends AsyncApiCaller {
         const { thicknessBottom, thicknessTop, thicknessLeft, thicknessRight, sideType } = border.sideSetting;
         if (sideType === SideType.Normal) return;
         const thickness = Math.max(thicknessBottom, thicknessTop, thicknessLeft, thicknessRight);
-        this.api.setBorderSide(this.shape.getBorders(), new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
-        this.api.shapeEditPoints(this.page, this.shape, true);
+        this.operator.setBorderSide(this.shape.getBorders(), new BorderSideSetting(SideType.Normal, thickness, thickness, thickness, thickness));
+        this.operator.shapeEditPoints(this.page, this.shape, true);
     }
 
     get haveEdit() {
@@ -121,7 +121,7 @@ export class PathModifier extends AsyncApiCaller {
                 const fixed_index = env.childs.findIndex(s => s.scrollBehavior === Fixed);
                 targetIndex = fixed_index === -1 ? env.childs.length : fixed_index;
             }
-            this.api.shapeInsert(this.__document, this.page, env, vec, targetIndex);
+            this.operator.shapeInsert(this.__document, this.page, env, vec, targetIndex);
 
             this.shape = env.childs[targetIndex];
 
@@ -139,14 +139,14 @@ export class PathModifier extends AsyncApiCaller {
             const shape = adapt2Shape(view) as PathShape;
             this.shape = shape;
             this.modifyBorderSetting();
-            this.api.addPointAt(
+            this.operator.addPointAt(
                 this.page,
                 shape,
                 index,
                 new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight),
                 segment
             );
-            after_insert_point(this.page, this.api, shape, index, segment, apex);
+            after_insert_point(this.page, this.operator, shape, index, segment, apex);
             this.updateView();
             return true;
         } catch (e) {
@@ -161,7 +161,7 @@ export class PathModifier extends AsyncApiCaller {
             if (segment < 0 || index < 0) return false;
             const shape = adapt2Shape(view) as PathShape;
             this.shape = shape;
-            this.api.addPointAt(
+            this.operator.addPointAt(
                 this.page,
                 shape,
                 index,
@@ -183,8 +183,8 @@ export class PathModifier extends AsyncApiCaller {
             const index = (this.shape as PathShape).pathsegs.length;
             const point = new CurvePoint([0] as BasicArray<number>, uuid(), xy.x, xy.y, CurveMode.Straight);
             const segment = new PathSegment([index] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(point), false);
-            this.api.addSegmentAt(this.page, shape, index, segment);
-            this.api.shapeEditPoints(this.page, shape, true);
+            this.operator.addSegmentAt(this.page, shape, index, segment);
+            this.operator.shapeEditPoints(this.page, shape, true);
             this.updateView();
             return true;
         } catch (e) {
@@ -196,7 +196,7 @@ export class PathModifier extends AsyncApiCaller {
 
     execute(view: ShapeView, units: ModifyUnits) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const shape = adapt2Shape(view) as PathShape;
             this.shape = shape;
@@ -215,17 +215,17 @@ export class PathModifier extends AsyncApiCaller {
                         continue;
                     }
 
-                    this.api.shapeModifyCurvPoint(page, shape, unit.index, { x: unit.x, y: unit.y }, segment);
+                    this.operator.shapeModifyCurvPoint(page, shape, unit.index, { x: unit.x, y: unit.y }, segment);
 
                     if (point.hasFrom) {
-                        api.shapeModifyCurvFromPoint(page, shape, unit.index, {
+                        op.shapeModifyCurvFromPoint(page, shape, unit.index, {
                             x: unit.fromX,
                             y: unit.fromY
                         }, segment);
                     }
 
                     if (point.hasTo) {
-                        api.shapeModifyCurvToPoint(page, shape, unit.index, { x: unit.toX, y: unit.toY }, segment);
+                        op.shapeModifyCurvToPoint(page, shape, unit.index, { x: unit.toX, y: unit.toY }, segment);
                     }
                 }
             })
@@ -240,7 +240,7 @@ export class PathModifier extends AsyncApiCaller {
     preCurve(order: 2 | 3, shape: ShapeView, index: number, segmentIndex: number) {
         this.modifyBorderSetting();
         this.shape = adapt2Shape(shape);
-        __pre_curve(order, this.page, this.api, this.shape as PathShape, index, segmentIndex);
+        __pre_curve(order, this.page, this.operator, this.shape as PathShape, index, segmentIndex);
     }
 
     preCurve2(order: 2 | 3, shape: ShapeView, index: number, segmentIndex: number) {
@@ -259,25 +259,25 @@ export class PathModifier extends AsyncApiCaller {
                 return;
             }
 
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const __shape = this.shape as PathShape;
             if (order === 2) { // 二次曲线
                 if (point.mode !== CurveMode.Disconnected) {
-                    api.modifyPointCurveMode(page, __shape, index, CurveMode.Disconnected, segmentIndex);
+                    op.modifyPointCurveMode(page, __shape, index, CurveMode.Disconnected, segmentIndex);
                 }
 
-                api.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segmentIndex);
-                api.modifyPointHasFrom(page, __shape, index, true, segmentIndex);
+                op.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segmentIndex);
+                op.modifyPointHasFrom(page, __shape, index, true, segmentIndex);
             } else { // 三次曲线
                 if (point.mode !== CurveMode.Mirrored) {
-                    api.modifyPointCurveMode(page, __shape, index, CurveMode.Mirrored, segmentIndex);
+                    op.modifyPointCurveMode(page, __shape, index, CurveMode.Mirrored, segmentIndex);
                 }
 
-                api.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segmentIndex);
-                api.shapeModifyCurvToPoint(page, __shape, index, { x: point.x, y: point.y }, segmentIndex);
-                api.modifyPointHasFrom(page, __shape, index, true, segmentIndex);
-                api.modifyPointHasTo(page, __shape, index, true, segmentIndex);
+                op.shapeModifyCurvFromPoint(page, __shape, index, { x: point.x, y: point.y }, segmentIndex);
+                op.shapeModifyCurvToPoint(page, __shape, index, { x: point.x, y: point.y }, segmentIndex);
+                op.modifyPointHasFrom(page, __shape, index, true, segmentIndex);
+                op.modifyPointHasTo(page, __shape, index, true, segmentIndex);
             }
 
 
@@ -293,7 +293,7 @@ export class PathModifier extends AsyncApiCaller {
                    to: { x: number, y: number },
                    segmentIndex: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             this.shape = adapt2Shape(view);
             const shape = this.shape as PathShape;
@@ -304,13 +304,13 @@ export class PathModifier extends AsyncApiCaller {
             }
 
             if (mode === CurveMode.Mirrored || mode === CurveMode.Asymmetric) {
-                api.shapeModifyCurvFromPoint(page, shape, index, from, segmentIndex);
-                api.shapeModifyCurvToPoint(page, shape, index, to, segmentIndex);
+                op.shapeModifyCurvFromPoint(page, shape, index, from, segmentIndex);
+                op.shapeModifyCurvToPoint(page, shape, index, to, segmentIndex);
             } else if (mode === CurveMode.Disconnected) {
                 if (side === 'from') {
-                    api.shapeModifyCurvFromPoint(page, shape, index, from, segmentIndex);
+                    op.shapeModifyCurvFromPoint(page, shape, index, from, segmentIndex);
                 } else {
-                    api.shapeModifyCurvToPoint(page, shape, index, to, segmentIndex);
+                    op.shapeModifyCurvToPoint(page, shape, index, to, segmentIndex);
                 }
             }
 
@@ -323,33 +323,33 @@ export class PathModifier extends AsyncApiCaller {
 
     initCurveBeforeCurveModify(view: PathShapeView, segmentIndex: number, previousIndex: number, nextIndex: number) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const pathShape = adapt2Shape(view) as PathShape;
             const previous = view.segments[segmentIndex].points[previousIndex];
             const next = view.segments[segmentIndex].points[nextIndex];
             const doNotInitHandle = previous.hasFrom || next.hasTo;
             if (previous.mode === CurveMode.Straight || previous.mode === CurveMode.None || !previous.hasFrom) {
-                api.modifyPointCurveMode(page, pathShape, previousIndex, CurveMode.Disconnected, segmentIndex);
-                api.shapeModifyCurvFromPoint(page, pathShape, previousIndex, previous, segmentIndex);
+                op.modifyPointCurveMode(page, pathShape, previousIndex, CurveMode.Disconnected, segmentIndex);
+                op.shapeModifyCurvFromPoint(page, pathShape, previousIndex, previous, segmentIndex);
             }
             if (!previous.hasFrom) {
-                api.modifyPointHasFrom(page, pathShape, previousIndex, true, segmentIndex);
+                op.modifyPointHasFrom(page, pathShape, previousIndex, true, segmentIndex);
             }
             if (next.mode === CurveMode.Straight || next.mode === CurveMode.None) {
-                api.modifyPointCurveMode(page, pathShape, nextIndex, CurveMode.Disconnected, segmentIndex);
-                api.shapeModifyCurvToPoint(page, pathShape, nextIndex, next, segmentIndex);
+                op.modifyPointCurveMode(page, pathShape, nextIndex, CurveMode.Disconnected, segmentIndex);
+                op.shapeModifyCurvToPoint(page, pathShape, nextIndex, next, segmentIndex);
             }
             if (!next.hasTo) {
-                api.modifyPointHasTo(page, pathShape, nextIndex, true, segmentIndex);
+                op.modifyPointHasTo(page, pathShape, nextIndex, true, segmentIndex);
             }
             if (doNotInitHandle) return;
             const dx = next.x - previous.x;
             const dy = next.y - previous.y;
             const p1 = { x: previous.x + 1 / 3 * dx, y: previous.y + 1 / 3 * dy };
             const p2 = { x: previous.x + 2 / 3 * dx, y: previous.y + 2 / 3 * dy };
-            api.shapeModifyCurvFromPoint(page, pathShape, previousIndex, p1, segmentIndex);
-            api.shapeModifyCurvToPoint(page, pathShape, nextIndex, p2, segmentIndex);
+            op.shapeModifyCurvFromPoint(page, pathShape, previousIndex, p1, segmentIndex);
+            op.shapeModifyCurvToPoint(page, pathShape, nextIndex, p2, segmentIndex);
             this.updateView();
         } catch (e) {
             console.error(e);
@@ -366,25 +366,25 @@ export class PathModifier extends AsyncApiCaller {
         toPoint: { x: number, y: number }
     ) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const pathShape = (this.shape ?? (this.shape = adapt2Shape(view))) as PathShape;
             const previous = view.segments[segmentIndex].points[previousIndex];
             const next = view.segments[segmentIndex].points[nextIndex];
 
-            api.shapeModifyCurvFromPoint(page, pathShape, previousIndex, fromPoint, segmentIndex);
-            api.shapeModifyCurvToPoint(page, pathShape, nextIndex, toPoint, segmentIndex);
+            op.shapeModifyCurvFromPoint(page, pathShape, previousIndex, fromPoint, segmentIndex);
+            op.shapeModifyCurvToPoint(page, pathShape, nextIndex, toPoint, segmentIndex);
 
             if (previous.hasTo) {
                 if (previous.mode === CurveMode.Mirrored) {
                     const x = previous.x - (previous.fromX! - previous.x);
                     const y = previous.y - (previous.fromY! - previous.y);
-                    api.shapeModifyCurvToPoint(page, pathShape, previousIndex, { x, y }, segmentIndex);
+                    op.shapeModifyCurvToPoint(page, pathShape, previousIndex, { x, y }, segmentIndex);
                 } else if (previous.mode === CurveMode.Asymmetric) {
                     const rad = getAsymmetricRad(previous, { x: previous.fromX!, y: previous.fromY! });
                     const point = { x: previous.toX!, y: previous.toY! };
                     modifyAsymmetricXY(previous as CurvePoint, point, rad, previous.fromX! - previous.x, previous.fromY! - previous.y);
-                    api.shapeModifyCurvToPoint(page, pathShape, previousIndex, point, segmentIndex);
+                    op.shapeModifyCurvToPoint(page, pathShape, previousIndex, point, segmentIndex);
                 }
             }
 
@@ -392,12 +392,12 @@ export class PathModifier extends AsyncApiCaller {
                 if (next.mode === CurveMode.Mirrored) {
                     const x = next.x - (next.toX! - next.x);
                     const y = next.y - (next.toY! - next.y);
-                    api.shapeModifyCurvFromPoint(page, pathShape, nextIndex, { x, y }, segmentIndex);
+                    op.shapeModifyCurvFromPoint(page, pathShape, nextIndex, { x, y }, segmentIndex);
                 } else if (next.mode === CurveMode.Asymmetric) {
                     const rad = getAsymmetricRad(next, { x: next.toX!, y: next.toY! });
                     const point = { x: next.fromX!, y: next.fromY! };
                     modifyAsymmetricXY(next as CurvePoint, point, rad, next.toX! - next.x, next.toY! - next.y);
-                    api.shapeModifyCurvFromPoint(page, pathShape, nextIndex, point, segmentIndex);
+                    op.shapeModifyCurvFromPoint(page, pathShape, nextIndex, point, segmentIndex);
                 }
             }
 
@@ -436,7 +436,7 @@ export class PathModifier extends AsyncApiCaller {
                 return false;
             }
 
-            this.api.setCloseStatus(this.page, shape, true, segmentIndex);
+            this.operator.setCloseStatus(this.page, shape, true, segmentIndex);
 
             return true;
         } catch (e) {
@@ -502,19 +502,19 @@ export class PathModifier extends AsyncApiCaller {
 
                 pointsContainer.push(point);
             }
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             // 删除原有的线条
-            api.deleteSegmentAt(page, shape, segmentIndex);
-            api.deleteSegmentAt(page, shape, toSegmentIndex);
+            op.deleteSegmentAt(page, shape, segmentIndex);
+            op.deleteSegmentAt(page, shape, toSegmentIndex);
 
             // crdtidx重排
             pointsContainer.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
 
             // 生成合并过后的线条
             const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsContainer, false);
-            api.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
+            op.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
 
             this.updateView();
 
@@ -540,7 +540,7 @@ export class PathModifier extends AsyncApiCaller {
                 return true;
             }
 
-            this.api.modifyPointCurveMode(this.page, shape, index, CurveMode.Disconnected, segmentIndex);
+            this.operator.modifyPointCurveMode(this.page, shape, index, CurveMode.Disconnected, segmentIndex);
 
             this.updateView();
 
@@ -567,10 +567,10 @@ export class PathModifier extends AsyncApiCaller {
                 return true;
             }
 
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
-            api.modifyPointCurveMode(page, shape, index, recoverTo, segmentIndex);
+            op.modifyPointCurveMode(page, shape, index, recoverTo, segmentIndex);
 
             if (activeSide === 'from') {
                 if (recoverTo === CurveMode.Mirrored) {
@@ -581,7 +581,7 @@ export class PathModifier extends AsyncApiCaller {
                     const _ty = point.y - deltaY;
 
                     if (point.toX !== _tx || point.toY !== _ty) {
-                        api.shapeModifyCurvToPoint(page, shape, index, { x: _tx, y: _ty }, segmentIndex);
+                        op.shapeModifyCurvToPoint(page, shape, index, { x: _tx, y: _ty }, segmentIndex);
                     }
                 } else if (recoverTo === CurveMode.Asymmetric) {
                     const l = Math.hypot(point.x - (point.toX || 0), point.y - (point.toY || 0));
@@ -596,7 +596,7 @@ export class PathModifier extends AsyncApiCaller {
                     const y = point.y - (dy / Math.abs(dy)) * _l_y;
 
                     if (point.toX !== x || point.toY !== x) {
-                        api.shapeModifyCurvToPoint(page, shape, index, { x, y }, segmentIndex);
+                        op.shapeModifyCurvToPoint(page, shape, index, { x, y }, segmentIndex);
                     }
                 }
             } else {
@@ -608,7 +608,7 @@ export class PathModifier extends AsyncApiCaller {
                     const _ty = point.y - deltaY;
 
                     if (point.fromX !== _tx || point.fromY !== _ty) {
-                        api.shapeModifyCurvFromPoint(page, shape, index, { x: _tx, y: _ty }, segmentIndex);
+                        op.shapeModifyCurvFromPoint(page, shape, index, { x: _tx, y: _ty }, segmentIndex);
                     }
                 } else if (recoverTo === CurveMode.Asymmetric) {
                     const l = Math.hypot(point.x - (point.fromX || 0), point.y - (point.fromY || 0));
@@ -623,7 +623,7 @@ export class PathModifier extends AsyncApiCaller {
                     const y = point.y - (dy / Math.abs(dy)) * _l_y;
 
                     if (point.fromX !== x || point.fromY !== x) {
-                        api.shapeModifyCurvFromPoint(page, shape, index, { x, y }, segmentIndex);
+                        op.shapeModifyCurvFromPoint(page, shape, index, { x, y }, segmentIndex);
                     }
                 }
             }
@@ -669,15 +669,15 @@ export class PathModifier extends AsyncApiCaller {
 
                 container.push(np);
             }
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
-            api.deleteSegmentAt(page, shape, segmentIndex);
+            op.deleteSegmentAt(page, shape, segmentIndex);
             const l = shape.pathsegs.length;
             container.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
             const newSegment = new PathSegment([l] as BasicArray<number>, uuid(), container, segment.isClosed);
 
-            api.addSegmentAt(page, shape, l, newSegment);
+            op.addSegmentAt(page, shape, l, newSegment);
 
             this.updateView();
 
@@ -695,21 +695,21 @@ export class PathModifier extends AsyncApiCaller {
 
             this.shape = shape;
 
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             const segments = shape.pathsegs;
             if (!segments.length) {
                 const parent = shape.parent as GroupShape;
                 const index = parent.indexOfChild(shape);
-                api.shapeDelete(this.__document, page, parent, index);
+                op.shapeDelete(this.__document, page, parent, index);
                 return;
             }
 
             for (let i = segments.length - 1; i > -1; i--) {
                 const segment = segments[i];
                 if (segment.points.length < 2) {
-                    api.deleteSegmentAt(page, shape, i);
+                    op.deleteSegmentAt(page, shape, i);
                 }
             }
         } catch (e) {
@@ -731,13 +731,13 @@ export class PathModifier extends AsyncApiCaller {
             }
 
             const page = this.page;
-            const api = this.api;
+            const op = this.operator;
 
             for (let i = 0; i < segments.length; i++) {
                 const segment = segments[i];
                 const points = segment.points;
                 if (points.length < 3) continue;
-                api.setCloseStatus(page, shape, val, i);
+                op.setCloseStatus(page, shape, val, i);
             }
 
             return true;
@@ -751,8 +751,8 @@ export class PathModifier extends AsyncApiCaller {
     commit() {
         if (this.__repo.isNeedCommit() && !this.exception) {
             if (this.shape) {
-                update_frame_by_points(this.api, this.page, this.shape as PathShape);
-                if (!this.shape.haveEdit) this.api.shapeEditPoints(this.page, this.shape, true);
+                update_frame_by_points(this.operator, this.page, this.shape as PathShape);
+                if (!this.shape.haveEdit) this.operator.shapeEditPoints(this.page, this.shape, true);
             }
             this.__repo.commit();
         } else {

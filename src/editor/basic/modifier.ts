@@ -8,7 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api, IRepository } from "../../repo";
+import { IRepository } from "../../repo";
+import { Operator } from "../../operator";
 
 export class Modifier {
     private __repo: IRepository;
@@ -21,18 +22,18 @@ export class Modifier {
         return this.__repo;
     }
 
-    private m_api: Api | undefined;
-    protected getOperator(desc: string): Api {
-        return this.m_api ?? (this.m_api = this.__repo.start(desc));
+    private m_operator: Operator | undefined;
+    protected getOperator(desc: string): Operator {
+        return this.m_operator ?? (this.m_operator = this.__repo.start(desc));
     }
 
     protected rollback() {
         this.__repo.rollback();
-        this.m_api = undefined;
+        this.m_operator = undefined;
     }
 
     protected commit() {
         this.__repo.commit();
-        this.m_api = undefined;
+        this.m_operator = undefined;
     }
 }

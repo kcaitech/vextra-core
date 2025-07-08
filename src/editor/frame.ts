@@ -172,54 +172,37 @@ function fixHeightByRecorder(shape: Shape, height: number, origin_d_to_bottom: n
     }
 }
 
-function setSize(page: Page, shape: Shape, w: number, h: number, api: Operator): boolean {
+function setSize(page: Page, shape: Shape, w: number, h: number, op: Operator): boolean {
     if (!shape.hasSize()) {
         return false;
     }
     const frame = shape.size;
     let changed = false;
-    // if (x !== frame.x) {
-    //     api.shapeModifyX(page, shape, x)
-    //     changed = true;
-    // }
-    // if (y !== frame.y) {
-    //     api.shapeModifyY(page, shape, y)
-    //     changed = true;
-    // }
+
     if (w !== frame.width || h !== frame.height) {
         if (shape instanceof TextShape) {
             const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
             if (h !== frame.height) {
                 if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
-                    api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
+                    op.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
                 }
             } else {
                 if (textBehaviour === TextBehaviour.Flexible) {
-                    api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
+                    op.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
                 }
             }
-            api.shapeModifyWH(page, shape, w, h)
-            fixTextShapeFrameByLayout(api, page, shape);
+            op.shapeModifyWH(page, shape, w, h)
+            fixTextShapeFrameByLayout(op, page, shape);
         }
-        // else if (shape instanceof GroupShape) {
-        //     // const saveW = frame.width;
-        //     // const saveH = frame.height;
-        //     api.shapeModifyWH(page, shape, w, h)
-        //     // const scaleX = frame.width / saveW;
-        //     // const scaleY = frame.height / saveH;
-        //
-        //     // 这个scaleX, scaleY 不对
-        //     // afterModifyGroupShapeWH(api, page, shape, scaleX, scaleY, new ShapeFrame(frame.x, frame.y, saveW, saveH), recorder);
-        // }
         else {
-            api.shapeModifyWH(page, shape, w, h)
+            op.shapeModifyWH(page, shape, w, h)
         }
         changed = true;
     }
     return changed;
 }
 
-export function translateTo(api: Operator, page: Page, shape: Shape, x: number, y: number) {
+export function translateTo(op: Operator, page: Page, shape: Shape, x: number, y: number) {
     const p = shape.parent;
     if (!p) return;
     const m1 = p.matrix2Root();
@@ -228,10 +211,10 @@ export function translateTo(api: Operator, page: Page, shape: Shape, x: number, 
     const cur = m0.computeCoord(0, 0);
     const dx = target.x - cur.x;
     const dy = target.y - cur.y;
-    api.shapeModifyXY(page, shape, shape.transform.translateX + dx, shape.transform.translateY + dy)
+    op.shapeModifyXY(page, shape, shape.transform.translateX + dx, shape.transform.translateY + dy)
 }
 
-export function translate(api: Operator, page: Page, shape: Shape, dx: number, dy: number, round: boolean = true) {
+export function translate(op: Operator, page: Page, shape: Shape, dx: number, dy: number, round: boolean = true) {
     const xy = shape.frame2Root();
     let x = xy.x + dx;
     let y = xy.y + dy;
@@ -239,42 +222,22 @@ export function translate(api: Operator, page: Page, shape: Shape, dx: number, d
         x = Math.round(x);
         y = Math.round(y);
     }
-    translateTo(api, page, shape, x, y);
+    translateTo(op, page, shape, x, y);
 }
 
-export function expandTo(api: Operator, document: Document, page: Page, shape: Shape, w: number, h: number) {
+export function expandTo(op: Operator, document: Document, page: Page, shape: Shape, w: number, h: number) {
     if (w < minimum_WH) w = minimum_WH;
     if (h < minimum_WH) h = minimum_WH;
     let changed;
     if (shape.isNoTransform()) {
-        changed = setSize(page, shape, w, h, api);
+        changed = setSize(page, shape, w, h, op);
     } else {
-        // todo
-        // const frame = shape.frame;
-        // // 修改frame后的matrix，用来判断修改后(0,0)点的偏移位置
-        // const cx1 = w / 2;
-        // const cy1 = h / 2;
-        // const m1 = new Matrix();
-        // m1.trans(-cx1, -cy1);
-        // if (shape.rotation) m1.rotate(shape.rotation / 180 * Math.PI);
-        // m1.trans(cx1, cy1);
-        // m1.trans(frame.x, frame.y);
-        // const m = shape.matrix2Parent();
-        // const xy = m.computeCoord(0, 0);
-        // const xy1 = m1.computeCoord(0, 0);
-        // const dx = xy.x - xy1.x;
-        // const dy = xy.y - xy1.y;
-        // api.shapeModifyX(page, shape, shape.transform.translateX + dx)
-        // api.shapeModifyY(page, shape, shape.transform.translateY + dy)
-
-        changed = setSize(page, shape, w, h, api);
+        changed = setSize(page, shape, w, h, op);
     }
-
-    // if (changed) updateFrame(shape);
-    if (changed || !shape.hasSize()) afterShapeSizeChange(api, document, page, shape);
+    if (changed || !shape.hasSize()) afterShapeSizeChange(op, document, page, shape);
 }
 
-export function expand(api: Operator, document: Document, page: Page, shape: Shape, dw: number, dh: number, round: boolean = true) {
+export function expand(op: Operator, document: Document, page: Page, shape: Shape, dw: number, dh: number, round: boolean = true) {
     const frame = shape.size;
     let w = frame.width + dw;
     let h = frame.height + dh;
@@ -282,14 +245,14 @@ export function expand(api: Operator, document: Document, page: Page, shape: Sha
         w = Math.round(w);
         h = Math.round(h);
     }
-    expandTo(api, document, page, shape, w, h);
+    expandTo(op, document, page, shape, w, h);
 }
 
 
 /**
  * @deprecated
  */
-export function adjustRB2(api: Operator, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
+export function adjustRB2(op: Operator, document: Document, page: Page, shape: Shape, x: number, y: number, recorder?: SizeRecorder) {
     const p = shape.parent;
     if (!p) return;
     // 需要满足左下(lt)不动
@@ -301,27 +264,15 @@ export function adjustRB2(api: Operator, document: Document, page: Page, shape: 
     let dx = 0;
     let dy = 0;
     const xy2 = matrix2parent.inverseCoord(target.x, target.y);
-    // let w = frame.width - xy2.x;
     let w = xy2.x;
     let h = frame.height - xy2.y;
     const savelt = matrix2parent.computeCoord(0, 0) // lt
     const m = matrix2parent;
     h = -(m.m00 * (savelt.y - target.y) - m.m10 * (savelt.x - target.x)) / (m.m00 * m.m11 - m.m10 * m.m01);
-    // w = (target.x - savelt.x + m.m01 * -h) / m.m00;
     if (w < 0) {
-        // todo flip
-        // api.shapeModifyHFlip(page, shape, !shape.isFlippedHorizontal);
-        // if (shape.rotation) {
-        //     // api.shapeModifyRotate(page, shape, 360 - shape.rotation);
-        // }
         w = -w;
     }
     if (h < 0) {
-        // todo flip
-        // api.shapeModifyVFlip(page, shape, !shape.isFlippedVertical);
-        // if (shape.rotation) {
-        //     // api.shapeModifyRotate(page, shape, 360 - shape.rotation);
-        // }
         h = -h;
     }
     if (w < minimum_WH) w = minimum_WH;
@@ -332,21 +283,19 @@ export function adjustRB2(api: Operator, document: Document, page: Page, shape: 
     const m1 = new Matrix();
     m1.trans(-cx1, -cy1);
     if (shape.rotation) m1.rotate(shape.rotation / 180 * Math.PI);
-    // todo flip
-    // if (shape.isFlippedHorizontal) m1.flipHoriz();
-    // if (shape.isFlippedVertical) m1.flipVert();
+
     m1.trans(cx1, cy1);
     m1.trans(frame.x, frame.y);
     const xy1 = m1.computeCoord(w, h);
 
     dx = target.x - xy1.x;
     dy = target.y - xy1.y;
-    api.shapeModifyXY(page, shape, shape.transform.translateX + dx, shape.transform.translateY + dy)
-    setSize(page, shape, w, h, api);
-    afterShapeSizeChange(api, document, page, shape);
+    op.shapeModifyXY(page, shape, shape.transform.translateX + dx, shape.transform.translateY + dy)
+    setSize(page, shape, w, h, op);
+    afterShapeSizeChange(op, document, page, shape);
 }
 
-function afterShapeSizeChange(api: Operator, document: Document, page: Page, shape: Shape) {
+function afterShapeSizeChange(op: Operator, document: Document, page: Page, shape: Shape) {
     if (shape instanceof SymbolShape && !(shape instanceof SymbolUnionShape)) {
         const symId = shape.id;
         const refs = document.symbolsMgr.getRefs(symId);
@@ -355,9 +304,9 @@ function afterShapeSizeChange(api: Operator, document: Document, page: Page, sha
             if (v.isCustomSize) continue;
             const page = v.getPage();
             if (!page) throw new Error();
-            api.shapeModifyWH(page as Page, v, shape.frame.width, shape.frame.height);
+            op.shapeModifyWH(page as Page, v, shape.frame.width, shape.frame.height);
         }
     } else if (shape instanceof SymbolRefShape) {
-        api.shapeModifyIsCustomSize(page, shape, true);
+        op.shapeModifyIsCustomSize(page, shape, true);
     }
 }

@@ -29,17 +29,17 @@ export function expandBounds(bounds: {
     else if (y > bounds.bottom) bounds.bottom = y;
 }
 
-export function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Operator): boolean {
+export function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, op: Operator): boolean {
     const p = shape.parent as GroupShape;
     if (!p) return false;
-    api.shapeDelete(document, page, p, p.indexOfChild(shape))
+    op.shapeDelete(document, page, p, p.indexOfChild(shape))
     if (p.childs.length <= 0) {
-        deleteEmptyGroupShape(document, page, p, api)
+        deleteEmptyGroupShape(document, page, p, op)
     }
     return true;
 }
 
-export function group<T extends GroupShape>(document: Document, page: Page, shapes: Shape[], target: T, env: GroupShape, index: number, api: Operator): T {
+export function group<T extends GroupShape>(document: Document, page: Page, shapes: Shape[], target: T, env: GroupShape, index: number, op: Operator): T {
     // 图层在root上的transform
     const shapes2rootTransform = shapes.map(s => (s.matrix2Root()));
 
@@ -118,21 +118,21 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
     target.size.height = __bounds.bottom - __bounds.top;
 
     // 将GroupShape加入到save parent(层级最高图形的parent)中
-    target = api.shapeInsert(document, page, env, target, index) as T;
+    target = op.shapeInsert(document, page, env, target, index) as T;
 
     // 将shapes里的对象从原本parent下移入新建的GroupShape
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
         const p = s.parent as GroupShape;
         const idx = p.indexOfChild(s);
-        api.shapeMove(page, p, idx, target, 0); // 层级低的放前面
+        op.shapeMove(page, p, idx, target, 0); // 层级低的放前面
 
-        if (p.childs.length <= 0) deleteEmptyGroupShape(document, page, p, api);
+        if (p.childs.length <= 0) deleteEmptyGroupShape(document, page, p, op);
     }
 
     const inverse2 = (target.matrix2Root()).getInverse();
     for (let i = 0, len = shapes.length; i < len; i++) {
-        api.shapeModifyTransform(page, shapes[i], (shapes2rootTransform[i].addTransform(inverse2)));
+        op.shapeModifyTransform(page, shapes[i], (shapes2rootTransform[i].addTransform(inverse2)));
     }
 
     if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(target.type)) {
@@ -149,14 +149,14 @@ export function group<T extends GroupShape>(document: Document, page: Page, shap
             const s = sortedArr[j];
             const currentIndex = target.childs.indexOf(s);
             if (currentIndex !== j) {
-                api.shapeMove(page, target, currentIndex, target, j);
+                op.shapeMove(page, target, currentIndex, target, j);
             }
         }
     }
     return target;
 }
 
-export function ungroup(document: Document, page: Page, shape: GroupShape, api: Operator): Shape[] {
+export function ungroup(document: Document, page: Page, shape: GroupShape, op: Operator): Shape[] {
     const env = shape.parent as GroupShape;
     let idx = env.indexOfChild(shape);
     const index = idx;
@@ -170,12 +170,12 @@ export function ungroup(document: Document, page: Page, shape: GroupShape, api: 
     for (let len = shape.childs.length; len > 0; len--) {
         const c = shape.childs[0];
         const transform = transformMap.get(c.id)!;
-        api.shapeMove(page, shape, 0, env, idx);
-        api.shapeModifyTransform(page, c, (transform.addTransform(env_transform)));
+        op.shapeMove(page, shape, 0, env, idx);
+        op.shapeModifyTransform(page, c, (transform.addTransform(env_transform)));
         idx++;
         childs.push(c);
     }
 
-    api.shapeDelete(document, page, env, index + childs.length);
+    op.shapeDelete(document, page, env, index + childs.length);
     return childs;
 }

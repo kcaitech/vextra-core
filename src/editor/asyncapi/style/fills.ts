@@ -20,7 +20,7 @@ import {
 } from "../../../data";
 import { exportGradient } from "../../../data/baseexport";
 import { importFill, importGradient, importStop } from "../../../data/baseimport";
-import { Api } from "../../../repo";
+import { Operator } from "../../../operator";
 import { PageView, ShapeView } from "../../../dataview";
 import { override_variable } from "../../symbol";
 import { uuid } from "../../../basic/uuid";
@@ -41,7 +41,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
         }
     }
 
-    getFillsVariable(api: Api, page: PageView, view: ShapeView) {
+    getFillsVariable(op: Operator, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Fills, OverrideType.Fills, (_var) => {
             const fills = _var?.value ?? view.getFills();
             return new BasicArray(...(fills as Array<Fill>).map((v) => {
@@ -51,20 +51,20 @@ export class FillsAsyncApi extends AsyncApiCaller {
                     return ret;
                 }
             ))
-        }, api, view)!;
+        }, op, view)!;
     }
 
     // 修改填充类型
     modifyFillType(mission: Function[]) {
         try {
-            mission.forEach((call) => call(this.api));
+            mission.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
         }
     }
 
-    initGradient(api: Api, action: { fill: Fill, type: string }) {
+    initGradient(op: Operator, action: { fill: Fill, type: string }) {
         const gradient = action.fill.gradient;
         if (gradient) {
             const gCopy = importGradient(exportGradient(gradient));
@@ -77,7 +77,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
             }
             if (action.type === GradientType.Radial && gCopy.elipseLength === undefined) gCopy.elipseLength = 1;
             gCopy.gradientType = action.type as GradientType;
-            api.setFillGradient(action.fill, gCopy);
+            op.setFillGradient(action.fill, gCopy);
         } else {
             const stops = new BasicArray<Stop>();
             const { alpha, red, green, blue } = action.fill.color;
@@ -96,13 +96,13 @@ export class FillsAsyncApi extends AsyncApiCaller {
                 v.crdtidx = idx;
             })
             gradient.gradientType = action.type as GradientType;
-            api.setFillGradient(action.fill, gradient);
+            op.setFillGradient(action.fill, gradient);
         }
     }
 
     modifySolidColor(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -113,7 +113,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     // 新增一个渐变色站点
     createGradientStop(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -123,7 +123,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     // 删除一个渐变色站点
     removeGradientStop(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -144,7 +144,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     /* 修改图片填充的滤镜 */
     modifyFillImageFilter(missions: Function[]): void {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             console.error(error);
@@ -155,7 +155,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     /* 修改站点位置 */
     modifyStopPosition(missions: Function[]): void {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -166,7 +166,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     /* 修改一次站点颜色 */
     modifyStopColorOnce(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -176,7 +176,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     /* 逆转站点 */
     reverseGradientStops(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -186,7 +186,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     /* 旋转站点 */
     rotateGradientStops(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -196,7 +196,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     /* 修改图片的填充方式 */
     modifyObjectFit(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -206,7 +206,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     /* 修改平铺状态下，图片的原始比例 */
     modifyTileScale(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -215,7 +215,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
 
     modifyTileScale2(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             console.error(error);
@@ -226,7 +226,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     /* 旋转图片 */
     rotateImg(mission: Function[]) {
         try {
-            mission.forEach((call) => call(this.api));
+            mission.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -236,7 +236,7 @@ export class FillsAsyncApi extends AsyncApiCaller {
     /* 修改图片的引用 */
     modifyFillImageRef(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();

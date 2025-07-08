@@ -69,7 +69,7 @@ export type TransformRecorder = Map<string, Transform>;
  * · 靠右边、底边固定的需要记录外接盒子距离对应边的偏移；
  * · 水平居中、垂直居中的需要记录外接盒子对应中点的偏移；
  *
- * @param api
+ * @param op
  * @param page
  * @param shape
  * @param scale X、Y轴缩放值
@@ -78,7 +78,7 @@ export type TransformRecorder = Map<string, Transform>;
  * @param _transformRecorder
  */
 export function reLayoutBySizeChanged(
-    api: Operator,
+    op: Operator,
     page: Page,
     shape: GroupShapeView,
     scale: { x: number, y: number },
@@ -109,14 +109,14 @@ export function reLayoutBySizeChanged(
             if (child instanceof TextShapeView) {
                 fixTextLayout(data as TextShape, oSize, width, height);
             } else {
-                api.shapeModifyWH(page, data, width, height)
+                op.shapeModifyWH(page, data, width, height)
             }
 
             transform.clearScaleSize();
-            api.shapeModifyTransform(page, data, (transform));
+            op.shapeModifyTransform(page, data, (transform));
 
             if (child instanceof GroupShapeView) {
-                reLayoutBySizeChanged(api, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
+                reLayoutBySizeChanged(op, page, child, _scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
     } else if (!(shape as ArtboardView).autoLayout) {
@@ -314,16 +314,16 @@ export function reLayoutBySizeChanged(
             if (child instanceof TextShapeView) {
                 fixTextLayout(data as TextShape, oSize, targetWidth, targetHeight)
             } else {
-                api.shapeModifyWH(page, data, targetWidth, targetHeight)
+                op.shapeModifyWH(page, data, targetWidth, targetHeight)
             }
             if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && child instanceof SymbolRefView && !child.isCustomSize) {
-                api.shapeModifyIsCustomSize(page, data as SymbolRefShape, true)
+                op.shapeModifyIsCustomSize(page, data as SymbolRefShape, true)
             }
 
-            api.shapeModifyTransform(page, data, (transform));
+            op.shapeModifyTransform(page, data, (transform));
 
             if ((oSize.width !== targetWidth || oSize.height !== targetHeight) && child instanceof GroupShapeView) {
-                reLayoutBySizeChanged(api, page, child, __scale, rangeRecorder, sizeRecorder, transformRecorder);
+                reLayoutBySizeChanged(op, page, child, __scale, rangeRecorder, sizeRecorder, transformRecorder);
             }
         }
     }
@@ -339,21 +339,21 @@ export function reLayoutBySizeChanged(
         const behaviour = textShape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
         if (isWidthChange && isHeightChange) {
             if (behaviour !== TextBehaviour.FixWidthAndHeight) {
-                api.shapeModifyTextBehaviour(page, textShape.text, TextBehaviour.FixWidthAndHeight);
+                op.shapeModifyTextBehaviour(page, textShape.text, TextBehaviour.FixWidthAndHeight);
             }
-            api.shapeModifyWH(page, textShape, targetWidth, targetHeight);
+            op.shapeModifyWH(page, textShape, targetWidth, targetHeight);
         } else if (isWidthChange) {
             if (behaviour !== TextBehaviour.Fixed) {
-                api.shapeModifyTextBehaviour(page, textShape.text, TextBehaviour.Fixed);
+                op.shapeModifyTextBehaviour(page, textShape.text, TextBehaviour.Fixed);
             }
-            api.shapeModifyWidth(page, textShape, targetWidth);
+            op.shapeModifyWidth(page, textShape, targetWidth);
         } else if (isHeightChange) {
             if (behaviour !== TextBehaviour.FixWidthAndHeight) {
-                api.shapeModifyTextBehaviour(page, textShape.text, TextBehaviour.FixWidthAndHeight);
+                op.shapeModifyTextBehaviour(page, textShape.text, TextBehaviour.FixWidthAndHeight);
             }
-            api.shapeModifyHeight(page, textShape, targetHeight);
+            op.shapeModifyHeight(page, textShape, targetHeight);
         }
-        fixTextShapeFrameByLayout(api, page, textShape);
+        fixTextShapeFrameByLayout(op, page, textShape);
     }
 
     function getBox(s: ShapeView) {
@@ -480,7 +480,7 @@ export interface UniformScaleUnit {
 }
 
 export function reLayoutByUniformScale(
-    api: Operator,
+    op: Operator,
     page: Page,
     shape: GroupShapeView,
     scale: { x: number, y: number },
@@ -515,26 +515,26 @@ export function reLayoutByUniformScale(
         //         const textBehaviour = child.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
         //         if (height !== child.size.height) {
         //             if (textBehaviour !== TextBehaviour.FixWidthAndHeight) {
-        //                 api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.FixWidthAndHeight);
+        //                 op.shapeModifyTextBehaviour(page, child.text, TextBehaviour.FixWidthAndHeight);
         //             }
         //         } else {
         //             if (textBehaviour === TextBehaviour.Flexible) {
-        //                 api.shapeModifyTextBehaviour(page, child.text, TextBehaviour.Fixed);
+        //                 op.shapeModifyTextBehaviour(page, child.text, TextBehaviour.Fixed);
         //             }
         //         }
-        //         api.shapeModifyWH(page, data, width, height)
-        //         fixTextShapeFrameByLayout(api, page, child);
+        //         op.shapeModifyWH(page, data, width, height)
+        //         fixTextShapeFrameByLayout(op, page, child);
         //     }
         // } else {
-        //     api.shapeModifyWH(page, data, width, height)
+        //     op.shapeModifyWH(page, data, width, height)
         // }
-        api.shapeModifyWH(page, data, width, height)
+        op.shapeModifyWH(page, data, width, height)
 
         transform.clearScaleSize();
-        api.shapeModifyTransform(page, data, (transform));
+        op.shapeModifyTransform(page, data, (transform));
 
         if (child instanceof GroupShapeView) {
-            reLayoutByUniformScale(api, page, child, _scale, container, rangeRecorder, sizeRecorder, transformRecorder, valueRecorder);
+            reLayoutByUniformScale(op, page, child, _scale, container, rangeRecorder, sizeRecorder, transformRecorder, valueRecorder);
         }
 
         function getSize(s: ShapeView) {
@@ -564,7 +564,7 @@ export function reLayoutByUniformScale(
 }
 
 export function uniformScale(
-    api: Operator,
+    op: Operator,
     page: Page,
     units: UniformScaleUnit[],
     ratio: number,
@@ -584,18 +584,18 @@ export function uniformScale(
         const { transform, shape: view, size, decomposeScale } = unit;
         const shape = adapt2Shape(view);
 
-        api.shapeModifyTransform(page, shape, transform.clone());
-        if (shape.hasSize()) api.shapeModifyWH(page, shape, size.width, size.height);
+        op.shapeModifyTransform(page, shape, transform.clone());
+        if (shape.hasSize()) op.shapeModifyWH(page, shape, size.width, size.height);
 
         if (shape instanceof SymbolRefShape) {
             const scale = getScale(view);
-            api.modifyShapeScale(page, shape, scale * absRatio);
+            op.modifyShapeScale(page, shape, scale * absRatio);
             continue;
         }
 
         container4modifyStyle.push(view);
 
-        if (view instanceof GroupShapeView) reLayoutByUniformScale(api, page, view, decomposeScale, container4modifyStyle, rangeRecorder, sizeRecorder, transformRecorder);
+        if (view instanceof GroupShapeView) reLayoutByUniformScale(op, page, view, decomposeScale, container4modifyStyle, rangeRecorder, sizeRecorder, transformRecorder);
     }
     const textSet: TextShapeLike[] = [];
     for (const view of container4modifyStyle) {
@@ -614,26 +614,26 @@ export function uniformScale(
             thicknessRight * absRatio
         );
 
-        api.setBorderSide(shape.getBorders(), setting);
+        op.setBorderSide(shape.getBorders(), setting);
         const shadows = shape.getShadows();
         shadows.forEach(s => {
             const sId = s.id + shape.id;
             const blurRadius = getBaseValue(sId, 'blurRadius', s.blurRadius);
-            api.setShadowBlur(s, blurRadius * absRatio);
+            op.setShadowBlur(s, blurRadius * absRatio);
             const offsetX = getBaseValue(sId, 'offsetX', s.offsetX);
-            api.setShadowOffsetX(s, offsetX * absRatio);
+            op.setShadowOffsetX(s, offsetX * absRatio);
             const offsetY = getBaseValue(sId, 'offsetY', s.offsetY);
-            api.setShadowOffsetY(s, offsetY * absRatio);
+            op.setShadowOffsetY(s, offsetY * absRatio);
             const spread = getBaseValue(sId, 'spread', s.spread);
-            api.setShadowSpread(s, spread * absRatio)
+            op.setShadowSpread(s, spread * absRatio)
         });
         const blur = view.blur;
-        if (blur?.saturation) api.shapeModifyBlurSaturation(blur, blur.saturation * absRatio);
+        if (blur?.saturation) op.shapeModifyBlurSaturation(blur, blur.saturation * absRatio);
 
         if (view instanceof TextShapeView) textSet.push(view);
         if (view instanceof SymbolRefView) {
             const scale = getScale(view);
-            api.modifyShapeScale(page, shape, scale * absRatio);
+            op.modifyShapeScale(page, shape, scale * absRatio);
         }
         if (view instanceof PathShapeView) {
             const segments = view.segments;
@@ -642,7 +642,7 @@ export function uniformScale(
                 segment.points.forEach((point, j) => {
                     const pid = sid + '-point-' + j;
                     const corner = getBaseValue(pid, 'radius', point.radius ?? 0);
-                    corner && api.modifyPointCornerRadius(page, shape as PathShape, j, corner * absRatio, i);
+                    corner && op.modifyPointCornerRadius(page, shape as PathShape, j, corner * absRatio, i);
                 });
             });
         }
@@ -652,7 +652,7 @@ export function uniformScale(
             const rt = getBaseValue(cornerId, 'rt', view.cornerRadius.rt);
             const rb = getBaseValue(cornerId, 'rb', view.cornerRadius.rb);
             const lb = getBaseValue(cornerId, 'lb', view.cornerRadius.lb);
-            if (lt || rt || rb || lb) api.shapeModifyRadius2(page, shape as Artboard, lt * absRatio, rt * absRatio, rb * absRatio, lb * absRatio);
+            if (lt || rt || rb || lb) op.shapeModifyRadius2(page, shape as Artboard, lt * absRatio, rt * absRatio, rb * absRatio, lb * absRatio);
         }
     }
     for (const textLike of textSet) scale4text(textLike);
@@ -660,13 +660,13 @@ export function uniformScale(
     function scale4text(text: TextShapeLike) {
         const paraSpacing = getBaseValue(text.id, 'paraSpacing', text.text.attr?.paraSpacing || 0);
         if (paraSpacing) {
-            api.textModifyParaSpacing(page, text, paraSpacing * absRatio, 0, text.text.length);
+            op.textModifyParaSpacing(page, text, paraSpacing * absRatio, 0, text.text.length);
         }
         const paddingLeft = getBaseValue(text.id, 'paddingLeft', text.text.attr?.padding?.left || 0);
         const paddingRight = getBaseValue(text.id, 'paddingRight', text.text.attr?.padding?.right || 0);
 
         if (paddingLeft || paddingRight) {
-            api.textModifyPaddingHor(page, text, {
+            op.textModifyPaddingHor(page, text, {
                 left: (paddingLeft || 0) * absRatio,
                 right: (paddingRight || 0) * absRatio
             }, 0, text.text.length);
@@ -677,11 +677,11 @@ export function uniformScale(
             const pId = text.id + j;
             const minimumLineHeight = getBaseValue(pId, 'minimumLineHeight', para.attr?.minimumLineHeight || 121);
             if (minimumLineHeight) {
-                api.textModifyMinLineHeight(page, text, minimumLineHeight * absRatio, index, para.length);
+                op.textModifyMinLineHeight(page, text, minimumLineHeight * absRatio, index, para.length);
             }
             const maximumLineHeight = getBaseValue(pId, 'maximumLineHeight', para.attr?.maximumLineHeight || 121);
             if (maximumLineHeight) {
-                api.textModifyMaxLineHeight(page, text, maximumLineHeight * absRatio, index, para.length);
+                op.textModifyMaxLineHeight(page, text, maximumLineHeight * absRatio, index, para.length);
             }
             let __index = index;
             const spans = para.spans;
@@ -690,11 +690,11 @@ export function uniformScale(
                 const sId = text.id + i + j;
                 const spanFontSize = getBaseValue(sId, 'spanFontSize', span.fontSize || 0);
                 if (spanFontSize) {
-                    api.textModifyFontSize(page, text, __index, span.length, spanFontSize * absRatio);
+                    op.textModifyFontSize(page, text, __index, span.length, spanFontSize * absRatio);
                 }
                 const spanKerning = getBaseValue(sId, 'spanKerning', span.kerning || 0);
                 if (spanKerning) {
-                    api.textModifyKerning(page, text, __index, span.length, spanKerning * absRatio);
+                    op.textModifyKerning(page, text, __index, span.length, spanKerning * absRatio);
                 }
                 __index += span.length;
             }
@@ -739,7 +739,7 @@ export class Scaler extends AsyncApiCaller {
     }
 
     fixTextSize(view: TextShapeView, targetSize: ShapeSize) {
-        const api = this.api;
+        const op = this.operator;
         const page = this.page;
 
         const shape = adapt2Shape(view) as TextShape;
@@ -750,21 +750,21 @@ export class Scaler extends AsyncApiCaller {
 
         if (isWidthChange && isHeightChange) {
             if (behaviour !== TextBehaviour.FixWidthAndHeight) {
-                api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
+                op.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
             }
-            api.shapeModifyWH(page, shape, targetSize.width, targetSize.height);
+            op.shapeModifyWH(page, shape, targetSize.width, targetSize.height);
         } else if (isWidthChange) {
             if (behaviour !== TextBehaviour.Fixed) {
-                api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
+                op.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.Fixed);
             }
-            api.shapeModifyWidth(page, shape, targetSize.width);
+            op.shapeModifyWidth(page, shape, targetSize.width);
         } else if (isHeightChange) {
             if (behaviour !== TextBehaviour.FixWidthAndHeight) {
-                api.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
+                op.shapeModifyTextBehaviour(page, shape.text, TextBehaviour.FixWidthAndHeight);
             }
-            api.shapeModifyHeight(page, shape, targetSize.height);
+            op.shapeModifyHeight(page, shape, targetSize.height);
         }
-        fixTextShapeFrameByLayout(api, page, shape);
+        fixTextShapeFrameByLayout(op, page, shape);
     }
 
     getSize(view: TextShapeView) {
@@ -791,7 +791,7 @@ export class Scaler extends AsyncApiCaller {
         h_change: boolean
     }[]) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
 
             const recorder = this.recorder;
@@ -804,25 +804,25 @@ export class Scaler extends AsyncApiCaller {
                     this.fixTextSize(item.shape as TextShapeView, item.size as ShapeSize);
                 } else if (shape.hasSize()) {
                     const size = item.size;
-                    api.shapeModifyWH(page, shape, size.width, size.height)
+                    op.shapeModifyWH(page, shape, size.width, size.height)
                 }
-                api.shapeModifyTransform(page, shape, item.transform2.clone());
+                op.shapeModifyTransform(page, shape, item.transform2.clone());
                 if (item.shape.autoLayout) {
-                    const _shape = shape4Autolayout(api, item.shape, this._page);
+                    const _shape = shape4Autolayout(op, item.shape, this._page);
                     if (item.w_change) {
-                        api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
+                        op.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
                     }
                     if (item.h_change) {
-                        api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
+                        op.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
                     }
                 }
                 if (item.shape instanceof GroupShapeView) {
                     const scale = item.scale;
-                    reLayoutBySizeChanged(api, page, item.shape, scale, recorder, sizeRecorder, transformRecorder);
+                    reLayoutBySizeChanged(op, page, item.shape, scale, recorder, sizeRecorder, transformRecorder);
                 }
 
                 if (shape instanceof SymbolRefShape && !shape.isCustomSize) {
-                    api.shapeModifyIsCustomSize(page, shape, true);
+                    op.shapeModifyIsCustomSize(page, shape, true);
                 }
             }
             this.updateView();
@@ -841,7 +841,7 @@ export class Scaler extends AsyncApiCaller {
         h_change: boolean
     }[]) {
         try {
-            const api = this.api;
+            const op = this.operator;
             const page = this.page;
             const recorder = this.recorder;
             const sizeRecorder = this.sizeRecorder;
@@ -854,27 +854,27 @@ export class Scaler extends AsyncApiCaller {
                     this.fixTextSize(item.shape as TextShapeView, item.size as ShapeSize);
                 } else if (shape.hasSize()) {
                     const size = item.size;
-                    api.shapeModifyWH(page, shape, size.width, size.height)
+                    op.shapeModifyWH(page, shape, size.width, size.height)
                 }
-                api.shapeModifyTransform(page, shape, item.transform2.clone());
+                op.shapeModifyTransform(page, shape, item.transform2.clone());
                 if (item.shape.autoLayout) {
-                    const _shape = shape4Autolayout(api, item.shape, this._page);
+                    const _shape = shape4Autolayout(op, item.shape, this._page);
                     if (item.w_change) {
-                        api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
+                        op.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
                     }
                     if (item.h_change) {
-                        api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
+                        op.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
                     }
                 }
 
                 if (shape instanceof SymbolRefShape && !shape.isCustomSize) {
-                    api.shapeModifyIsCustomSize(page, shape, true);
+                    op.shapeModifyIsCustomSize(page, shape, true);
                 }
 
                 if (item.shape instanceof GroupShapeView) {
                     if (item.shape.type === ShapeType.Group || item.shape.type === ShapeType.BoolShape) {
                         const scale = item.scale;
-                        reLayoutBySizeChanged(api, page, item.shape, scale, recorder, sizeRecorder, transformRecorder);
+                        reLayoutBySizeChanged(op, page, item.shape, scale, recorder, sizeRecorder, transformRecorder);
                     } else {
                         const view = item.shape;
                         const children = view.childs;
@@ -884,7 +884,7 @@ export class Scaler extends AsyncApiCaller {
                             const childTransform = getTransform(child).clone();
                             const lastFrame = childTransform.multiAtLeft(originTransform);
                             const currentFrame = item.transform2.inverse;
-                            api.shapeModifyTransform(page, adapt2Shape(child), lastFrame.multiAtLeft(currentFrame));
+                            op.shapeModifyTransform(page, adapt2Shape(child), lastFrame.multiAtLeft(currentFrame));
                         }
                     }
                 }
@@ -908,7 +908,7 @@ export class Scaler extends AsyncApiCaller {
 
     executeUniform(units: UniformScaleUnit[], ratio: number) {
         try {
-            uniformScale(this.api, this.page, units, ratio, this.recorder, this.sizeRecorder, this.transformRecorder, this.valueRecorder);
+            uniformScale(this.operator, this.page, units, ratio, this.recorder, this.sizeRecorder, this.transformRecorder, this.valueRecorder);
             this.updateView();
         } catch (error) {
             console.error(error);

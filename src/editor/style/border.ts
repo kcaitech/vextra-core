@@ -8,7 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api, IRepository } from "../../repo";
+import { IRepository } from "../../repo";
+import { Operator } from "../../operator";
 import { Modifier } from "../basic/modifier";
 import {
     BasicArray,
@@ -37,25 +38,25 @@ export class BorderModifier extends Modifier {
         super(repo);
     }
 
-    getFillMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.BorderFillsMask, OverrideType.BorderFillsMask, () => value, view, page, api);
+    getFillMaskVariable(op: Operator, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.BorderFillsMask, OverrideType.BorderFillsMask, () => value, view, page, op);
     }
 
-    getStrokeMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, api);
+    getStrokeMaskVariable(op: Operator, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.BordersMask, OverrideType.BordersMask, () => value, view, page, op);
     }
 
-    getBorderVariable(api: Api, page: PageView, view: ShapeView) {
+    getBorderVariable(op: Operator, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Borders, OverrideType.Borders, (_var) => {
             return importBorder(_var?.value ?? view.getBorder());
-        }, api, view)!;
+        }, op, view)!;
     }
 
     /* 创建一个填充 */
     createFill(missions: Function[]) {
         try {
-            const api = this.getOperator('createFill');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('createFill');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -66,8 +67,8 @@ export class BorderModifier extends Modifier {
     /* 隐藏与显示一条填充 */
     setFillsEnabled(missions: Function[]) {
         try {
-            const api = this.getOperator('setFillsEnabled');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setFillsEnabled');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -78,8 +79,8 @@ export class BorderModifier extends Modifier {
     /* 修改填充颜色 */
     setFillsColor(missions: Function[]) {
         try {
-            const api = this.getOperator('setFillsColor');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setFillsColor');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -90,8 +91,8 @@ export class BorderModifier extends Modifier {
     /* 修改渐变色透明度 */
     setGradientOpacity(missions: Function[]) {
         try {
-            const api = this.getOperator('setGradientOpacity');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setGradientOpacity');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -102,8 +103,8 @@ export class BorderModifier extends Modifier {
     /* 删除一个填充 */
     removeFill(missions: Function[]) {
         try {
-            const api = this.getOperator('removeFill');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('removeFill');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -114,8 +115,8 @@ export class BorderModifier extends Modifier {
     /* 统一多个fills */
     unifyShapesFills(missions: Function[]) {
         try {
-            const api = this.getOperator('unifyShapesFills');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('unifyShapesFills');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -126,8 +127,8 @@ export class BorderModifier extends Modifier {
     // 设置单边类型
     modifyBorderSideSetting(missions: Function[]) {
         try {
-            const api = this.getOperator('modifyBorderSideSetting');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('modifyBorderSideSetting');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -138,8 +139,8 @@ export class BorderModifier extends Modifier {
     /* 修改mask边框 */
     setBorderMaskSide(actions: { border: Border, side: BorderSideSetting }[]) {
         try {
-            const api = this.getOperator('setBorderMaskSide');
-            actions.forEach(action => api.setBorderSide(action.border, action.side));
+            const op = this.getOperator('setBorderMaskSide');
+            actions.forEach(action => op.setBorderSide(action.border, action.side));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -149,42 +150,42 @@ export class BorderModifier extends Modifier {
     /* 修改边框粗细 */
     setBorderThickness(pageView: PageView, views: ShapeView[], thickness: number) {
         try {
-            const api = this.getOperator('setBorderThickness');
+            const op = this.getOperator('setBorderThickness');
             const page = adapt2Shape(pageView) as Page;
             for (const view of views) {
                 const border = view.getBorder();
-                const linkedVariable = this.getBorderVariable(api, pageView, view);
+                const linkedVariable = this.getBorderVariable(op, pageView, view);
                 const source = linkedVariable ? linkedVariable.value as Border : view.data.style.borders;
                 if (view.bordersMask) {
-                    const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, pageView, view, undefined);
+                    const linkedBorderMaskVariable = this.getStrokeMaskVariable(op, pageView, view, undefined);
                     if (linkedBorderMaskVariable) {
-                        api.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
+                        op.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
                     } else {
-                        api.modifyBorderMask(adapt2Shape(view).style, undefined);
+                        op.modifyBorderMask(adapt2Shape(view).style, undefined);
                     }
-                    api.setBorderPosition(source, border.position);
+                    op.setBorderPosition(source, border.position);
                 }
                 const sideType = border.sideSetting.sideType;
                 switch (sideType) {
                     case SideType.Normal:
                         const sides = new BorderSideSetting(sideType, thickness, thickness, thickness, thickness);
-                        api.setBorderSide(source, sides);
+                        op.setBorderSide(source, sides);
                         break;
                     case SideType.Top:
-                        api.setBorderThicknessTop(source, thickness);
+                        op.setBorderThicknessTop(source, thickness);
                         break
                     case SideType.Right:
-                        api.setBorderThicknessRight(source, thickness);
+                        op.setBorderThicknessRight(source, thickness);
                         break
                     case SideType.Bottom:
-                        api.setBorderThicknessBottom(source, thickness);
+                        op.setBorderThicknessBottom(source, thickness);
                         break
                     case SideType.Left:
-                        api.setBorderThicknessLeft(source, thickness);
+                        op.setBorderThicknessLeft(source, thickness);
                         break
                     default:
                         const customSides = new BorderSideSetting(SideType.Custom, thickness, thickness, thickness, thickness);
-                        api.setBorderSide(source, customSides);
+                        op.setBorderSide(source, customSides);
                         break;
                 }
             }
@@ -197,22 +198,22 @@ export class BorderModifier extends Modifier {
     /* 修改边框自定义粗细 */
     setBorderCustomThickness(pageView: PageView, shapes: ShapeView[], thickness: number, type: SideType) {
         try {
-            const api = this.getOperator('setBorderCustomThickness');
+            const op = this.getOperator('setBorderCustomThickness');
             for (const view of shapes) {
-                const linkedVariable = this.getBorderVariable(api, pageView, view);
+                const linkedVariable = this.getBorderVariable(op, pageView, view);
                 const source = linkedVariable ? linkedVariable.value : view.style.borders;
                 switch (type) {
                     case SideType.Top:
-                        api.setBorderThicknessTop(source, thickness);
+                        op.setBorderThicknessTop(source, thickness);
                         break
                     case SideType.Right:
-                        api.setBorderThicknessRight(source, thickness);
+                        op.setBorderThicknessRight(source, thickness);
                         break
                     case SideType.Bottom:
-                        api.setBorderThicknessBottom(source, thickness);
+                        op.setBorderThicknessBottom(source, thickness);
                         break
                     case SideType.Left:
-                        api.setBorderThicknessLeft(source, thickness);
+                        op.setBorderThicknessLeft(source, thickness);
                         break
                     default:
                         break;
@@ -227,8 +228,8 @@ export class BorderModifier extends Modifier {
     /* 修改mask边框位置 */
     setBorderMaskPosition(actions: { border: BorderMaskType, position: BorderPosition }[]) {
         try {
-            const api = this.getOperator('setBorderMaskPosition');
-            actions.forEach(action => api.setBorderPosition(action.border, action.position));
+            const op = this.getOperator('setBorderMaskPosition');
+            actions.forEach(action => op.setBorderPosition(action.border, action.position));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -238,22 +239,22 @@ export class BorderModifier extends Modifier {
     /* 修改边框位置 */
     setBorderPosition(pageView: PageView, views: ShapeView[], position: BorderPosition) {
         try {
-            const api = this.getOperator('setBorderPosition');
+            const op = this.getOperator('setBorderPosition');
             const page = adapt2Shape(pageView) as Page;
             for (const view of views) {
                 const border = view.getBorder();
-                const linkedVariable = this.getBorderVariable(api, pageView, view);
+                const linkedVariable = this.getBorderVariable(op, pageView, view);
                 const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
                 if (view.bordersMask) {
-                    const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, pageView, view, undefined);
+                    const linkedBorderMaskVariable = this.getStrokeMaskVariable(op, pageView, view, undefined);
                     if (linkedBorderMaskVariable) {
-                        api.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
+                        op.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
                     } else {
-                        api.modifyBorderMask(adapt2Shape(view).style, undefined);
+                        op.modifyBorderMask(adapt2Shape(view).style, undefined);
                     }
-                    api.setBorderSide(source, border.sideSetting);
+                    op.setBorderSide(source, border.sideSetting);
                 }
-                api.setBorderPosition(source, position);
+                op.setBorderPosition(source, position);
             }
             this.commit();
         } catch (error) {
@@ -266,12 +267,12 @@ export class BorderModifier extends Modifier {
     unifyShapesFillsMask(document: Document, views: ShapeView[], fillsMask: string) {
         if (!views.length) return;
         try {
-            const api = this.getOperator('unifyShapesFillsMask');
+            const op = this.getOperator('unifyShapesFillsMask');
             const pageView = views[0].getPage() as PageView;
             const page = pageView.data;
             for (const view of views) {
-                const linked = this.getFillMaskVariable(api, pageView, view, fillsMask);
-                linked ? api.shapeModifyVariable(page, linked, fillsMask) : api.setBorderFillMask(adapt2Shape(view).style, fillsMask);
+                const linked = this.getFillMaskVariable(op, pageView, view, fillsMask);
+                linked ? op.shapeModifyVariable(page, linked, fillsMask) : op.setBorderFillMask(adapt2Shape(view).style, fillsMask);
             }
             this.commit();
         } catch (error) {
@@ -283,12 +284,12 @@ export class BorderModifier extends Modifier {
     // 修改边框样式（虚线/实线）
     modifyStrokeStyle(pageView: PageView, actions: { target: ShapeView, value: any }[]) {
         try {
-            const api = this.getOperator('modifyStrokeStyle');
+            const op = this.getOperator('modifyStrokeStyle');
             const page = pageView.data;
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                const s = shape4border(api, pageView, target);
-                api.setBorderStyle(page, s, value);
+                const s = shape4border(op, pageView, target);
+                op.setBorderStyle(page, s, value);
             }
             this.commit();
         } catch (error) {
@@ -300,12 +301,12 @@ export class BorderModifier extends Modifier {
     // 修改边框拐角样式
     modifyCornerType(pageView: PageView, actions: { target: ShapeView, value: any }[]) {
         try {
-            const api = this.getOperator('modifyCornerType');
+            const op = this.getOperator('modifyCornerType');
             const page = pageView.data;
             for (let i = 0; i < actions.length; i++) {
                 const { target, value } = actions[i];
-                const s = shape4border(api, pageView, target);
-                api.setBorderCornerType(page, s, value);
+                const s = shape4border(op, pageView, target);
+                op.setBorderCornerType(page, s, value);
             }
             this.commit();
         } catch (error) {
@@ -317,25 +318,25 @@ export class BorderModifier extends Modifier {
     /* 创建一个填充遮罩 */
     createFillsMask(document: Document, mask: FillMask, pageView: PageView, views?: ShapeView[]) {
         try {
-            const api = this.getOperator('createFillsMask');
+            const op = this.getOperator('createFillsMask');
             mask.fills = new BasicArray(...mask.fills.map(i => {
                 const fill = importFill(i);
                 fill.setImageMgr(document.mediasMgr);
                 return fill;
             }));
-            api.styleInsert(document, mask);
+            op.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
                 const shapes: Shape[] = [];
                 for (const view of views) {
-                    const variable = this.getFillMaskVariable(api, pageView, view, mask.id);
+                    const variable = this.getFillMaskVariable(op, pageView, view, mask.id);
                     variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
                 }
                 const page = pageView.data;
                 for (const variable of variables) {
-                    if (variable.value !== mask.id) api.shapeModifyVariable(page, variable, mask.id);
+                    if (variable.value !== mask.id) op.shapeModifyVariable(page, variable, mask.id);
                 }
-                for (const shape of shapes) api.setBorderFillMask(shape.style, mask.id);
+                for (const shape of shapes) op.setBorderFillMask(shape.style, mask.id);
             }
             this.commit();
         } catch (error) {
@@ -347,20 +348,20 @@ export class BorderModifier extends Modifier {
     /* 创建一个边框遮罩 */
     createBorderMask(document: Document, mask: BorderMask, pageView: PageView, views?: ShapeView[]) {
         try {
-            const api = this.getOperator('createBorderMask');
-            api.styleInsert(document, mask);
+            const op = this.getOperator('createBorderMask');
+            op.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
                 const shapes: Shape[] = [];
                 for (const view of views) {
-                    const variable = this.getStrokeMaskVariable(api, pageView, view, mask.id);
+                    const variable = this.getStrokeMaskVariable(op, pageView, view, mask.id);
                     variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
                 }
                 const page = pageView.data;
                 for (const variable of variables) {
-                    if (variable.value !== mask.id) api.shapeModifyVariable(page, variable, mask.id);
+                    if (variable.value !== mask.id) op.shapeModifyVariable(page, variable, mask.id);
                 }
-                for (const shape of shapes) api.modifyBorderMask(shape.style, mask.id);
+                for (const shape of shapes) op.modifyBorderMask(shape.style, mask.id);
             }
             this.commit();
             return true;
@@ -374,17 +375,17 @@ export class BorderModifier extends Modifier {
     setShapesFillMask(document: Document, pageView: PageView, views: ShapeView[], value: string) {
         try {
             const page = adapt2Shape(pageView) as Page;
-            const api = this.getOperator('setShapesFillMask');
+            const op = this.getOperator('setShapesFillMask');
             const variables: Variable[] = [];
             const shapes: Shape[] = [];
             for (const view of views) {
-                const variable = this.getFillMaskVariable(api, pageView, view, value);
+                const variable = this.getFillMaskVariable(op, pageView, view, value);
                 variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
             }
             for (const variable of variables) {
-                if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
+                if (variable.value !== value) op.shapeModifyVariable(page, variable, value);
             }
-            for (const shape of shapes) api.setBorderFillMask(shape.style, value);
+            for (const shape of shapes) op.setBorderFillMask(shape.style, value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -395,17 +396,17 @@ export class BorderModifier extends Modifier {
     setShapesStrokeMask(pageView: PageView, views: ShapeView[], value: string) {
         try {
             const page = adapt2Shape(pageView) as Page;
-            const api = this.getOperator('setShapesStrokeMask');
+            const op = this.getOperator('setShapesStrokeMask');
             const variables: Variable[] = [];
             const shapes: Shape[] = [];
             for (const view of views) {
-                const variable = this.getStrokeMaskVariable(api, pageView, view, value);
+                const variable = this.getStrokeMaskVariable(op, pageView, view, value);
                 variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
             }
             for (const variable of variables) {
-                if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
+                if (variable.value !== value) op.shapeModifyVariable(page, variable, value);
             }
-            for (const shape of shapes) api.modifyBorderMask(shape.style, value);
+            for (const shape of shapes) op.modifyBorderMask(shape.style, value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -418,31 +419,31 @@ export class BorderModifier extends Modifier {
         try {
             if (!views.length) return;
 
-            const api = this.getOperator('unbindShapesFillMask');
+            const op = this.getOperator('unbindShapesFillMask');
             const borderCopy = views[0].getBorder();
 
             // 处理遮罩
             const fillMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const linkedFillMaskVariable = this.getFillMaskVariable(api, pageView, view, undefined);
+                const linkedFillMaskVariable = this.getFillMaskVariable(op, pageView, view, undefined);
                 linkedFillMaskVariable ? fillMaskVariables.push(linkedFillMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
             const page = adapt2Shape(pageView) as Page;
-            fillMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.delBorderFillMask(shape.style));
+            fillMaskVariables.forEach(variable => op.shapeModifyVariable(page, variable, undefined));
+            shapes4mask.forEach(shape => op.delBorderFillMask(shape.style));
 
             // 固定现有填充到本地
             const fillsContainer: BasicArray<Fill>[] = [];
             for (const view of views) {
-                const linkedVariable = this.getBorderVariable(api, pageView, view);
+                const linkedVariable = this.getBorderVariable(op, pageView, view);
                 fillsContainer.push(linkedVariable ? (linkedVariable.value as Border).strokePaints : adapt2Shape(view).style.borders.strokePaints);
             }
 
             fillsContainer.forEach(source => {
                 const __borderCopy = borderCopy.strokePaints.map(i => importFill(i));
-                api.deleteFills(source, 0, source.length);
-                api.addFills(source, __borderCopy);
+                op.deleteFills(source, 0, source.length);
+                op.addFills(source, __borderCopy);
             });
             this.commit();
         } catch (error) {
@@ -455,21 +456,21 @@ export class BorderModifier extends Modifier {
         try {
             if (!views.length) return;
 
-            const api = this.getOperator('unbindShapesBorderMask');
+            const op = this.getOperator('unbindShapesBorderMask');
             const page = adapt2Shape(pageView) as Page;
             const borderCopy = views[0].getBorder();
             // 处理遮罩
             for (const view of views) {
-                const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, pageView, view, undefined);
+                const linkedBorderMaskVariable = this.getStrokeMaskVariable(op, pageView, view, undefined);
                 if (linkedBorderMaskVariable) {
-                    api.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
+                    op.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
                 } else {
-                    api.modifyBorderMask(adapt2Shape(view).style, undefined);
+                    op.modifyBorderMask(adapt2Shape(view).style, undefined);
                 }
             }
 
             for (const view of views) {
-                const linkedVariable = this.getBorderVariable(api, pageView, view);
+                const linkedVariable = this.getBorderVariable(op, pageView, view);
                 const source = linkedVariable ? (linkedVariable.value as Border) : adapt2Shape(view).style.borders;
                 let sideSetting = borderCopy.sideSetting;
                 if (view.radiusType !== RadiusType.Rect) {
@@ -478,8 +479,8 @@ export class BorderModifier extends Modifier {
                     const thickness = side.thicknessTop || side.thicknessLeft || side.thicknessBottom || side.thicknessRight || 1;
                     sideSetting = new BorderSideSetting(type, thickness, thickness, thickness, thickness);
                 }
-                api.setBorderPosition(source, borderCopy.position);
-                api.setBorderSide(source, sideSetting);
+                op.setBorderPosition(source, borderCopy.position);
+                op.setBorderSide(source, sideSetting);
             }
 
             this.commit();
@@ -492,23 +493,23 @@ export class BorderModifier extends Modifier {
     /* 删除填充遮罩(与解绑有所不同) */
     removeShapesFillMask(document: Document, pageView: PageView, views: ShapeView[]) {
         try {
-            const api = this.getOperator('removeShapesFillMask');
+            const op = this.getOperator('removeShapesFillMask');
             const fillMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const linkedFillMaskVariable = this.getFillMaskVariable(api, pageView, view, undefined);
+                const linkedFillMaskVariable = this.getFillMaskVariable(op, pageView, view, undefined);
                 linkedFillMaskVariable ? fillMaskVariables.push(linkedFillMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
             const page = adapt2Shape(pageView) as Page;
-            fillMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.delBorderFillMask(shape.style));
+            fillMaskVariables.forEach(variable => op.shapeModifyVariable(page, variable, undefined));
+            shapes4mask.forEach(shape => op.delBorderFillMask(shape.style));
 
             const fillsContainer: BasicArray<Fill>[] = [];
             for (const view of views) {
-                const linkedVariable = this.getBorderVariable(api, pageView, view);
+                const linkedVariable = this.getBorderVariable(op, pageView, view);
                 fillsContainer.push(linkedVariable ? (linkedVariable.value as Border).strokePaints : adapt2Shape(view).style.borders.strokePaints);
             }
-            fillsContainer.forEach(source => api.deleteFills(source, 0, source.length));
+            fillsContainer.forEach(source => op.deleteFills(source, 0, source.length));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -518,29 +519,29 @@ export class BorderModifier extends Modifier {
     /* 删除边框 */
     removeShapesBorder(pageView: PageView, views: ShapeView[]) {
         try {
-            const api = this.getOperator('removeShapesBorder');
+            const op = this.getOperator('removeShapesBorder');
             const page = adapt2Shape(pageView) as Page;
             for (const view of views) {
-                const linkedFillMaskVariable = this.getFillMaskVariable(api, pageView, view, undefined);
-                const linkedBorderMaskVariable = this.getStrokeMaskVariable(api, pageView, view, undefined);
+                const linkedFillMaskVariable = this.getFillMaskVariable(op, pageView, view, undefined);
+                const linkedBorderMaskVariable = this.getStrokeMaskVariable(op, pageView, view, undefined);
 
                 if (linkedFillMaskVariable) {
-                    api.shapeModifyVariable(page, linkedFillMaskVariable, undefined);
+                    op.shapeModifyVariable(page, linkedFillMaskVariable, undefined);
                 } else {
-                    api.delBorderFillMask(adapt2Shape(view).style);
+                    op.delBorderFillMask(adapt2Shape(view).style);
                 }
 
                 if (linkedBorderMaskVariable) {
-                    api.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
+                    op.shapeModifyVariable(page, linkedBorderMaskVariable, undefined);
                 } else {
-                    api.modifyBorderMask(adapt2Shape(view).style, undefined);
+                    op.modifyBorderMask(adapt2Shape(view).style, undefined);
                 }
             }
 
             for (const view of views) {
-                const linkedVariable = this.getBorderVariable(api, pageView, view);
+                const linkedVariable = this.getBorderVariable(op, pageView, view);
                 const source = linkedVariable ? (linkedVariable.value as Border).strokePaints : adapt2Shape(view).style.borders.strokePaints;
-                api.deleteFills(source, 0, source.length);
+                op.deleteFills(source, 0, source.length);
             }
             this.commit();
         } catch (error) {
@@ -551,8 +552,8 @@ export class BorderModifier extends Modifier {
 
     disableMask(mask: StyleMangerMember) {
         try {
-            const api = this.getOperator('disableMask');
-            api.disableMask(mask);
+            const op = this.getOperator('disableMask');
+            op.disableMask(mask);
             this.commit();
         } catch (error) {
             this.rollback();

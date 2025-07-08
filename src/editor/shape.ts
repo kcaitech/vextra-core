@@ -106,10 +106,10 @@ export class ShapeEditor {
         return adapt2Shape(this.__shape);
     }
 
-    private _repoWrap(name: string, func: (api: Operator) => void) {
-        const api = this.__repo.start(name);
+    private _repoWrap(name: string, func: (op: Operator) => void) {
+        const op = this.__repo.start(name);
         try {
-            func(api);
+            func(op);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -124,31 +124,31 @@ export class ShapeEditor {
      * @param varType
      * @param overrideType
      * @param valuefun
-     * @param api
+     * @param op
      * @param shape
      * @returns
      */
-    // private overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view?: ShapeView) {
+    // private overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, op: op, view?: ShapeView) {
     //     view = view ?? this.__shape;
-    //     return override_variable(this.__page, varType, overrideType, valuefun, api, view);
+    //     return override_variable(this.__page, varType, overrideType, valuefun, op, view);
     // }
 
     /**
      * 检查当前shape的overrideType对应的属性值是否由变量起作用，如果是则判断var是否可以修改，如可以则「修改」var，否则先override再「修改」新的var
      * @returns
      */
-    modifyVariable(varType: VariableType, overrideType: OverrideType, value: any, api: Operator): boolean {
-        return modify_variable_with_api(api, this._page, this.__shape, varType, overrideType, value);
+    modifyVariable(varType: VariableType, overrideType: OverrideType, value: any, op: Operator): boolean {
+        return modify_variable_with_api(op, this._page, this.__shape, varType, overrideType, value);
     }
 
     /**
      * 修改_var的值为value，如果_var不可以修改，则override _var到value
      * @param _var
      * @param value
-     * @param api
+     * @param op
      */
-    private modifyVariable2(_var: Variable, value: any, api: Operator) {
-        modify_variable(this.__document, this.__page, this.__shape, _var, { value }, api);
+    private modifyVariable2(_var: Variable, value: any, op: Operator) {
+        modify_variable(this.__document, this.__page, this.__shape, _var, { value }, op);
     }
 
     /**
@@ -156,8 +156,8 @@ export class ShapeEditor {
      */
     modifyVariableName(_var: Variable, name: string) {
         try {
-            const api = this.__repo.start("modifyVariableName");
-            modify_variable(this.__document, this.__page, this.__shape, _var, { name }, api);
+            const op = this.__repo.start("modifyVariableName");
+            modify_variable(this.__document, this.__page, this.__shape, _var, { name }, op);
             this.__repo.commit();
         } catch (e) {
             console.log(e);
@@ -171,9 +171,9 @@ export class ShapeEditor {
      * @param value
      */
     modifySymbolRefVariable(_var: Variable, value: any) {
-        const api = this.__repo.start("modifySymbolRefVariable");
+        const op = this.__repo.start("modifySymbolRefVariable");
         try {
-            this.modifyVariable2(_var, value, api);
+            this.modifyVariable2(_var, value, op);
             this.__repo.commit();
         } catch (e) {
             console.log(e);
@@ -183,7 +183,7 @@ export class ShapeEditor {
 
     modifySymbolRefVisibleVariable(_var: Variable, value: any) {
         try {
-            const api = this.__repo.start("modifySymbolRefVisibleVariable");
+            const op = this.__repo.start("modifySymbolRefVisibleVariable");
             const clearOverride = (children: ShapeView[]) => {
                 for (const child of children) {
                     if (child instanceof GroupShapeView) clearOverride(child.childs);
@@ -195,12 +195,12 @@ export class ShapeEditor {
                     const _vars: Variable[] = [];
                     child.varsContainer && findVar(varId, _vars, child.varsContainer, undefined, false);
                     if (_vars.find(i => i.id === _var.id) && !_vars.find(i => i.id === originOV.id)) {
-                        api.shapeRemoveVariable(this.__page, this.shape as SymbolRefShape, originOV.id);
+                        op.shapeRemoveVariable(this.__page, this.shape as SymbolRefShape, originOV.id);
                     }
                 }
             }
             clearOverride((this.view as SymbolRefView).childs);
-            this.modifyVariable2(_var, value, api);
+            this.modifyVariable2(_var, value, op);
             this.__repo.commit();
         } catch (e) {
             console.log(e);
@@ -210,7 +210,7 @@ export class ShapeEditor {
 
     modifySymbolRefTextVariable(_var: Variable, value: any) {
         try {
-            const api = this.__repo.start("modifySymbolRefTextVariable");
+            const op = this.__repo.start("modifySymbolRefTextVariable");
             const page = this.__page;
             const shape = this.shape as SymbolRefShape;
             const clearOverride = (children: ShapeView[]) => {
@@ -224,12 +224,12 @@ export class ShapeEditor {
                     const _vars: Variable[] = [];
                     child.varsContainer && findVar(varId, _vars, child.varsContainer, undefined, false);
                     if (_vars.find(i => i.id === _var.id) && !_vars.find(i => i.id === originOV.id)) {
-                        api.shapeRemoveVariable(page, shape, originOV.id);
+                        op.shapeRemoveVariable(page, shape, originOV.id);
                     }
                 }
             }
             clearOverride((this.view as SymbolRefView).childs);
-            this.modifyVariable2(_var, value, api);
+            this.modifyVariable2(_var, value, op);
             this.__repo.commit();
         } catch (e) {
             console.log(e);
@@ -251,25 +251,25 @@ export class ShapeEditor {
         }
         if (!(p instanceof SymbolRefView)) throw new Error();
 
-        const api = this.__repo.start('resetSymbolRefVariable');
+        const op = this.__repo.start('resetSymbolRefVariable');
         try {
             if (p === view) {
                 // 清空当前view的variables,overrides,isCustomSize
                 const variables = view.variables;
                 const overrides = view.overrides;
                 overrides && overrides.forEach((v, k) => {
-                    api.shapeRemoveOverride(this.__page, view.data, k);
+                    op.shapeRemoveOverride(this.__page, view.data, k);
                 })
                 variables.forEach((_, k) => {
-                    api.shapeRemoveVariable(this.__page, view.data, k);
+                    op.shapeRemoveVariable(this.__page, view.data, k);
                 });
                 if (view.isCustomSize) {
-                    api.shapeModifyIsCustomSize(this.__page, view.data, false);
+                    op.shapeModifyIsCustomSize(this.__page, view.data, false);
                     const sym = view.symData;
-                    if (sym) api.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
+                    if (sym) op.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
                 }
                 if (view.uniformScale && view.uniformScale !== 1) {
-                    api.modifyShapeScale(this.__page, view.data, 1);
+                    op.modifyShapeScale(this.__page, view.data, 1);
                 }
             } else {
                 // 清空p中与当前view相关的variables,overrides
@@ -282,10 +282,10 @@ export class ShapeEditor {
                 overrides && overrides.forEach((v, k) => {
 
                     if (!(k.startsWith(refId))) return;
-                    api.shapeRemoveOverride(this.__page, _p.data, k);
+                    op.shapeRemoveOverride(this.__page, _p.data, k);
 
                     const variable = variables.get(v);
-                    if (variable) api.shapeRemoveVariable(this.__page, _p.data, k);
+                    if (variable) op.shapeRemoveVariable(this.__page, _p.data, k);
                 })
             }
 
@@ -305,13 +305,13 @@ export class ShapeEditor {
         if (!is_symbol_or_union(symbol)) {
             throw new Error('wrong role!');
         }
-        const api = this.__repo.start("makeVisibleVar");
+        const op = this.__repo.start("makeVisibleVar");
         try {
             const _var = new Variable(v4(), VariableType.Visible, name, dlt_value);
-            api.shapeAddVariable(this.__page, symbol, _var);
+            op.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const item = shapes[i];
-                api.shapeBindVar(this.__page, item, OverrideType.Visible, _var.id);
+                op.shapeBindVar(this.__page, item, OverrideType.Visible, _var.id);
             }
             this.__repo.commit();
             return symbol;
@@ -330,12 +330,12 @@ export class ShapeEditor {
         if (!is_symbol_or_union(symbol)) {
             throw new Error('wrong role!');
         }
-        const api = this.__repo.start("makeSymbolRefVar");
+        const op = this.__repo.start("makeSymbolRefVar");
         try {
             const _var = new Variable(v4(), VariableType.SymbolRef, name, shapes[0].refId);
-            api.shapeAddVariable(this.__page, symbol, _var);
+            op.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
-                api.shapeBindVar(this.__page, shapes[i], OverrideType.SymbolID, _var.id);
+                op.shapeBindVar(this.__page, shapes[i], OverrideType.SymbolID, _var.id);
             }
             this.__repo.commit();
             return symbol;
@@ -351,14 +351,14 @@ export class ShapeEditor {
     makeTextVar(symbolView: SymbolView, name: string, dlt: string, shapes: (Shape & { text?: Text })[]) {
         let symbol = adapt2Shape(symbolView) as SymbolShape;
         if (!is_symbol_or_union(symbol)) return;
-        const api = this.__repo.start("makeTextVar");
+        const op = this.__repo.start("makeTextVar");
         try {
             const text = string2Text(dlt)
             const _var = new Variable(v4(), VariableType.Text, name, text);
-            api.shapeAddVariable(this.__page, symbol, _var);
+            op.shapeAddVariable(this.__page, symbol, _var);
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const item = shapes[i];
-                api.shapeBindVar(this.__page, item, OverrideType.Text, _var.id);
+                op.shapeBindVar(this.__page, item, OverrideType.Text, _var.id);
             }
             this.__repo.commit();
             return symbol;
@@ -379,23 +379,23 @@ export class ShapeEditor {
         if (!is_symbol_or_union(symbol)) {
             throw new Error('wrong role!');
         }
-        const api = this.__repo.start("modifyVar");
+        const op = this.__repo.start("modifyVar");
         try {
             for (let i = 0, len = new_layers.length; i < len; i++) {
                 const item = new_layers[i];
-                api.shapeBindVar(this.__page, item, type[variable.type], variable.id);
+                op.shapeBindVar(this.__page, item, type[variable.type], variable.id);
             }
             for (let i = 0, len = old_layers.length; i < len; i++) {
                 const item = old_layers[i];
-                api.shapeUnbinVar(this.__page, item, type[variable.type]);
+                op.shapeUnbinVar(this.__page, item, type[variable.type]);
             }
 
             if (new_name !== variable.name) {
-                modify_variable(this.__document, this.__page, this.__shape, variable, { name: new_name }, api)
+                modify_variable(this.__document, this.__page, this.__shape, variable, { name: new_name }, op)
             }
 
             if (new_dlt_value !== variable.value) {
-                modify_variable(this.__document, this.__page, this.__shape, variable, { value: new_dlt_value }, api)
+                modify_variable(this.__document, this.__page, this.__shape, variable, { value: new_dlt_value }, op)
             }
 
             this.__repo.commit();
@@ -408,79 +408,79 @@ export class ShapeEditor {
     }
 
     public setName(name: string) {
-        this._repoWrap('setName', (api) => {
-            const __r = this.modifyVariable(VariableType.Name, OverrideType.Name, name, api);
+        this._repoWrap('setName', (op) => {
+            const __r = this.modifyVariable(VariableType.Name, OverrideType.Name, name, op);
             if (__r) return;
-            api.shapeModifyName(this.__page, this.shape, name)
-            api.shapeModifyNameFixed(this.__page, this.shape, true);
+            op.shapeModifyName(this.__page, this.shape, name)
+            op.shapeModifyNameFixed(this.__page, this.shape, true);
         })
     }
 
     public toggleVisible() {
         // 实例图层
-        this._repoWrap('toggleVisible', (api) => {
+        this._repoWrap('toggleVisible', (op) => {
             const isVisible = !this.view.isVisible;
-            if (this.modifyVariable(VariableType.Visible, OverrideType.Visible, isVisible, api)) return;
-            api.shapeModifyVisible(this.__page, this.shape, isVisible);
+            if (this.modifyVariable(VariableType.Visible, OverrideType.Visible, isVisible, op)) return;
+            op.shapeModifyVisible(this.__page, this.shape, isVisible);
         })
     }
 
     public toggleLock() {
-        this._repoWrap('toggleLock', (api) => {
+        this._repoWrap('toggleLock', (op) => {
             const isLocked = !this.view.isLocked;
-            if (this.modifyVariable(VariableType.Lock, OverrideType.Lock, isLocked, api)) return;
-            api.shapeModifyLock(this.__page, this.shape, isLocked);
+            if (this.modifyVariable(VariableType.Lock, OverrideType.Lock, isLocked, op)) return;
+            op.shapeModifyLock(this.__page, this.shape, isLocked);
         });
     }
 
     public translate(dx: number, dy: number, round: boolean = true) {
-        this._repoWrap("translate", (api) => {
-            translate(api, this.__page, this.shape, dx, dy, round);
+        this._repoWrap("translate", (op) => {
+            translate(op, this.__page, this.shape, dx, dy, round);
         });
     }
 
     public translateTo(x: number, y: number) {
-        this._repoWrap("translateTo", (api) => {
-            translateTo(api, this.__page, this.shape, x, y);
+        this._repoWrap("translateTo", (op) => {
+            translateTo(op, this.__page, this.shape, x, y);
         });
     }
 
     public expand(dw: number, dh: number) {
-        this._repoWrap("expand", (api) => {
-            expand(api, this.__document, this.__page, this.shape, dw, dh);
+        this._repoWrap("expand", (op) => {
+            expand(op, this.__document, this.__page, this.shape, dw, dh);
         });
     }
 
     public expandTo(w: number, h: number) {
-        this._repoWrap("expandTo", (api) => {
-            expandTo(api, this.__document, this.__page, this.shape, w, h);
+        this._repoWrap("expandTo", (op) => {
+            expandTo(op, this.__document, this.__page, this.shape, w, h);
         });
     }
 
     public setConstrainerProportions(val: boolean) {
-        this._repoWrap("setConstrainerProportions", (api) => {
-            api.shapeModifyConstrainerProportions(this.__page, this.shape, val)
+        this._repoWrap("setConstrainerProportions", (op) => {
+            op.shapeModifyConstrainerProportions(this.__page, this.shape, val)
         });
     }
 
     // flip
     public flipH() {
-        this._repoWrap("flipHorizontal", (api) => {
-            api.shapeModifyHFlip(this.__page, this.shape)
+        this._repoWrap("flipHorizontal", (op) => {
+            op.shapeModifyHFlip(this.__page, this.shape)
         });
     }
 
     public flipV() {
-        this._repoWrap("flipVertical", (api) => {
-            api.shapeModifyVFlip(this.__page, this.shape)
+        this._repoWrap("flipVertical", (op) => {
+            op.shapeModifyVFlip(this.__page, this.shape)
         });
     }
 
     public contextSettingOpacity(value: number) {
-        const api = this.__repo.start("contextSettingOpacity");
+        const op = this.__repo.start("contextSettingOpacity");
         try {
-            const shape = shape4contextSettings(api, this.__shape, this._page);
-            api.shapeModifyContextSettingsOpacity(this.__page, shape, value);
+            const shape = shape4contextSettings(op, this.__shape, this._page);
+            op.shapeModifyContextSettingsOpacity(this.__page, shape, value);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -489,24 +489,24 @@ export class ShapeEditor {
 
     // resizingConstraint
     public setResizingConstraint(value: number) {
-        this._repoWrap("setResizingConstraint", (api) => {
-            api.shapeModifyResizingConstraint(this.__page, this.shape, value);
+        this._repoWrap("setResizingConstraint", (op) => {
+            op.shapeModifyResizingConstraint(this.__page, this.shape, value);
         });
     }
 
     // rotation
     public rotate(deg: number) {
-        this._repoWrap("rotate", (api) => {
+        this._repoWrap("rotate", (op) => {
             deg = deg % 360;
-            // api.shapeModifyRotate(this.__page, this.shape, deg)
+            // op.shapeModifyRotate(this.__page, this.shape, deg)
         });
     }
 
     // radius
     public setRectRadius(lt: number, rt: number, rb: number, lb: number) {
         const shape = this.shape;
-        this._repoWrap("setRectRadius", (api) => {
-            api.shapeModifyRadius(this.__page, (shape as RectShape), lt, rt, rb, lb);
+        this._repoWrap("setRectRadius", (op) => {
+            op.shapeModifyRadius(this.__page, (shape as RectShape), lt, rt, rb, lb);
         });
     }
 
@@ -516,18 +516,18 @@ export class ShapeEditor {
         } else if (!(this.shape instanceof PathShape || this.shape instanceof PathShape2 || this.shape instanceof TextShape)) {
             return;
         }
-        this._repoWrap("setFixedRadius", (api) => {
-            api.shapeModifyFixedRadius(this.__page, this.shape as GroupShape, fixedRadius || undefined);
+        this._repoWrap("setFixedRadius", (op) => {
+            op.shapeModifyFixedRadius(this.__page, this.shape as GroupShape, fixedRadius || undefined);
         });
     }
 
     public setBoolOp(op: BoolOp, name?: string) {
         if (!(this.shape instanceof BoolShape)) return;
-        this._repoWrap("setBoolOp", (api) => {
+        this._repoWrap("setBoolOp", (operator) => {
             const shape = this.shape as BoolShape;
-            if (name) api.shapeModifyName(this.__page, this.shape, name);
+            if (name) operator.shapeModifyName(this.__page, this.shape, name);
             shape.childs.forEach((child) => {
-                api.shapeModifyBoolOp(this.__page, child, op);
+                operator.shapeModifyBoolOp(this.__page, child, op);
             })
         });
     }
@@ -535,18 +535,18 @@ export class ShapeEditor {
     /**
      * @description 已提出到 "editor/utils/symbol"
      */
-    private shape4fill(api: Operator, shape?: ShapeView) {
-        return shape4fill(api, this._page, shape ?? this.__shape);
+    private shape4fill(op: Operator, shape?: ShapeView) {
+        return shape4fill(op, this._page, shape ?? this.__shape);
     }
 
     /**
      * @deprecated 单个图层修改局限性大，应该使用批量修改接口
      */
     public addFill(fill: Fill) {
-        this._repoWrap("addFill", (api) => {
-            const shape = this.shape4fill(api);
+        this._repoWrap("addFill", (op) => {
+            const shape = this.shape4fill(op);
             const fills = shape instanceof Shape ? shape.style.fills : shape.value;
-            api.addFillAt(fills, fill, fills.length);
+            op.addFillAt(fills, fill, fills.length);
         });
     }
 
@@ -554,79 +554,79 @@ export class ShapeEditor {
      * @deprecated 单个图层修改局限性大，应该使用批量修改接口
      */
     public setFillColor(fill: Fill, color: Color) {
-        this._repoWrap("setFillColor", (api) => {
-            api.setFillColor(fill, color);
+        this._repoWrap("setFillColor", (op) => {
+            op.setFillColor(fill, color);
         });
     }
 
     public setFillEnable(fill: Fill, value: boolean) {
-        this._repoWrap("setFillEnable", (api) => {
-            api.setFillEnable(fill, value);
+        this._repoWrap("setFillEnable", (op) => {
+            op.setFillEnable(fill, value);
         });
     }
 
     public deleteFill(fills: BasicArray<Fill>, idx: number) {
-        this._repoWrap("deleteFill", (api) => {
-            api.deleteFillAt(fills, idx);
+        this._repoWrap("deleteFill", (op) => {
+            op.deleteFillAt(fills, idx);
         });
     }
 
     /**
      * @description 已提出到 "editor/utils/symbol"
      */
-    private shape4border(api: Operator, shape?: ShapeView) {
-        return shape4border(api, this._page, shape ?? this.__shape);
+    private shape4border(op: Operator, shape?: ShapeView) {
+        return shape4border(op, this._page, shape ?? this.__shape);
     }
 
     // border
     public setBorderEnable(idx: number, isEnabled: boolean) {
-        this._repoWrap("setBorderEnable", (api) => {
-            const shape = this.shape4border(api);
-            api.setBorderEnable(this.__page, shape, idx, isEnabled);
+        this._repoWrap("setBorderEnable", (op) => {
+            const shape = this.shape4border(op);
+            op.setBorderEnable(this.__page, shape, idx, isEnabled);
         });
     }
 
     public setBorderColor(idx: number, color: Color) {
-        this._repoWrap("setBorderColor", (api) => {
-            const shape = this.shape4border(api);
-            api.setBorderColor(this.__page, shape, idx, color);
+        this._repoWrap("setBorderColor", (op) => {
+            const shape = this.shape4border(op);
+            op.setBorderColor(this.__page, shape, idx, color);
         });
     }
 
     public setBorderStyle(borderStyle: BorderStyle) {
-        this._repoWrap("setBorderStyle", (api) => {
-            const shape = this.shape4border(api);
-            api.setBorderStyle(this.__page, shape, borderStyle);
+        this._repoWrap("setBorderStyle", (op) => {
+            const shape = this.shape4border(op);
+            op.setBorderStyle(this.__page, shape, borderStyle);
         });
     }
 
     public deleteBorder(idx: number) {
 
-        this._repoWrap("deleteBorder", (api) => {
-            const shape = this.shape4border(api);
-            api.deleteStrokePaintAt(this.__page, shape, idx)
+        this._repoWrap("deleteBorder", (op) => {
+            const shape = this.shape4border(op);
+            op.deleteStrokePaintAt(this.__page, shape, idx)
         });
 
     }
 
     public addStrokePaint(strokePaint: Fill) {
-        this._repoWrap("addStrokePaint", (api) => {
-            const shape = this.shape4border(api);
+        this._repoWrap("addStrokePaint", (op) => {
+            const shape = this.shape4border(op);
             const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-            api.addStrokePaint(this.__page, shape, strokePaint, borders.strokePaints.length);
+            op.addStrokePaint(this.__page, shape, strokePaint, borders.strokePaints.length);
         });
     }
 
     // points
     public setPathClosedStatus(val: boolean, segmentIndex: number) {
-        this._repoWrap("setPathClosedStatus", (api) => {
-            api.setCloseStatus(this.__page, this.shape as PathShape, val, segmentIndex);
+        this._repoWrap("setPathClosedStatus", (op) => {
+            op.setCloseStatus(this.__page, this.shape as PathShape, val, segmentIndex);
         });
     }
 
     public addPointAt(point: CurvePoint, idx: number, segmentIndex: number) {
-        this._repoWrap("addPointAt", (api) => {
-            api.addPointAt(this.__page, this.shape as PathShape, idx, point, segmentIndex);
+        this._repoWrap("addPointAt", (op) => {
+            op.addPointAt(this.__page, this.shape as PathShape, idx, point, segmentIndex);
         });
     }
 
@@ -634,7 +634,7 @@ export class ShapeEditor {
         try {
             let result = -1;
 
-            const api = this.__repo.start("removePoints");
+            const op = this.__repo.start("removePoints");
 
             const page = this.__page;
 
@@ -653,15 +653,15 @@ export class ShapeEditor {
                     return;
                 }
                 for (let i = indexes.length - 1; i > -1; i--) {
-                    api.deletePoint(page, shape, indexes[i], segment);
+                    op.deletePoint(page, shape, indexes[i], segment);
                 }
                 const seg = shape.pathsegs[segment];
                 if (seg.points.length === 2) {
-                    api.setCloseStatus(page, shape, false, segment);
+                    op.setCloseStatus(page, shape, false, segment);
                 }
 
                 if (seg.points.length < 2) {
-                    api.deleteSegmentAt(page, shape, segment);
+                    op.deleteSegmentAt(page, shape, segment);
                 }
             });
 
@@ -677,11 +677,11 @@ export class ShapeEditor {
             }
 
             if (needRecovery) {
-                this.__delete(shape, api);
+                this.__delete(shape, op);
                 result = 0;
             } else {
-                api.shapeEditPoints(page, shape, true);
-                update_frame_by_points(api, page, shape);
+                op.shapeEditPoints(page, shape, true);
+                update_frame_by_points(op, page, shape);
             }
 
             this.__repo.commit();
@@ -695,7 +695,7 @@ export class ShapeEditor {
 
     }
 
-    __delete(shape: Shape, api: Operator) {
+    __delete(shape: Shape, op: Operator) {
         const parent = shape.parent as GroupShape;
         const index = parent.indexOfChild(shape);
 
@@ -703,29 +703,29 @@ export class ShapeEditor {
             return;
         }
 
-        api.shapeDelete(this.__document, this.__page, parent, index);
+        op.shapeDelete(this.__document, this.__page, parent, index);
 
         if (!parent.childs.length) {
-            this.__delete(parent, api);
+            this.__delete(parent, op);
         }
     }
 
     public modifyPointsCurveMode(range: Map<number, number[]>, curve_mode: CurveMode) {
         try {
-            const api = this.__repo.start("modifyPointsCurveMode");
+            const op = this.__repo.start("modifyPointsCurveMode");
 
             if (this.shape.pathType !== PathType.Editable) return;
 
             range.forEach((indexes, segment) => {
                 for (let i = indexes.length - 1; i > -1; i--) {
                     const index = indexes[i];
-                    _typing_modify(this.shape as PathShape, this.__page, api, index, curve_mode, segment);
-                    api.modifyPointCurveMode(this.__page, this.shape as PathShape, index, curve_mode, segment);
+                    _typing_modify(this.shape as PathShape, this.__page, op, index, curve_mode, segment);
+                    op.modifyPointCurveMode(this.__page, this.shape as PathShape, index, curve_mode, segment);
                 }
             });
 
-            update_frame_by_points(api, this.__page, this.shape as PathShape);
-            if (!this.shape.haveEdit) api.shapeEditPoints(this.__page, this.shape, true);
+            update_frame_by_points(op, this.__page, this.shape as PathShape);
+            if (!this.shape.haveEdit) op.shapeEditPoints(this.__page, this.shape, true);
             this.__repo.commit();
             return true;
         } catch (e) {
@@ -737,7 +737,7 @@ export class ShapeEditor {
 
     public modifyPointsCornerRadius(range: Map<number, number[]>, cornerRadius: number) {
         try {
-            const api = this.__repo.start("modifyPointsCornerRadius");
+            const op = this.__repo.start("modifyPointsCornerRadius");
 
             if (this.shape.pathType !== PathType.Editable) {
                 return;
@@ -745,7 +745,7 @@ export class ShapeEditor {
 
             range.forEach((indexes, segment) => {
                 for (let i = indexes.length - 1; i > -1; i--) {
-                    api.modifyPointCornerRadius(this.__page, this.shape as PathShape, indexes[i], cornerRadius, segment);
+                    op.modifyPointCornerRadius(this.__page, this.shape as PathShape, indexes[i], cornerRadius, segment);
                 }
             });
 
@@ -764,8 +764,8 @@ export class ShapeEditor {
                 return;
             }
 
-            const api = this.__repo.start("modifyPointsXY");
-            modify_points_xy(api, this.__page, this.shape as PathShape, actions);
+            const op = this.__repo.start("modifyPointsXY");
+            modify_points_xy(op, this.__page, this.shape as PathShape, actions);
             this.__repo.commit();
             return true;
         } catch (e) {
@@ -777,15 +777,15 @@ export class ShapeEditor {
 
     // export ops
     public addExportFormat(formats: ExportFormat[]) {
-        const api = this.__repo.start("addExportFormat");
+        const op = this.__repo.start("addExportFormat");
         try {
-            const shape = shape4exportOptions(api, this.__shape, this._page);
+            const shape = shape4exportOptions(op, this.__shape, this._page);
             const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
             const len = options?.exportFormats.length || 0;
             for (let i = 0; i < formats.length; i++) {
                 const format = formats[i];
                 const length = len + i;
-                api.addExportFormat(this.__page, shape, format, length);
+                op.addExportFormat(this.__page, shape, format, length);
             }
             this.__repo.commit();
         } catch (e) {
@@ -797,10 +797,10 @@ export class ShapeEditor {
     public deleteExportFormat(idx: number) {
         const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
-            const api = this.__repo.start("deleteExportFormat");
+            const op = this.__repo.start("deleteExportFormat");
             try {
-                const shape = shape4exportOptions(api, this.__shape, this._page);
-                api.deleteExportFormatAt(this.__page, shape, idx)
+                const shape = shape4exportOptions(op, this.__shape, this._page);
+                op.deleteExportFormatAt(this.__page, shape, idx)
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -812,10 +812,10 @@ export class ShapeEditor {
     public setExportFormatScale(idx: number, scale: number) {
         const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
-            const api = this.__repo.start("setExportFormatScale");
+            const op = this.__repo.start("setExportFormatScale");
             try {
-                const shape = shape4exportOptions(api, this.__shape, this._page);
-                api.setExportFormatScale(this.__page, shape, idx, scale);
+                const shape = shape4exportOptions(op, this.__shape, this._page);
+                op.setExportFormatScale(this.__page, shape, idx, scale);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -827,10 +827,10 @@ export class ShapeEditor {
     public setExportFormatName(idx: number, name: string) {
         const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
-            const api = this.__repo.start("setExportFormatName");
+            const op = this.__repo.start("setExportFormatName");
             try {
-                const shape = shape4exportOptions(api, this.__shape, this._page);
-                api.setExportFormatName(this.__page, shape, idx, name);
+                const shape = shape4exportOptions(op, this.__shape, this._page);
+                op.setExportFormatName(this.__page, shape, idx, name);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -842,10 +842,10 @@ export class ShapeEditor {
     public setExportFormatFileFormat(idx: number, fileFormat: ExportFileFormat) {
         const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
-            const api = this.__repo.start("setExportFormatFileFormat");
+            const op = this.__repo.start("setExportFormatFileFormat");
             try {
-                const shape = shape4exportOptions(api, this.__shape, this._page);
-                api.setExportFormatFileFormat(this.__page, shape, idx, fileFormat);
+                const shape = shape4exportOptions(op, this.__shape, this._page);
+                op.setExportFormatFileFormat(this.__page, shape, idx, fileFormat);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -857,10 +857,10 @@ export class ShapeEditor {
     public setExportFormatPerfix(idx: number, perfix: ExportFormatNameingScheme) {
         const format = this.__shape.exportOptions?.exportFormats[idx];
         if (format) {
-            const api = this.__repo.start("setExportFormatPerfix");
+            const op = this.__repo.start("setExportFormatPerfix");
             try {
-                const shape = shape4exportOptions(api, this.__shape, this._page);
-                api.setExportFormatPerfix(this.__page, shape, idx, perfix);
+                const shape = shape4exportOptions(op, this.__shape, this._page);
+                op.setExportFormatPerfix(this.__page, shape, idx, perfix);
                 this.__repo.commit();
             } catch (e) {
                 console.error(e);
@@ -870,10 +870,10 @@ export class ShapeEditor {
     }
 
     public setExportTrimTransparent(trim: boolean) {
-        const api = this.__repo.start("setExportTrimTransparent");
+        const op = this.__repo.start("setExportTrimTransparent");
         try {
-            const shape = shape4exportOptions(api, this.__shape, this._page);
-            api.setExportTrimTransparent(this.__page, shape, trim);
+            const shape = shape4exportOptions(op, this.__shape, this._page);
+            op.setExportTrimTransparent(this.__page, shape, trim);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -882,10 +882,10 @@ export class ShapeEditor {
     }
 
     public setExportCanvasBackground(background: boolean) {
-        const api = this.__repo.start("setExportTrimTransparent");
+        const op = this.__repo.start("setExportTrimTransparent");
         try {
-            const shape = shape4exportOptions(api, this.__shape, this._page);
-            api.setExportCanvasBackground(this.__page, shape, background);
+            const shape = shape4exportOptions(op, this.__shape, this._page);
+            op.setExportCanvasBackground(this.__page, shape, background);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -894,10 +894,10 @@ export class ShapeEditor {
     }
 
     public setExportPreviewUnfold(unfold: boolean) {
-        const api = this.__repo.start("setExportTrimTransparent");
+        const op = this.__repo.start("setExportTrimTransparent");
         try {
-            const shape = shape4exportOptions(api, this.__shape, this._page);
-            api.setExportPreviewUnfold(this.__page, shape, unfold);
+            const shape = shape4exportOptions(op, this.__shape, this._page);
+            op.setExportPreviewUnfold(this.__page, shape, unfold);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -909,8 +909,8 @@ export class ShapeEditor {
     public adapt() {
         try {
             if (!(this.view instanceof ArtboardView)) return;
-            const api = this.__repo.start('adapt');
-            if (adapt_for_artboard(api, this.__page, this.view)) this.__repo.commit();
+            const op = this.__repo.start('adapt');
+            if (adapt_for_artboard(op, this.__page, this.view)) this.__repo.commit();
         } catch (error) {
             console.error('adapt', error);
             this.__repo.rollback();
@@ -918,7 +918,7 @@ export class ShapeEditor {
     }
 
     // 删除图层
-    public delete(_api?: Operator) {
+    public delete(_op?: Operator) {
         if (this.shape.isVirtualShape) {
             this.toggleVisible();
             return;
@@ -929,29 +929,29 @@ export class ShapeEditor {
             const index = childs.findIndex(s => s.id === this.shape.id);
             if (index >= 0) {
                 try {
-                    const api = _api ?? this.__repo.start("deleteShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+                    const op = _op ?? this.__repo.start("deleteShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                         const state = {} as SelectionState;
                         if (isUndo) state.shapes = [this.shape.id];
                         else state.shapes = cmd.saveselection?.shapes || [];
                         selection.restore(state);
                     });
                     if (this.shape.type === ShapeType.Contact) { // 将执行删除连接线，需要清除连接线对起始两边的影响
-                        this.removeContactSides(api, this.__page, this.shape as unknown as ContactShape);
+                        this.removeContactSides(op, this.__page, this.shape as unknown as ContactShape);
                     } else {
-                        this.removeContact(api, this.__page, this.shape);
+                        this.removeContact(op, this.__page, this.shape);
                     }
                     const symbol = get_symbol_by_layer(this.shape);
                     if (symbol) { // 将执行删除组件内部图层，需要清除内部图层对组件的影响
-                        clear_binds_effect(this.__page, this.shape, symbol, api);
+                        clear_binds_effect(this.__page, this.shape, symbol, op);
                     }
-                    api.shapeDelete(this.__document, this.__page, parent, index);
+                    op.shapeDelete(this.__document, this.__page, parent, index);
                     // 当所删除元素为某一个编组的最后一个子元素时，需要把这个编组也删掉
                     if (after_remove(parent)) {
                         const _p = parent.parent;
                         const _idx = (_p as GroupShape).childs.findIndex(c => c.id === parent.id);
-                        api.shapeDelete(this.__document, this.__page, (_p as GroupShape), _idx);
+                        op.shapeDelete(this.__document, this.__page, (_p as GroupShape), _idx);
                     }
-                    _api || this.__repo.commit();
+                    _op || this.__repo.commit();
                 } catch (error) {
                     this.__repo.rollback();
                     throw error;
@@ -960,7 +960,7 @@ export class ShapeEditor {
         }
     }
 
-    private removeContactSides(api: Operator, page: Page, shape: ContactShape) {
+    private removeContactSides(op: Operator, page: Page, shape: ContactShape) {
         if (shape.from) {
             const fromShape = page.getShape(shape.from.shapeId);
             const contacts = fromShape?.style.contacts;
@@ -974,7 +974,7 @@ export class ShapeEditor {
                     }
                 }
                 if (idx > -1) {
-                    api.removeContactRoleAt(page, fromShape, idx);
+                    op.removeContactRoleAt(page, fromShape, idx);
                 }
             }
         }
@@ -991,13 +991,13 @@ export class ShapeEditor {
                     }
                 }
                 if (idx > -1) {
-                    api.removeContactRoleAt(page, toShape, idx);
+                    op.removeContactRoleAt(page, toShape, idx);
                 }
             }
         }
     }
 
-    private removeContact(api: Operator, page: Page, shape: Shape) {
+    private removeContact(op: Operator, page: Page, shape: Shape) {
         const contacts = shape.style.contacts;
         if (contacts && contacts.length) {
             for (let i = 0, len = contacts.length; i < len; i++) {
@@ -1012,7 +1012,7 @@ export class ShapeEditor {
                         break;
                     }
                 }
-                if (idx > -1) api.shapeDelete(this.__document, page, p as GroupShape, idx);
+                if (idx > -1) op.shapeDelete(this.__document, page, p as GroupShape, idx);
             }
         }
     }
@@ -1028,8 +1028,8 @@ export class ShapeEditor {
      */
     public modify_edit_state(state: boolean) {
         if (this.shape.type !== ShapeType.Contact) return false;
-        this._repoWrap("modify_edit_state", (api) => {
-            api.contactModifyEditState(this.__page, this.shape as ContactShape, state);
+        this._repoWrap("modify_edit_state", (op) => {
+            op.contactModifyEditState(this.__page, this.shape as ContactShape, state);
         });
     }
 
@@ -1038,12 +1038,12 @@ export class ShapeEditor {
             return false;
         }
         const shape = this.shape;
-        this._repoWrap("reset_contact_path", (api) => {
-            api.contactModifyEditState(this.__page, shape, false);
+        this._repoWrap("reset_contact_path", (op) => {
+            op.contactModifyEditState(this.__page, shape, false);
 
             const len = shape.points.length;
 
-            api.deletePoints(this.__page, shape, 0, len, 0);
+            op.deletePoints(this.__page, shape, 0, len, 0);
 
             for (let i = 0, len = visiblePoints.length; i < len; i++) {
                 const p = importCurvePoint((visiblePoints[i]));
@@ -1051,7 +1051,7 @@ export class ShapeEditor {
                 visiblePoints[i] = p;
             }
 
-            api.addPoints(this.__page, shape, visiblePoints, 0);
+            op.addPoints(this.__page, shape, visiblePoints, 0);
         });
     }
 
@@ -1059,15 +1059,15 @@ export class ShapeEditor {
     switchSymRef(refId: string) {
         // check
         if (!(this.view instanceof SymbolRefView)) return;
-        const api = this.__repo.start("switchSymRef");
+        const op = this.__repo.start("switchSymRef");
         try {
-            if (!this.modifyVariable(VariableType.SymbolRef, OverrideType.SymbolID, refId, api)) {
-                api.shapeModifySymRef(this.__page, this.view.data, refId);
+            if (!this.modifyVariable(VariableType.SymbolRef, OverrideType.SymbolID, refId, op)) {
+                op.shapeModifySymRef(this.__page, this.view.data, refId);
                 const view = this.view as SymbolRefView;
                 if (!view.data.isCustomSize) {
                     const sym = this.__document.symbolsMgr.get(refId);
                     if (sym) {
-                        api.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
+                        op.shapeModifyWH(this.__page, view.data, sym.size.width, sym.size.height);
                     }
                 }
             }
@@ -1173,20 +1173,20 @@ export class ShapeEditor {
         // 检查重复值，这个无法避免完全不重复，还是有可能同步修改过来的
         //
 
-        const api = this.__repo.start("modifySymTag");
+        const op = this.__repo.start("modifySymTag");
         try {
             if (shape.id === matchshape.id) {
                 // todo
                 // 同步修改对应的变量值
                 const _var = curVars.get(varId);
                 if (!_var) throw new Error();
-                // this.modifyVariable2(_var, tag, api);
-                api.shapeModifyVariable(this.__page, _var, tag);
+                // this.modifyVariable2(_var, tag, op);
+                op.shapeModifyVariable(this.__page, _var, tag);
             }
 
             // todo 判断shape是否是virtual? 不能是
             // 修改vartag
-            api.shapeModifyVartag(this.__page, shape, varId, tag);
+            op.shapeModifyVartag(this.__page, shape, varId, tag);
 
             this.__repo.commit();
         } catch (e) {
@@ -1200,16 +1200,16 @@ export class ShapeEditor {
      */
     modifyStateSymTagValue(varId: string, tag: string) {
         if (!this.shape.parent || !(this.shape.parent instanceof SymbolUnionShape)) return;
-        const api = this.__repo.start("modifyStateSymTagValue");
+        const op = this.__repo.start("modifyStateSymTagValue");
         try {
             const is_default = is_default_state(this.shape as SymbolShape); // 如果修改的可变组件为默认可变组件，则需要更新组件的默认状态
             if (is_default) {
                 const variables = (this.shape.parent as SymbolUnionShape).variables;
                 const _var = variables?.get(varId);
                 if (!_var) throw new Error('wrong variable');
-                api.shapeModifyVariable(this.__page, _var, tag);
+                op.shapeModifyVariable(this.__page, _var, tag);
             }
-            api.shapeModifyVartag(this.__page, this.shape as SymbolShape, varId, tag);
+            op.shapeModifyVartag(this.__page, this.shape as SymbolShape, varId, tag);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1226,9 +1226,9 @@ export class ShapeEditor {
 
         const _var = new Variable(uuid(), type, name, value);
         // _var.value = value;
-        const api = this.__repo.start("createVar");
+        const op = this.__repo.start("createVar");
         try {
-            api.shapeAddVariable(this.__page, this.shape, _var);
+            op.shapeAddVariable(this.__page, this.shape, _var);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1256,31 +1256,31 @@ export class ShapeEditor {
                 if (s instanceof GroupShape) traval(s, varId, ot, f);
             })
         }
-        const api = this.__repo.start("removeVar");
+        const op = this.__repo.start("removeVar");
         try {
             // 将_var的值保存到对象中
             switch (_var.type) {
                 case VariableType.Visible:
                     traval(shape, _var.id, OverrideType.Visible, (s: Shape) => {
                         if ((!!s.isVisible !== !!_var.value)) {
-                            api.shapeModifyVisible(this.__page, s, !s.isVisible);
+                            op.shapeModifyVisible(this.__page, s, !s.isVisible);
                         }
                     });
                     break;
                 case VariableType.Text:
                     traval(shape, _var.id, OverrideType.Text, (s: Shape) => {
                         if (s instanceof TextShape) {
-                            api.deleteText2(this.__page, s, 0, s.text.length - 1);
+                            op.deleteText2(this.__page, s, 0, s.text.length - 1);
                             if (typeof _var.value === 'string') {
-                                api.insertSimpleText2(this.__page, s, 0, _var.value);
+                                op.insertSimpleText2(this.__page, s, 0, _var.value);
                             } else {
-                                api.insertComplexText2(this.__page, s, 0, _var.value);
+                                op.insertComplexText2(this.__page, s, 0, _var.value);
                             }
                         }
                     });
                     break;
             }
-            api.shapeRemoveVariable(this.__page, shape, key);
+            op.shapeRemoveVariable(this.__page, shape, key);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1295,10 +1295,10 @@ export class ShapeEditor {
     removeBinds(type: OverrideType) {
         if (!is_part_of_symbol(this.shape)) return;
         try {
-            const api = this.__repo.start("removeBinds");
+            const op = this.__repo.start("removeBinds");
             const var_id = this.shape.varbinds?.get(type);
             if (!var_id) throw new Error('Invalid Override');
-            api.shapeUnbinVar(this.__page, this.shape, type);
+            op.shapeUnbinVar(this.__page, this.shape, type);
             const symbol = get_symbol_by_layer(this.shape);
             if (!symbol) {
                 this.__repo.commit();
@@ -1306,7 +1306,7 @@ export class ShapeEditor {
             }
             const layers = find_layers_by_varid(symbol, var_id, type);
             if (!layers.length) {
-                api.shapeRemoveVariable(this.__page, symbol, var_id);
+                op.shapeRemoveVariable(this.__page, symbol, var_id);
             }
             this.__repo.commit();
         } catch (e) {
@@ -1321,9 +1321,9 @@ export class ShapeEditor {
         const varsContainer = view.varsContainer;
         if (!varsContainer) throw new Error();
         if (view.isVirtualShape) throw new Error();
-        const api = this.__repo.start("bindVar");
+        const op = this.__repo.start("bindVar");
         try {
-            api.shapeBindVar(this.__page, this.shape, slot, varId);
+            op.shapeBindVar(this.__page, this.shape, slot, varId);
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -1333,14 +1333,14 @@ export class ShapeEditor {
     }
 
     addAutoLayout() {
-        let api: Operator;
+        let op: Operator;
         const parent = adapt2Shape(this.__shape) as GroupShape;
         const id = parent.id;
         let artboard: Artboard | undefined = undefined;
         const p = parent.parent! as GroupShape;
         if (parent.type === ShapeType.Group) {
             artboard = newArtboard(parent.name, new ShapeFrame(0, 0, 100, 100), this.__document.stylesMgr);
-            api = this.__repo.start("addAutoLayout", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
+            op = this.__repo.start("addAutoLayout", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
                 const state = {} as SelectionState;
                 if (!isUndo) state.shapes = [id];
                 else state.shapes = cmd.saveselection?.shapes || [];
@@ -1348,7 +1348,7 @@ export class ShapeEditor {
             });
             artboard.style = parent.style;
         } else {
-            api = this.__repo.start("addAutoLayout");
+            op = this.__repo.start("addAutoLayout");
         }
         try {
             const shapes_rows = layoutShapesOrder2(this.__shape.childs, false);
@@ -1388,14 +1388,14 @@ export class ShapeEditor {
                 const s = adapt2Shape(rows[i]);
                 const currentIndex = parent.indexOfChild(s);
                 if (currentIndex === i) continue;
-                api!.shapeMove(this.__page, parent, currentIndex, parent, i);
+                op!.shapeMove(this.__page, parent, currentIndex, parent, i);
             }
             if (parent.type === ShapeType.Group) {
                 const saveidx = p.indexOfChild(parent);
-                const childs = ungroup(this.__document, this.__page, parent, api!);
-                artboard = group(this.__document, this.__page, childs.map(s => s), artboard!, p, saveidx, api!);
+                const childs = ungroup(this.__document, this.__page, parent, op!);
+                artboard = group(this.__document, this.__page, childs.map(s => s), artboard!, p, saveidx, op!);
             }
-            api!.shapeAutoLayout(this.__page, artboard || parent, layoutInfo);
+            op!.shapeAutoLayout(this.__page, artboard || parent, layoutInfo);
             this.__repo.commit();
             return artboard;
         } catch (e) {
@@ -1409,7 +1409,7 @@ export class ShapeEditor {
      */
     clipPath(actions: { originSegmentIndex: number; slices: CurvePoint[][]; closed: boolean }[]) {
         try {
-            const api = this.__repo.start("clipPath");
+            const op = this.__repo.start("clipPath");
             const page = this.__page;
             const shape = adapt2Shape(this.__shape) as PathShape;
             const segments = shape.pathsegs;
@@ -1418,16 +1418,16 @@ export class ShapeEditor {
                 let last = originSegmentIndex;
                 for (let i = 0; i < slices.length; i++) {
                     const slice = new BasicArray(...slices[i].map(p => importCurvePoint(exportCurvePoint((p)))));
-                    if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
+                    if (last === originSegmentIndex) op.deleteSegmentAt(page, shape, originSegmentIndex);
                     slice.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
-                    api.addSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
+                    op.addSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
                 }
-                if (last === originSegmentIndex) api.deleteSegmentAt(page, shape, originSegmentIndex);
+                if (last === originSegmentIndex) op.deleteSegmentAt(page, shape, originSegmentIndex);
             }
-            if (!segments.length) this.delete(api);
+            if (!segments.length) this.delete(op);
             else {
-                update_frame_by_points(api, page, shape);
-                api.shapeEditPoints(page, shape, true);
+                update_frame_by_points(op, page, shape);
+                op.shapeEditPoints(page, shape, true);
             }
             this.__repo.commit();
             return segments.length;

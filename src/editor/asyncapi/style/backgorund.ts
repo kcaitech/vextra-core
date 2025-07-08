@@ -18,7 +18,7 @@ export class backgorundAsyncApi extends AsyncApiCaller {
 
     modifySolidColor(actions: { color: Color }[]) {
         try {
-            for (const t of actions) this.api.pageModifyBackground(this.__document, this.page.id, t.color);
+            for (const t of actions) this.operator.pageModifyBackground(this.__document, this.page.id, t.color);
             this.updateView();
         } catch (err) {
             this.exception = true;

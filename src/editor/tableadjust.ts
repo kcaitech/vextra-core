@@ -21,10 +21,10 @@ const MinCellSize = TableShape.MinCellSize;
  * @param fromIdx 
  * @param toIdx 
  * @param dx 
- * @param api 
+ * @param op 
  * @returns 
  */
-export function adjColum(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Operator) {
+export function adjColum(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, op: Operator) {
     if (dx === 0 || fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
         return;
     }
@@ -59,12 +59,12 @@ export function adjColum(page: Page, table: TableView, fromIdx: number, toIdx: n
     const fromWeight = fromWidth / frame.width * total;
     const toWeight = toWidth / frame.width * total;
 
-    api.tableModifyColWidth(page, table.data, fromIdx, fromWeight);
-    api.tableModifyColWidth(page, table.data, toIdx, toWeight);
+    op.tableModifyColWidth(page, table.data, fromIdx, fromWeight);
+    op.tableModifyColWidth(page, table.data, toIdx, toWeight);
 }
 
 
-export function adjRow(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, api: Operator) {
+export function adjRow(page: Page, table: TableView, fromIdx: number, toIdx: number, dx: number, op: Operator) {
     if (dx === 0 || fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
         return;
     }
@@ -100,6 +100,6 @@ export function adjRow(page: Page, table: TableView, fromIdx: number, toIdx: num
     const fromWeight = fromHeight / frame.height * total;
     const toWeight = toHeight / frame.height * total;
 
-    api.tableModifyRowHeight(page, table.data, fromIdx, fromWeight);
-    api.tableModifyRowHeight(page, table.data, toIdx, toWeight);
+    op.tableModifyRowHeight(page, table.data, fromIdx, fromWeight);
+    op.tableModifyRowHeight(page, table.data, toIdx, toWeight);
 }

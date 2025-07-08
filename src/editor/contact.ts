@@ -8,7 +8,8 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Operator, IRepository } from "../repo";
+import { Operator } from "../operator";
+import { IRepository } from "../repo";
 import { adapt2Shape, ContactLineView, get_nearest_border_point, PageView, ShapeView } from "../dataview";
 import {
     BasicArray,

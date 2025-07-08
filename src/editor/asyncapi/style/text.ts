@@ -27,7 +27,7 @@ import {
 } from "../../../data";
 import { exportGradient } from "../../../data/baseexport";
 import { importGradient, importStop, importText } from "../../../data/baseimport";
-import { Api } from "../../../repo";
+import { Operator } from "../../../operator";
 import { ShapeView, TextShapeView } from "../../../dataview";
 import { varParent } from "../../symbol";
 import { uuid } from "../../../basic/uuid";
@@ -37,10 +37,10 @@ export class TextAsyncApi extends AsyncApiCaller {
     importGradient = importGradient;
     importStop = importStop;
 
-    overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, api: Api, view: ShapeView) {
-        return prepareVar(api, this.pageView, view, overrideType, varType, valuefun)?.var;
+    overrideVariable(varType: VariableType, overrideType: OverrideType, valuefun: (_var: Variable | undefined) => any, op: Operator, view: ShapeView) {
+        return prepareVar(op, this.pageView, view, overrideType, varType, valuefun)?.var;
     }
-    shape4edit(api: Api, shape: TextShapeView): Variable | TextShapeView {
+    shape4edit(op: Operator, shape: TextShapeView): Variable | TextShapeView {
         let _var = this.overrideVariable(VariableType.Text, OverrideType.Text, (_var) => {
             if (_var) {
                 if (_var.value instanceof Text) return importText(_var.value);
@@ -52,19 +52,19 @@ export class TextAsyncApi extends AsyncApiCaller {
                 return string2Text(shape.text.toString())
             }
             throw new Error();
-        }, api, shape);
+        }, op, shape);
 
         if (_var && (typeof _var.value === 'string')) { // 这有问题！
             const host = varParent(_var)! as SymbolRefShape | SymbolShape;
             const textVar = new Variable(uuid(), VariableType.Text, _var.name, string2Text(shape.text.toString()));
             if (host instanceof SymbolShape) {
-                api.shapeRemoveVariable(this.page, host, _var.id);
-                api.shapeAddVariable(this.page, host, textVar);
+                op.shapeRemoveVariable(this.page, host, _var.id);
+                op.shapeAddVariable(this.page, host, textVar);
                 const bindid = _var.id;
                 const rebind = (shape: Shape) => {
                     if (shape.varbinds?.get(OverrideType.Text) === bindid) {
-                        api.shapeUnbinVar(this.page, shape, OverrideType.Text);
-                        api.shapeBindVar(this.page, shape, OverrideType.Text, textVar.id);
+                        op.shapeUnbinVar(this.page, shape, OverrideType.Text);
+                        op.shapeBindVar(this.page, shape, OverrideType.Text, textVar.id);
                     }
                     if (shape instanceof GroupShape) {
                         shape.childs.forEach(c => rebind(c));
@@ -80,10 +80,10 @@ export class TextAsyncApi extends AsyncApiCaller {
                     }
                 }
                 if (!override_id) throw new Error();
-                api.shapeRemoveOverride(this.page, host, override_id);
-                api.shapeRemoveVariable(this.page, host, _var.id);
-                api.shapeAddVariable(this.page, host, textVar);
-                api.shapeAddOverride(this.page, host, override_id, textVar.id);
+                op.shapeRemoveOverride(this.page, host, override_id);
+                op.shapeRemoveVariable(this.page, host, _var.id);
+                op.shapeAddVariable(this.page, host, textVar);
+                op.shapeAddOverride(this.page, host, override_id, textVar.id);
             }
             _var = textVar;
         }
@@ -108,7 +108,7 @@ export class TextAsyncApi extends AsyncApiCaller {
     // 修改填充类型
     modifyFillType(mission: Function[]) {
         try {
-            mission.forEach((call) => call(this.api));
+            mission.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -152,7 +152,7 @@ export class TextAsyncApi extends AsyncApiCaller {
 
     modifySolidColor(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (err) {
             this.exception = true;
@@ -163,7 +163,7 @@ export class TextAsyncApi extends AsyncApiCaller {
     // 新增一个渐变色站点
     createGradientStop(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -173,7 +173,7 @@ export class TextAsyncApi extends AsyncApiCaller {
     // 删除一个渐变色站点
     removeGradientStop(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -194,7 +194,7 @@ export class TextAsyncApi extends AsyncApiCaller {
     /* 修改站点位置 */
     modifyStopPosition(missions: Function[]): void {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
             this.updateView();
         } catch (error) {
             this.exception = true;
@@ -205,7 +205,7 @@ export class TextAsyncApi extends AsyncApiCaller {
     /* 修改一次站点颜色 */
     modifyStopColorOnce(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -215,7 +215,7 @@ export class TextAsyncApi extends AsyncApiCaller {
     /* 逆转站点 */
     reverseGradientStops(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
@@ -225,7 +225,7 @@ export class TextAsyncApi extends AsyncApiCaller {
     /* 旋转站点 */
     rotateGradientStops(missions: Function[]) {
         try {
-            missions.forEach((call) => call(this.api));
+            missions.forEach((call) => call(this.operator));
         } catch (error) {
             console.error(error);
             this.__repo.rollback();
