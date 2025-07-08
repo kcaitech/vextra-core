@@ -444,7 +444,7 @@ export function newDefaultTextShape(name: string, styleMgr: ResourceMgr<StyleMan
 }
 
 export function newTextShape(name: string, styleMgr: ResourceMgr<StyleMangerMember>, frame?: ShapeFrame): TextShape {
-    frame && _checkFrame(frame);
+    // frame && _checkFrame(frame);
     template_text_shape.id = uuid();
     template_text_shape.name = name;
     // 后续需要传入字体、字号、颜色信息
