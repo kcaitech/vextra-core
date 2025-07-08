@@ -14,13 +14,13 @@ Vextra Core (@kcdesign/data) is a high-performance design tool core library deve
 - **Figma** - Complete Figma document import and export
 - **Sketch** - Support for Sketch document parsing and conversion
 - **SVG** - Vector graphics import and export
-- **Image Formats** - PNG, JPG, PDF and other export formats
+- **Image Formats** - PNG, JPG and other export formats
 
 ### 🧩 Rich Graphics Types
 - Vector graphics: paths, polygons, ellipses, stars
 - Text processing: rich text, font styles, layout
 - Symbol system: components, instances, variables
-- Layout components: tables, auto layout, constraint systems
+- Layout components: auto layout, constraint systems
 
 ### 🎯 Complete Style System
 - Fills: solid colors, gradients, image fills
