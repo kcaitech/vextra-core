@@ -71,7 +71,7 @@ import { ISave4Restore, LocalCmd, SelectionState } from "../repo";
 import { exportCurvePoint } from "../data/baseexport";
 import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
 import { group, ungroup } from "./group";
-import { newArtboard } from "./creator/creator";
+import { newArtboard } from "../creator";
 
 export class ShapeEditor {
     protected __shape: ShapeView;

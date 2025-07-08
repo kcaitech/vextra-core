@@ -60,7 +60,7 @@ import {
     newSolidColorFill,
     newSymbolRefShape,
     newSymbolShape
-} from "./creator/creator";
+} from "../creator";
 import { expand, expandTo, translate, translateTo } from "./frame";
 import { uuid } from "../basic/uuid";
 import { TextShapeEditor } from "./textshape";

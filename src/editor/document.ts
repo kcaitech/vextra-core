@@ -11,7 +11,7 @@
 import { Page } from "../data/page";
 import { Document } from "../data/document";
 import { PageListItem } from "../data/typesdefine";
-import { newPage } from "./creator/creator";
+import { newPage } from "../creator";
 import { v4 as uuid } from "uuid";
 import { exportPage } from "../data/baseexport";
 import {

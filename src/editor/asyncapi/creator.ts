@@ -43,7 +43,7 @@ import {
     newRectShape,
     newStellateShape,
     newTextShape
-} from "../creator/creator";
+} from "../../creator";
 import { ISave4Restore, LocalCmd, SelectionState } from "../../repo";
 import { uuid } from "../../basic/uuid";
 import { Operator } from "../../operator";

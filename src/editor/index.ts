@@ -33,7 +33,7 @@ export { TableEditor } from "./table"
 export * from "./style"
 
 // creator
-export * as creator from "./creator/creator"
+export * as creator from "../creator"
 
 // linearapi
 export { LinearApi } from "./linearapi/linearapi"

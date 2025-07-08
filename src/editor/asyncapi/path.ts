@@ -31,7 +31,7 @@ import { adapt2Shape, GroupShapeView, PageView, PathShapeView, ShapeView } from 
 import { uuid } from "../../basic/uuid";
 import { __pre_curve, after_insert_point, update_frame_by_points } from "../utils/path";
 import { PathType } from "../../data";
-import { addCommonAttr, newFlatStyle } from "../creator/creator";
+import { addCommonAttr, newFlatStyle } from "../../creator";
 import { Border, BorderStyle, Fill, FillType, Shadow, Style } from "../../data";
 import { Color } from "../../data";
 import * as types from "../../data/typesdefine";
