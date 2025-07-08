@@ -32,7 +32,7 @@ export class RadiusModifier extends Modifier {
     /* 修改mask圆角 */
     setShapeMaskRadius(radiusMask: RadiusMask, radius: number[]) {
         try {
-            const api = this.getApi('setShapeMaskRadius');
+            const api = this.getOperator('setShapeMaskRadius');
             api.modifyMaskRadius(radiusMask, radius);
             this.commit();
         } catch (error) {
@@ -44,7 +44,7 @@ export class RadiusModifier extends Modifier {
     /* 创建一个圆角遮罩 */
     createRadiusMask(document: Document, mask: RadiusMask, pageView: PageView, views?: ShapeView[]) {
         try {
-            const api = this.getApi('createRadiusMask');
+            const api = this.getOperator('createRadiusMask');
             api.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
@@ -70,7 +70,7 @@ export class RadiusModifier extends Modifier {
     setShapesRadiusMask(pageView: PageView, views: ShapeView[], value: string) {
         try {
             const page = adapt2Shape(pageView) as Page;
-            const api = this.getApi('setShapesRadiusMask');
+            const api = this.getOperator('setShapesRadiusMask');
             const variables: Variable[] = [];
             const shapes: Shape[] = [];
             for (const view of views) {
@@ -90,7 +90,7 @@ export class RadiusModifier extends Modifier {
 
     disableMask(mask: StyleMangerMember) {
         try {
-            const api = this.getApi('disableMask');
+            const api = this.getOperator('disableMask');
             api.disableMask(mask);
             this.commit();
         } catch (error) {

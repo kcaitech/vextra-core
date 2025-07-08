@@ -53,12 +53,12 @@ export function unable_to_migrate(targetEnv: Shape, wander: Shape) {
     return 0;
 }
 
-export function after_migrate(document: Document, page: Page, api: Operator, origin: Shape) {
+export function after_migrate(document: Document, page: Page, op: Operator, origin: Shape) {
     if (origin instanceof SymbolUnionShape && !origin.childs?.length) {
         const origin_parent = origin.parent;
         if (!origin_parent) return;
         const delete_index = (origin_parent as GroupShape).indexOfChild(origin);
         if (delete_index < 0) return;
-        api.shapeDelete(document, page, origin_parent as GroupShape, delete_index);
+        op.shapeDelete(document, page, origin_parent as GroupShape, delete_index);
     }
 }

@@ -164,7 +164,7 @@ export class Controller {
         let except_envs: ShapeView[] = [];
         let current_env_id: string = '';
 
-        const api = this.__repo.start("transfer");
+        const operator = this.__repo.start("transfer");
         let status: Status = Status.Pending;
         const migrate = (targetParent: GroupShape, sortedShapes: Shape[], dlt: string) => {
             try {
@@ -177,7 +177,7 @@ export class Controller {
 
                 let index = targetParent.childs.length;
                 for (let i = 0, len = sortedShapes.length; i < len; i++) {
-                    __migrate(this.__document, api, page, targetParent, sortedShapes[i], dlt, index, env_transform);
+                    __migrate(this.__document, operator, page, targetParent, sortedShapes[i], dlt, index, env_transform);
                     index++;
                 }
 
@@ -207,7 +207,7 @@ export class Controller {
 
                     for (let i = 0, l = v.length; i < l; i++) {
                         const _v = v[i];
-                        __migrate(this.__document, api, page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index, env_transform);
+                        __migrate(this.__document, operator, page, op as GroupShape, adapt2Shape(_v.shape), dlt, _v.index, env_transform);
                     }
                 });
                 this.__repo.fireNotify();
@@ -222,7 +222,7 @@ export class Controller {
             status = Status.Pending;
             try {
                 for (let i = 0; i < shapes.length; i++) {
-                    translate(api, page, shapes[i], end.x - start.x, end.y - start.y);
+                    translate(operator, page, shapes[i], end.x - start.x, end.y - start.y);
                 }
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
@@ -235,7 +235,7 @@ export class Controller {
             status = Status.Pending;
             try {
                 for (let i = 0; i < shapes.length; i++) {
-                    translate(api, page, shapes[i], dx, dy);
+                    translate(operator, page, shapes[i], dx, dy);
                 }
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
@@ -248,7 +248,7 @@ export class Controller {
             status = Status.Pending;
             try {
                 for (let i = 0; i < shapes.length; i++) {
-                    translate(api, page, shapes[i], dx, dy);
+                    translate(operator, page, shapes[i], dx, dy);
                 }
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
@@ -264,7 +264,7 @@ export class Controller {
                 for (let i = 0, len = actions.length; i < len; i++) {
                     const shape = _ss[i];
                     const { parent, index } = actions[i];
-                    api.shapeInsert(this.__document, page, parent, shape, index);
+                    operator.shapeInsert(this.__document, page, parent, shape, index);
                     result.push(parent.childs[index]);
                 }
                 this.__repo.fireNotify();
@@ -320,7 +320,7 @@ export class Controller {
         const shape: PathShape = _shape instanceof ShapeView ? adapt2Shape(_shape) as PathShape : _shape as PathShape;
         const page = _page instanceof PageView ? adapt2Shape(_page) as Page : _page;
 
-        const api = this.__repo.start("asyncPathEditor");
+        const op = this.__repo.start("asyncPathEditor");
         let status: Status = Status.Pending;
         const w = shape.size.width, h = shape.size.height;
         let m = (shape.matrix2Root());
@@ -330,8 +330,8 @@ export class Controller {
             status === Status.Pending
             try {
                 const p = new CurvePoint(new BasicArray<number>(), uuid(), 0, 0, CurveMode.Straight);
-                api.addPointAt(page, shape as PathShape, index, p, 0);
-                after_insert_point(page, api, shape, index, 0);
+                op.addPointAt(page, shape as PathShape, index, p, 0);
+                after_insert_point(page, op, shape, index, 0);
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -342,7 +342,6 @@ export class Controller {
         const execute = (index: number, end: PageXY) => {
             status === Status.Pending
             try {
-                // pathEdit(api, page, shape, index, end, m);
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -359,7 +358,6 @@ export class Controller {
                     if (!points?.length) {
                         return;
                     }
-                    // pointsEdit(api, page, shape, points, indexes, dx, dy, segment);
                 });
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
@@ -379,7 +377,7 @@ export class Controller {
                     }
                     for (let i = indexes.length - 1; i > -1; i--) {
                         const radius = points[indexes[i]].radius || 0;
-                        api.modifyPointCornerRadius(page, shape, indexes[i], radius + r, segment);
+                        op.modifyPointCornerRadius(page, shape, indexes[i], radius + r, segment);
                     }
                 });
                 this.__repo.fireNotify();
@@ -392,7 +390,7 @@ export class Controller {
         const close = () => {
             status = Status.Pending;
             try {
-                update_frame_by_points(api, page, shape as PathShape);
+                update_frame_by_points(op, page, shape as PathShape);
                 status = Status.Fulfilled;
             } catch (e) {
                 console.error(e);
@@ -415,14 +413,14 @@ export class Controller {
         const shapes: ShapeView[] = _shapes;
         const page = _page.data
 
-        const api = this.__repo.start("asyncOpacityEditor");
+        const op = this.__repo.start("asyncOpacityEditor");
         let status: Status = Status.Pending;
         const execute = (contextSettingOpacity: number) => {
             status = Status.Pending;
             try {
                 for (let i = 0, l = shapes.length; i < l; i++) {
-                    const shape = shape4contextSettings(api, shapes[i], _page);
-                    api.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
+                    const shape = shape4contextSettings(op, shapes[i], _page);
+                    op.shapeModifyContextSettingsOpacity(page, shape, contextSettingOpacity);
                 }
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
@@ -443,7 +441,7 @@ export class Controller {
     }
 
     public asyncGradientEditor(fill: Fill, _page: PageView): AsyncGradientEditor {
-        const api = this.__repo.start("asyncGradientEditor");
+        const op = this.__repo.start("asyncGradientEditor");
         let status: Status = Status.Pending;
         const execute_from = (from: { x: number, y: number }) => {
             status = Status.Pending;
@@ -453,7 +451,7 @@ export class Controller {
                 const new_gradient = importGradient(exportGradient(gradient));
                 new_gradient.from.x = from.x;
                 new_gradient.from.y = from.y;
-                api.setFillGradient(fill, new_gradient);
+                op.setFillGradient(fill, new_gradient);
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -469,7 +467,7 @@ export class Controller {
                 const new_gradient = importGradient(exportGradient(gradient));
                 new_gradient.to.x = to.x;
                 new_gradient.to.y = to.y;
-                api.setFillGradient(fill, new_gradient);
+                op.setFillGradient(fill, new_gradient);
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -484,7 +482,7 @@ export class Controller {
                 if (!gradient) return;
                 const new_gradient = importGradient(exportGradient(gradient));
                 new_gradient.elipseLength = length;
-                api.setFillGradient(fill, new_gradient);
+                op.setFillGradient(fill, new_gradient);
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -512,7 +510,7 @@ export class Controller {
                         return 0;
                     }
                 })
-                api.setFillGradient(fill, new_gradient);
+                op.setFillGradient(fill, new_gradient);
                 this.__repo.fireNotify();
                 status = Status.Fulfilled;
             } catch (e) {
@@ -533,18 +531,18 @@ export class Controller {
     }
 }
 
-function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, api: Operator): boolean {
+function deleteEmptyGroupShape(document: Document, page: Page, shape: Shape, op: Operator): boolean {
     const p = shape.parent as GroupShape;
     if (!p) return false;
-    api.shapeDelete(document, page, p, p.indexOfChild(shape))
+    op.shapeDelete(document, page, p, p.indexOfChild(shape))
     if (p.childs.length <= 0) {
-        deleteEmptyGroupShape(document, page, p, api)
+        deleteEmptyGroupShape(document, page, p, op)
     }
     return true;
 }
 
 function __migrate(document: Document,
-    api: Operator, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
+    op: Operator, page: Page, targetParent: GroupShape, shape: Shape, dlt: string, index: number,
     transform: { ohflip: boolean, ovflip: boolean, pminverse: Transform }
 ) {
     const error = unable_to_migrate(targetParent, shape);
@@ -561,7 +559,7 @@ function __migrate(document: Document,
 
     if (is_state(shape)) {
         const name = get_state_name(shape as any, dlt);
-        api.shapeModifyName(page, shape, `${origin.name}/${name}`);
+        op.shapeModifyName(page, shape, `${origin.name}/${name}`);
     }
 
     // origin
@@ -580,10 +578,10 @@ function __migrate(document: Document,
 
     const m = shape.matrix2Root();
     const { x, y } = m.computeCoord(0, 0);
-    api.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
+    op.shapeMove(page, origin, origin.indexOfChild(shape), targetParent, index++);
 
-    if (hflip !== transform.ohflip) api.shapeModifyHFlip(page, shape);
-    if (vflip !== transform.ovflip) api.shapeModifyVFlip(page, shape);
+    if (hflip !== transform.ohflip) op.shapeModifyHFlip(page, shape);
+    if (vflip !== transform.ovflip) op.shapeModifyVFlip(page, shape);
 
     m.multiAtLeft(transform.pminverse);
     let sina = m.m10;
@@ -604,13 +602,12 @@ function __migrate(document: Document,
 
     if (!Number.isNaN(rotate)) {
         const r = (rotate / (2 * Math.PI) * 360) % 360;
-        // if (r !== (shape.rotation ?? 0)) api.shapeModifyRotate(page, shape, r);
     } else {
         console.log('rotate is NaN', rotate);
     }
 
-    translateTo(api, page, shape, x, y);
-    after_migrate(document, page, api, origin);
+    translateTo(op, page, shape, x, y);
+    after_migrate(document, page, op, origin);
 }
 
 function __get_env_transform_for_migrate(target_env: GroupShape) {

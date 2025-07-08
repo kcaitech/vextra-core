@@ -1,5 +1,4 @@
 import { TransactDataGuard, Text, Document } from "../data";
-import { Operator as Api } from "../operator";
 import { CmdMergeType, IRepository, ISave4Restore, LocalCmd } from "./types";
 import { Operator } from "../operator";
 import { FMT_VER_latest } from "../data/fmtver";
@@ -63,7 +62,7 @@ export class Repo implements IRepository {
     canRedo(): boolean {
         return this.__repo.canRedo();
     }
-    start(description: string, selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void = defaultSU): Api {
+    start(description: string, selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void = defaultSU): Operator {
         this.__repo.start(description);
         this.__operator.reset();
         this.__curCmd = {

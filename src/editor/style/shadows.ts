@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Api } from "../../repo";
+import { Operator } from "../../operator";
 import { Modifier } from "../basic/modifier";
 import {
     BasicArray,
@@ -29,24 +29,24 @@ import { importShadow } from "../../data/baseimport";
 export class ShadowsModifier extends Modifier {
     importShadow = importShadow;
 
-    getMaskVariable(api: Api, page: PageView, view: ShapeView, value: any) {
-        return _ov(VariableType.ShadowsMask, OverrideType.ShadowsMask, () => value, view, page, api);
+    getMaskVariable(op: Operator, page: PageView, view: ShapeView, value: any) {
+        return _ov(VariableType.ShadowsMask, OverrideType.ShadowsMask, () => value, view, page, op);
     }
 
-    getShadowsVariable(api: Api, page: PageView, view: ShapeView) {
+    getShadowsVariable(op: Operator, page: PageView, view: ShapeView) {
         return override_variable(page, VariableType.Shadows, OverrideType.Shadows, (_var) => {
             const shadows = _var?.value ?? view.getShadows();
             return new BasicArray(...(shadows as Array<Shadow>).map((v) => {
                 return importShadow(v);
             }))
-        }, api, view)!;
+        }, op, view)!;
     }
 
     /* 创建一个阴影 */
     createShadow(missions: Function[]) {
         try {
-            const api = this.getApi('createShadow');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('createShadow');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -57,8 +57,8 @@ export class ShadowsModifier extends Modifier {
     /* 隐藏与显示一条阴影 */
     setShadowEnabled(missions: Function[]) {
         try {
-            const api = this.getApi('setShadowEnabled');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setShadowEnabled');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -69,8 +69,8 @@ export class ShadowsModifier extends Modifier {
     /* 删除一个阴影 */
     removeShadows(missions: Function[]) {
         try {
-            const api = this.getApi('removeShadows');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('removeShadows');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -81,8 +81,8 @@ export class ShadowsModifier extends Modifier {
     /* 统一多个shadows */
     unifyShapesShadows(missions: Function[]) {
         try {
-            const api = this.getApi('unifyShapesShadows');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('unifyShapesShadows');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -93,8 +93,8 @@ export class ShadowsModifier extends Modifier {
     /* 修改阴影颜色 */
     setShadowsColor(missions: Function[]) {
         try {
-            const api = this.getApi('setShadowsColor');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setShadowsColor');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -105,8 +105,8 @@ export class ShadowsModifier extends Modifier {
     /* 修改阴影位置 */
     setShadowsPosition(missions: Function[]) {
         try {
-            const api = this.getApi('setShadowsPosition');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setShadowsPosition');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -117,8 +117,8 @@ export class ShadowsModifier extends Modifier {
     /* 修改阴影X轴 */
     setShadowOffsetX(missions: Function[]) {
         try {
-            const api = this.getApi('setShadowOffsetX');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setShadowOffsetX');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -129,8 +129,8 @@ export class ShadowsModifier extends Modifier {
     /* 修改阴影Y轴 */
     setShadowOffsetY(missions: Function[]) {
         try {
-            const api = this.getApi('setShadowOffsetY');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setShadowOffsetY');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -141,8 +141,8 @@ export class ShadowsModifier extends Modifier {
     /* 修改阴影扩散半径 */
     setShadowSpread(missions: Function[]) {
         try {
-            const api = this.getApi('setShadowSpread');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setShadowSpread');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -153,8 +153,8 @@ export class ShadowsModifier extends Modifier {
     /* 修改阴影模糊半径 */
     setShadowsBlur(missions: Function[]) {
         try {
-            const api = this.getApi('setShadowsBlur');
-            missions.forEach(call => call(api));
+            const op = this.getOperator('setShadowsBlur');
+            missions.forEach(call => call(op));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -166,12 +166,12 @@ export class ShadowsModifier extends Modifier {
     unifyShapesShadowsMask(views: ShapeView[], mask: string) {
         if (!views.length) return;
         try {
-            const api = this.getApi('unifyShapesShadowsMask');
+            const op = this.getOperator('unifyShapesShadowsMask');
             const pageView = views[0].getPage() as PageView;
             const page = pageView.data;
             for (const view of views) {
-                const linked = this.getMaskVariable(api, pageView, view, mask);
-                linked ? api.shapeModifyVariable(page, linked, mask) : api.modifyShadowsMask(page, adapt2Shape(view), mask);
+                const linked = this.getMaskVariable(op, pageView, view, mask);
+                linked ? op.shapeModifyVariable(page, linked, mask) : op.modifyShadowsMask(page, adapt2Shape(view), mask);
             }
             this.commit();
         } catch (error) {
@@ -183,21 +183,21 @@ export class ShadowsModifier extends Modifier {
     /* 创建一个阴影遮罩 */
     createShadowsMask(document: Document, mask: ShadowMask, pageView: PageView, views?: ShapeView[]) {
         try {
-            const api = this.getApi('createShadowsMask');
+            const op = this.getOperator('createShadowsMask');
             mask.shadows = new BasicArray(...mask.shadows.map(i => importShadow(i)));
-            api.styleInsert(document, mask);
+            op.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
                 const shapes: Shape[] = [];
                 for (const view of views) {
-                    const variable = this.getMaskVariable(api, pageView, view, mask.id);
+                    const variable = this.getMaskVariable(op, pageView, view, mask.id);
                     variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
                 }
                 const page = pageView.data;
                 for (const variable of variables) {
-                    if (variable.value !== mask.id) api.shapeModifyVariable(page, variable, mask.id);
+                    if (variable.value !== mask.id) op.shapeModifyVariable(page, variable, mask.id);
                 }
-                for (const shape of shapes) api.modifyShadowsMask(page, shape, mask.id);
+                for (const shape of shapes) op.modifyShadowsMask(page, shape, mask.id);
             }
             this.commit();
         } catch (error) {
@@ -210,17 +210,17 @@ export class ShadowsModifier extends Modifier {
     setShapesShadowsMask(pageView: PageView, views: ShapeView[], value: string) {
         try {
             const page = adapt2Shape(pageView) as Page;
-            const api = this.getApi('setShapesShadowsMask');
+            const op = this.getOperator('setShapesShadowsMask');
             const variables: Variable[] = [];
             const shapes: Shape[] = [];
             for (const view of views) {
-                const variable = this.getMaskVariable(api, pageView, view, value);
+                const variable = this.getMaskVariable(op, pageView, view, value);
                 variable ? variables.push(variable) : shapes.push(adapt2Shape(view));
             }
             for (const variable of variables) {
-                if (variable.value !== value) api.shapeModifyVariable(page, variable, value);
+                if (variable.value !== value) op.shapeModifyVariable(page, variable, value);
             }
-            for (const shape of shapes) api.modifyShadowsMask(page, shape, value);
+            for (const shape of shapes) op.modifyShadowsMask(page, shape, value);
             this.commit();
         } catch (error) {
             this.rollback();
@@ -233,31 +233,31 @@ export class ShadowsModifier extends Modifier {
         try {
             if (!views.length) return;
 
-            const api = this.getApi('unbindShapesShadowsMask');
+            const op = this.getOperator('unbindShapesShadowsMask');
             const shadowsCopy = views[0].getShadows().map(i => importShadow(i));
 
             // 处理遮罩
             const shadowsMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const linkedShadowsMaskVariable = this.getMaskVariable(api, pageView, view, undefined);
+                const linkedShadowsMaskVariable = this.getMaskVariable(op, pageView, view, undefined);
                 linkedShadowsMaskVariable ? shadowsMaskVariables.push(linkedShadowsMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
             const page = adapt2Shape(pageView) as Page;
-            shadowsMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.modifyShadowsMask(page, shape, undefined));
+            shadowsMaskVariables.forEach(variable => op.shapeModifyVariable(page, variable, undefined));
+            shapes4mask.forEach(shape => op.modifyShadowsMask(page, shape, undefined));
 
             // 固定现有填充到本地
             const shadowsContainer: BasicArray<Shadow>[] = [];
             for (const view of views) {
-                const linkedVariable = this.getShadowsVariable(api, pageView, view);
+                const linkedVariable = this.getShadowsVariable(op, pageView, view);
                 shadowsContainer.push(linkedVariable ? linkedVariable.value : adapt2Shape(view).style.shadows);
             }
 
             shadowsContainer.forEach(source => {
                 const __shadowsCopy = shadowsCopy.map(i => importShadow(i));
-                api.deleteShadows(source, 0, source.length);
-                api.addShadows(source, __shadowsCopy);
+                op.deleteShadows(source, 0, source.length);
+                op.addShadows(source, __shadowsCopy);
             });
             this.commit();
         } catch (error) {
@@ -269,24 +269,24 @@ export class ShadowsModifier extends Modifier {
     /* 删除阴影遮罩(与解绑有所不同) */
     removeShapesShadowsMask(pageView: PageView, views: ShapeView[]) {
         try {
-            const api = this.getApi('removeShapesShadowsMask');
+            const op = this.getOperator('removeShapesShadowsMask');
             const shadowsMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
             for (const view of views) {
-                const linkedShadowsMaskVariable = this.getMaskVariable(api, pageView, view, undefined);
+                const linkedShadowsMaskVariable = this.getMaskVariable(op, pageView, view, undefined);
                 linkedShadowsMaskVariable ? shadowsMaskVariables.push(linkedShadowsMaskVariable) : shapes4mask.push(adapt2Shape(view));
             }
 
             const page = adapt2Shape(pageView) as Page;
-            shadowsMaskVariables.forEach(variable => api.shapeModifyVariable(page, variable, undefined));
-            shapes4mask.forEach(shape => api.modifyShadowsMask(page, shape, undefined));
+            shadowsMaskVariables.forEach(variable => op.shapeModifyVariable(page, variable, undefined));
+            shapes4mask.forEach(shape => op.modifyShadowsMask(page, shape, undefined));
 
             const shadowsContainer: BasicArray<Shadow>[] = [];
             for (const view of views) {
-                const linkedVariable = this.getShadowsVariable(api, pageView, view);
+                const linkedVariable = this.getShadowsVariable(op, pageView, view);
                 shadowsContainer.push(linkedVariable ? linkedVariable.value : adapt2Shape(view).style.shadows);
             }
-            shadowsContainer.forEach(source => api.deleteShadows(source, 0, source.length));
+            shadowsContainer.forEach(source => op.deleteShadows(source, 0, source.length));
             this.commit();
         } catch (error) {
             this.rollback();
@@ -296,8 +296,8 @@ export class ShadowsModifier extends Modifier {
 
     disableMask(mask: StyleMangerMember) {
         try {
-            const api = this.getApi('disableMask');
-            api.disableMask(mask);
+            const op = this.getOperator('disableMask');
+            op.disableMask(mask);
             this.commit();
         } catch (error) {
             this.rollback();

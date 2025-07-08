@@ -22,7 +22,7 @@ export class Modifier {
     }
 
     private m_api: Api | undefined;
-    protected getApi(desc: string): Api {
+    protected getOperator(desc: string): Api {
         return this.m_api ?? (this.m_api = this.__repo.start(desc));
     }
 

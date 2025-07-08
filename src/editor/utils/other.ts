@@ -41,9 +41,9 @@ import { newSymbolShapeUnion } from "../creator/creator";
 import { uuid } from "../../basic/uuid";
 import * as types from "../../data/typesdefine";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView, adapt2Shape } from "../../dataview";
-import { Api } from "../../repo";
+import { Operator } from "../../operator";
 
-export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShapeView | TextShape) {
+export function fixTextShapeFrameByLayout(op: Operator, page: Page, shape: TextShapeView | TextShape) {
     if (!shape.text || shape.isVirtualShape) return;
     const _shape = shape instanceof TextShape ? shape : adapt2Shape(shape);
     const textBehaviour = shape.text.attr?.textBehaviour ?? TextBehaviour.Flexible;
@@ -55,7 +55,7 @@ export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShape
             const layout = shape.getLayout();
             const fontsize = shape.text.attr?.fontSize ?? Text.DefaultFontSize;
             const targetHeight = Math.ceil(Math.max(fontsize, layout.contentHeight));
-            api.shapeModifyWH(page, _shape, shape.size.width, targetHeight);
+            op.shapeModifyWH(page, _shape, shape.size.width, targetHeight);
             const verAlign = shape.text.attr?.verAlign ?? TextVerAlign.Top;
             if (verAlign === TextVerAlign.Middle) {
                 fixTransform(0, (_shape.size.height - targetHeight) / 2);
@@ -85,7 +85,7 @@ export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShape
                     }
                 }
             }
-            api.shapeModifyWH(page, _shape, targetWidth, targetHeight);
+            op.shapeModifyWH(page, _shape, targetWidth, targetHeight);
             break;
         }
     }
@@ -96,12 +96,12 @@ export function fixTextShapeFrameByLayout(api: Api, page: Page, shape: TextShape
         const dy = targetXY.y - _shape.transform.translateY;
         if (dx || dy) {
             const trans = _shape.transform.clone().trans(dx, dy)
-            api.shapeModifyTransform(page, _shape, trans);
+            op.shapeModifyTransform(page, _shape, trans);
         }
     }
 }
 
-export function fixTableShapeFrameByLayout(api: Api, page: Page, shape: TableCellView | TableCell, table: TableView) {
+export function fixTableShapeFrameByLayout(op: Operator, page: Page, shape: TableCellView | TableCell, table: TableView) {
     if (!shape.text || shape.isVirtualShape) return;
     // const table = shape.parent as TableView;
     const indexCell = table.indexOfCell(shape);
@@ -128,8 +128,8 @@ export function fixTableShapeFrameByLayout(api: Api, page: Page, shape: TableCel
         const rowIdx = indexCell.rowIdx + rowSpan - 1;
         const curHeight = table.rowHeights[rowIdx].value / table.heightTotalWeights * table.frame.height;
         const weight = (curHeight + layout.contentHeight - height) / curHeight * table.rowHeights[rowIdx].value;
-        api.tableModifyRowHeight(page, table.data, rowIdx, weight);
-        api.shapeModifyWH(page, table.data, table.frame.width, table.frame.height + layout.contentHeight - height);
+        op.tableModifyRowHeight(page, table.data, rowIdx, weight);
+        op.shapeModifyWH(page, table.data, table.frame.width, table.frame.height + layout.contentHeight - height);
     }
 }
 
@@ -156,16 +156,16 @@ export function find_state_space(union: SymbolShape) {
     return { x: space_x, y: space_y };
 }
 
-export function modify_frame_after_inset_state(page: Page, api: Api, union: SymbolShape) {
+export function modify_frame_after_inset_state(page: Page, op: Operator, union: SymbolShape) {
     const space = find_state_space(union)
     if (!space) return;
     const delta_x = union.size.width - space.x;
     const delta_y = union.size.height - space.y;
     if (delta_x <= 0) {
-        api.shapeModifyWidth(page, union, union.size.width - delta_x + 20)
+        op.shapeModifyWidth(page, union, union.size.width - delta_x + 20)
     }
     if (delta_y <= 0) {
-        api.shapeModifyHeight(page, union, union.size.height - delta_y + 20)
+        op.shapeModifyHeight(page, union, union.size.height - delta_y + 20)
     }
 }
 
@@ -191,7 +191,7 @@ export function gen_name_for_state(symbol: SymbolShape) {
 /**
  * @description 初始化可变组件的属性值，使该可变组件的属性值与其余可变组件不同、给可变组件命名
  */
-export function init_state(api: Api, page: Page, symbol: SymbolShape, dlt: string) {
+export function init_state(op: Operator, page: Page, symbol: SymbolShape, dlt: string) {
     if (!symbol.parent) return;
     const union = symbol.parent as SymbolShape;
     if (!union.variables) return;
@@ -200,12 +200,12 @@ export function init_state(api: Api, page: Page, symbol: SymbolShape, dlt: strin
         const v = variables[i];
         if (v.type !== VariableType.Status) continue;
         const special_name = gen_special_value_for_state(symbol, v, dlt) || dlt;
-        api.shapeModifyVartag(page, symbol, v.id, special_name);
+        op.shapeModifyVartag(page, symbol, v.id, special_name);
         break;
     }
     const name = gen_name_for_state(symbol);
     if (!name) return;
-    api.shapeModifyName(page, symbol, name);
+    op.shapeModifyName(page, symbol, name);
 }
 
 export function gen_special_value_for_state(symbol: SymbolShape, variable: Variable, dlt: string) {
@@ -229,7 +229,7 @@ export function gen_special_value_for_state(symbol: SymbolShape, variable: Varia
     return `${type_name}${index}`;
 }
 
-export function make_union(api: Api, document: Document, page: Page, symbol: SymbolShape, attri_name: string) {
+export function make_union(op: Operator, document: Document, page: Page, symbol: SymbolShape, attri_name: string) {
     const p = symbol.parent;
     if (!p || (p instanceof SymbolUnionShape)) {
         return false;
@@ -263,19 +263,19 @@ export function make_union(api: Api, document: Document, page: Page, symbol: Sym
     const _var = new Variable(uuid(), VariableType.Status, attri_name, SymbolShape.Default_State); // default
     union.variables.set(_var.id, _var);
 
-    const insert_result = api.shapeInsert(document, page, p as GroupShape, union, symIndex);
+    const insert_result = op.shapeInsert(document, page, p as GroupShape, union, symIndex);
     if (!insert_result) {
         return false;
     }
 
     symbol.variables.forEach((_, k) => {
-        api.shapeRemoveVariable(page, symbol, k);
+        op.shapeRemoveVariable(page, symbol, k);
     });
 
     union = insert_result as SymbolUnionShape;
 
-    api.shapeMove(page, p as GroupShape, symIndex + 1, union, 0);
-    api.shapeModifyXY(page, symbol, 20, 20);
+    op.shapeMove(page, p as GroupShape, symIndex + 1, union, 0);
+    op.shapeModifyXY(page, symbol, 20, 20);
 
     return union;
 }
@@ -397,23 +397,23 @@ function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, vari
 /**
  * @description 删除图层在组件身上留下的影响
  */
-export function clear_binds_effect(_page: PageView | Page, shape: ShapeView | Shape, symbol: SymbolShape, api: Api) {
+export function clear_binds_effect(_page: PageView | Page, shape: ShapeView | Shape, symbol: SymbolShape, op: Operator) {
     const page = _page instanceof Page ? _page : _page.data;
     if (!shape.varbinds) return;
     const v1 = shape.varbinds.get(OverrideType.Visible);
     if (v1) {
         const layers = find_layers_by_varid(symbol, v1, OverrideType.Visible);
-        if (layers.length < 2) api.shapeRemoveVariable(page, symbol, v1);
+        if (layers.length < 2) op.shapeRemoveVariable(page, symbol, v1);
     }
     const v2 = shape.varbinds.get(OverrideType.SymbolID);
     if (v2) {
         const layers = find_layers_by_varid(symbol, v2, OverrideType.SymbolID);
-        if (layers.length < 2) api.shapeRemoveVariable(page, symbol, v2);
+        if (layers.length < 2) op.shapeRemoveVariable(page, symbol, v2);
     }
     const v3 = shape.varbinds.get(OverrideType.Text);
     if (v3) {
         const layers = find_layers_by_varid(symbol, v3, OverrideType.Text);
-        if (layers.length < 2) api.shapeRemoveVariable(page, symbol, v3);
+        if (layers.length < 2) op.shapeRemoveVariable(page, symbol, v3);
     }
 }
 

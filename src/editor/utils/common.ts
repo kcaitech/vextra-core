@@ -26,7 +26,7 @@ function equal_with_mean(a: number, b: number) {
 /**
  * @description 修改直线的width，操作的是直线段的第二个CurvePoint
  */
-function modify_straight_length(api: Operator, page: Page, shape: PathShape, val: number) {
+function modify_straight_length(op: Operator, page: Page, shape: PathShape, val: number) {
     const points = shape.pathsegs[0].points;
     const p1 = points[0];
     const p2 = points[1];
@@ -46,21 +46,21 @@ function modify_straight_length(api: Operator, page: Page, shape: PathShape, val
 
     const new_rb = m.inverseCoord({ x, y });
 
-    api.shapeModifyCurvPoint(page, shape, 1, new_rb, 0);
+    op.shapeModifyCurvPoint(page, shape, 1, new_rb, 0);
 
-    update_frame_by_points(api, page, shape);
+    update_frame_by_points(op, page, shape);
 }
 
 /**
  * @description 主动修改图形的宽度为指定宽度val，这个函数因直线段而存在🤯
  */
-export function modify_shapes_width(api: Operator, document: Document, page: Page, shapes: ShapeView[], val: number) {
+export function modify_shapes_width(op: Operator, document: Document, page: Page, shapes: ShapeView[], val: number) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         const view = shapes[i];
         const shape = adapt2Shape(view);
 
         if (is_straight(shape)) {
-            modify_straight_length(api, page, shape as PathShape, val);
+            modify_straight_length(op, page, shape as PathShape, val);
             continue;
         }
 
@@ -73,18 +73,18 @@ export function modify_shapes_width(api: Operator, document: Document, page: Pag
             h = h / rate;
         }
         const origin_h = view.frame.height;
-        expandTo(api, document, page, shape, val, h);
+        expandTo(op, document, page, shape, val, h);
         if ((view as ArtboardView).autoLayout) {
-            const _shape = shape4Autolayout(api, view, view.getPage() as PageView);
-            api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
+            const _shape = shape4Autolayout(op, view, view.getPage() as PageView);
+            op.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'hor');
         }
         if (view instanceof GroupShapeView) {
-            reLayoutBySizeChanged(api, page, view, { x: val / w, y: h / origin_h });
+            reLayoutBySizeChanged(op, page, view, { x: val / w, y: h / origin_h });
         }
     }
 }
 
-export function modify_shapes_height(api: Operator, document: Document, page: Page, shapes: ShapeView[], val: number) {
+export function modify_shapes_height(op: Operator, document: Document, page: Page, shapes: ShapeView[], val: number) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         const view = shapes[i];
         const shape = adapt2Shape(view);
@@ -103,13 +103,13 @@ export function modify_shapes_height(api: Operator, document: Document, page: Pa
         }
 
         const origin_w = view.frame.width;
-        expandTo(api, document, page, shape, w, val);
+        expandTo(op, document, page, shape, w, val);
         if ((view as ArtboardView).autoLayout) {
-            const _shape = shape4Autolayout(api, view, view.getPage() as PageView);
-            api.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
+            const _shape = shape4Autolayout(op, view, view.getPage() as PageView);
+            op.shapeModifyAutoLayoutSizing(page, _shape, StackSizing.Fixed, 'ver');
         }
         if (view instanceof GroupShapeView) {
-            reLayoutBySizeChanged(api, page, view, {
+            reLayoutBySizeChanged(op, page, view, {
                 x: w / origin_w,
                 y: val / h
             });
@@ -120,7 +120,7 @@ export function modify_shapes_height(api: Operator, document: Document, page: Pa
 /**
  * @description 裁剪容器空白区域(保留自身transform)
  */
-export function adapt_for_artboard(api: Operator, page: Page, artboard: ArtboardView) {
+export function adapt_for_artboard(op: Operator, page: Page, artboard: ArtboardView) {
     const minimum_WH = 1;
     const children = artboard.childs;
     if (!children.length) throw new Error('!children.length') ;
@@ -136,10 +136,10 @@ export function adapt_for_artboard(api: Operator, page: Page, artboard: Artboard
 
     const a = adapt2Shape(artboard);
 
-    api.shapeModifyWH(page, a, Math.max(box.width, minimum_WH), Math.max(box.height, minimum_WH));
+    op.shapeModifyWH(page, a, Math.max(box.width, minimum_WH), Math.max(box.height, minimum_WH));
 
     const artboard_xy = m_artboard_to_root.computeCoord3(box);
-    translateTo(api, page, a, artboard_xy.x, artboard_xy.y);
+    translateTo(op, page, a, artboard_xy.x, artboard_xy.y);
 
     return true;
 
@@ -187,7 +187,7 @@ export function adapt_for_artboard(api: Operator, page: Page, artboard: Artboard
     function re_children_layout() {
         children.forEach(c => {
             const d = adapt2Shape(c);
-            api.shapeModifyXY(page, d, c.transform.translateX - box.x, c.transform.translateY - box.y);
+            op.shapeModifyXY(page, d, c.transform.translateX - box.x, c.transform.translateY - box.y);
         });
     }
 }

@@ -41,7 +41,7 @@ export class BlurModifier extends Modifier {
 
     createBlur(missions: Function[]) {
         try {
-            const api = this.getApi('createBlur');
+            const api = this.getOperator('createBlur');
             missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
@@ -52,7 +52,7 @@ export class BlurModifier extends Modifier {
 
     unifyShapesBlur(missions: Function[]) {
         try {
-            const api = this.getApi('unifyShapesBlurMask');
+            const api = this.getOperator('unifyShapesBlurMask');
             missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
@@ -63,7 +63,7 @@ export class BlurModifier extends Modifier {
 
     modifyBlurType(missions: Function[]) {
         try {
-            const api = this.getApi('modifyBlurType');
+            const api = this.getOperator('modifyBlurType');
             missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
@@ -73,7 +73,7 @@ export class BlurModifier extends Modifier {
     }
     modifyBlurEnabled(missions: Function[]) {
         try {
-            const api = this.getApi('modifyBlurEnabled');
+            const api = this.getOperator('modifyBlurEnabled');
             missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
@@ -83,7 +83,7 @@ export class BlurModifier extends Modifier {
     }
     modifyBlurSaturation(missions: Function[]) {
         try {
-            const api = this.getApi('modifyBlurSaturation');
+            const api = this.getOperator('modifyBlurSaturation');
             missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
@@ -94,7 +94,7 @@ export class BlurModifier extends Modifier {
 
     removeBlur(missions: Function[]) {
         try {
-            const api = this.getApi('removeBlur');
+            const api = this.getOperator('removeBlur');
             missions.forEach(call => call(api));
             this.commit();
         } catch (error) {
@@ -106,7 +106,7 @@ export class BlurModifier extends Modifier {
     unifyShapesBlurMask(views: ShapeView[], mask: string) {
         if (!views.length) return;
         try {
-            const api = this.getApi('unifyShapesBlurMask');
+            const api = this.getOperator('unifyShapesBlurMask');
             const pageView = views[0].getPage() as PageView;
             const page = pageView.data;
             for (const view of views) {
@@ -122,7 +122,7 @@ export class BlurModifier extends Modifier {
 
     createBlurMask(document: Document, mask: BlurMask, pageView: PageView, views?: ShapeView[]) {
         try {
-            const api = this.getApi('createBlurMask');
+            const api = this.getOperator('createBlurMask');
             api.styleInsert(document, mask);
             if (views) {
                 const variables: Variable[] = [];
@@ -147,7 +147,7 @@ export class BlurModifier extends Modifier {
     setShapesBlurMask(pageView: PageView, views: ShapeView[], value: string) {
         try {
             const page = adapt2Shape(pageView) as Page;
-            const api = this.getApi('setShapesBlurMask');
+            const api = this.getOperator('setShapesBlurMask');
             const variables: Variable[] = [];
             const shapes: Shape[] = [];
             for (const view of views) {
@@ -169,7 +169,7 @@ export class BlurModifier extends Modifier {
         try {
             if (!views.length) return;
 
-            const api = this.getApi('unbindShapesBlurMask');
+            const api = this.getOperator('unbindShapesBlurMask');
             const blur = importBlur(views.find(i => i.blur)?.blur!);
 
             const blurMaskVariables: Variable[] = [];
@@ -199,7 +199,7 @@ export class BlurModifier extends Modifier {
 
     removeShapesBlurMask(pageView: PageView, views: ShapeView[]) {
         try {
-            const api = this.getApi('removeShapesBlurMask');
+            const api = this.getOperator('removeShapesBlurMask');
 
             const blurMaskVariables: Variable[] = [];
             const shapes4mask: Shape[] = [];
@@ -229,7 +229,7 @@ export class BlurModifier extends Modifier {
 
     disableMask(mask: StyleMangerMember) {
         try {
-            const api = this.getApi('modifyMaskStatus');
+            const api = this.getOperator('modifyMaskStatus');
             api.disableMask(mask);
             this.commit();
         } catch (error) {

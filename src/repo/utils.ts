@@ -84,16 +84,16 @@ interface Operator {
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number): void;
 }
 
-export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, api: Operator): boolean {
+export function setFrame(page: Page, shape: Shape, x: number, y: number, w: number, h: number, op: Operator): boolean {
     const transfrom = shape.transform;
     const frame = shape.size;
     let changed = false;
     if (x !== transfrom.m02 || y !== transfrom.m12) {
-        api.shapeModifyXY(page, shape, x, y)
+        op.shapeModifyXY(page, shape, x, y)
         changed = true;
     }
     if (w !== frame.width || h !== frame.height) {
-        api.shapeModifyWH(page, shape, w, h)
+        op.shapeModifyWH(page, shape, w, h)
         changed = true;
     }
     return changed;

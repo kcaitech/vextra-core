@@ -10,10 +10,10 @@
 
 import { Page, ShapeType } from "../../data";
 import { adapt2Shape, ShapeView } from "../../dataview";
-import { Api } from "../../repo";
+import { Operator } from "../../operator";
 
 export type TidyUpAlign = 'center' | 'start' | 'end';
-export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean, align: TidyUpAlign, start?: { x: number, y: number }) => {
+export const tidyUpLayout = (page: Page, op: Operator, shape_rows: ShapeView[][], horSpacing: number, verSpacing: number, dir_hor: boolean, align: TidyUpAlign, start?: { x: number, y: number }) => {
     const minX = Math.min(...shape_rows[0].map(s => s.relativeFrame.x));
     const minY = Math.min(...shape_rows[0].map(s => s.relativeFrame.y));
     let leftTrans = start?.x || minX; //水平起点
@@ -52,7 +52,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
                 }
                 const x = shape.transform.translateX + transx;
                 const y = shape.transform.translateY + transy;
-                api.shapeModifyXY(page, adapt2Shape(shape), x, y);
+                op.shapeModifyXY(page, adapt2Shape(shape), x, y);
 
                 // 更新下一个图形的 x 坐标
                 leftTrans += frame.width + horSpacing;
@@ -92,7 +92,7 @@ export const tidyUpLayout = (page: Page, api: Api, shape_rows: ShapeView[][], ho
 
                 const x = shape.transform.translateX + transx;
                 const y = shape.transform.translateY + transy;
-                api.shapeModifyXY(page, adapt2Shape(shape), x, y);
+                op.shapeModifyXY(page, adapt2Shape(shape), x, y);
 
                 // 更新下一个图形的 y 坐标
                 topTrans += frame.height + verSpacing;

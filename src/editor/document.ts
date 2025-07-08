@@ -51,9 +51,9 @@ export class DocEditor {
         const pagesmgr = this.__document;
         const index = pagesmgr.indexOfPage(id);
         if (index < 0) return false;
-        const api = this.__repo.start('deletepage');
+        const op = this.__repo.start('deletepage');
         try {
-            api.pageDelete(this.__document, index);
+            op.pageDelete(this.__document, index);
 
             this.__repo.commit();
         } catch (error) {
@@ -65,9 +65,9 @@ export class DocEditor {
 
     // 插入页面
     insert(index: number, page: Page): boolean {
-        const api = this.__repo.start('insertpage');
+        const op = this.__repo.start('insertpage');
         try {
-            api.pageInsert(this.__document, page, index);
+            op.pageInsert(this.__document, page, index);
             this.__repo.commit();
         } catch (error) {
             console.log(error)
@@ -172,12 +172,12 @@ export class DocEditor {
 
     // 移动页面
     move(page: PageListItem, to: number): boolean {
-        const api = this.__repo.start('page-move');
+        const op = this.__repo.start('page-move');
         try {
             const idx = this.__document.getPageIndexById(page.id);
             const descend = idx >= to ? to : to + 1;
             if (to !== idx) {
-                api.pageMove(this.__document, idx, descend)
+                op.pageMove(this.__document, idx, descend)
             }
             this.__repo.commit();
         } catch (e) {
@@ -193,9 +193,9 @@ export class DocEditor {
             const pages = this.__document.pagesList;
             const wandererIdx = pages.findIndex(i => i.id === wandererId);
             let hostIdx = pages.findIndex(i => i.id === hostId);
-            const api = this.__repo.start('page-move');
+            const op = this.__repo.start('page-move');
             hostIdx = Math.max(0, offsetOverHalf ? hostIdx + 1 : hostIdx);
-            api.pageMove(this.__document, wandererIdx, hostIdx);
+            op.pageMove(this.__document, wandererIdx, hostIdx);
             this.__repo.commit();
         } catch (error) {
             this.__repo.rollback();
@@ -211,9 +211,9 @@ export class DocEditor {
     }
 
     setPageName(name: string, pageId: string) {
-        const api = this.__repo.start("setPageName");
+        const op = this.__repo.start("setPageName");
         try {
-            api.pageModifyName(this.__document, pageId, name);
+            op.pageModifyName(this.__document, pageId, name);
             this.__repo.commit();
         } catch (error) {
             console.log(error);
@@ -224,8 +224,8 @@ export class DocEditor {
 
     rename(name: string) {
         try {
-            const api = this.__repo.start('document-rename');
-            api.modifyDocumentName(this.__document, name)
+            const op = this.__repo.start('document-rename');
+            op.modifyDocumentName(this.__document, name)
             this.__repo.commit();
         } catch (e) {
             console.error(e);
@@ -235,38 +235,38 @@ export class DocEditor {
 
     insertStyleLib(style: StyleMangerMember, page: PageView, shapes?: ShapeView[]) {
         try {
-            const api = this.__repo.start('insertStyleLib');
-            api.styleInsert(this.__document, style);
+            const op = this.__repo.start('insertStyleLib');
+            op.styleInsert(this.__document, style);
             const p = this.__document.pagesMgr.getSync(page.id)
             if (shapes && p) {
                 if (style instanceof FillMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.modifyFillsMask(p, adapt2Shape(shape), style.id);
+                        op.modifyFillsMask(p, adapt2Shape(shape), style.id);
                     }
                 }
                 if (style instanceof ShadowMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.modifyShadowsMask(p, adapt2Shape(shape), style.id);
+                        op.modifyShadowsMask(p, adapt2Shape(shape), style.id);
                     }
                 }
                 if (style instanceof BlurMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.modifyBlurMask(p, adapt2Shape(shape), style.id);
+                        op.modifyBlurMask(p, adapt2Shape(shape), style.id);
                     }
                 }
                 if (style instanceof BorderMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.modifyBorderMask(adapt2Shape(shape).style, style.id);
+                        op.modifyBorderMask(adapt2Shape(shape).style, style.id);
                     }
                 }
                 if (style instanceof RadiusMask) {
                     for (let i = 0; i < shapes.length; i++) {
                         const shape = shapes[i];
-                        api.modifyRadiusMask(adapt2Shape(shape), style.id);
+                        op.modifyRadiusMask(adapt2Shape(shape), style.id);
                     }
                 }
             }
