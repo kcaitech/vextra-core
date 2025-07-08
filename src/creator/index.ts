@@ -9,7 +9,7 @@
  */
 
 import { v4 as uuid } from "uuid";
-import { AutoLayout, Page, Artboard, Document, PageListItem, StyleMangerMember, TableShape } from "../data";
+import { AutoLayout, Page, Artboard, Document, PageListItem, StyleMangerMember, TableShape, IDataGuard } from "../data";
 import {
     GroupShape,
     LineShape,
@@ -63,7 +63,6 @@ import {
     TextAttr,
 } from "../data";
 import { BasicArray, BasicMap } from "../data";
-import { TransactDataGuard } from "../data";
 import { ResourceMgr } from "../data";
 import { TableShape2 } from "../data";
 
@@ -100,7 +99,6 @@ function _checkFrame(frame: ShapeSize) {
 export function addCommonAttr(shape: Shape) {
     const transform2 = (shape.transform);
     transform2.setRotateZ(0);
-    // updateShapeTransform1By2(shape.transform, transform2);
     shape.isVisible = true;
     shape.isLocked = false;
     shape.constrainerProportions = false;
@@ -108,7 +106,7 @@ export function addCommonAttr(shape: Shape) {
     shape.resizingConstraint = ResizingConstraints2.Default;
 }
 
-export function newDocument(documentName: string, repo: TransactDataGuard): Document {
+export function newDocument(documentName: string, repo?: IDataGuard): Document {
     const dId = uuid();
     const pageList = new BasicArray<PageListItem>();
     return new Document(dId, documentName, repo, { pageList });
@@ -120,6 +118,10 @@ export function newPage(name: string): Page {
     const page = importPage(template_page as types.Page)
     page.backgroundColor = new Color(1, 239, 239, 239);
     return page;
+}
+
+export function newPageListItem(id: string, name: string): PageListItem {
+    return new PageListItem(new BasicArray(0), id, name);
 }
 
 export function newGroupShape(name: string, style?: Style): GroupShape {
@@ -144,14 +146,14 @@ export function newSolidColorFill(fillColor = new Color(1, 216, 216, 216)): Fill
     return new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, fillColor);
 }
 
-export function newStyle(styleMgr: ResourceMgr<StyleMangerMember>): Style {
+export function newStyle(styleMgr?: ResourceMgr<StyleMangerMember>): Style {
     const fill = newSolidColorFill();
     const fills = new BasicArray<Fill>();
     const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
     const strokePaints = new BasicArray<Fill>();
     const border = new Border(types.BorderPosition.Inner, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
     const style = new Style(fills, new BasicArray<Shadow>(), border);
-    style.setStylesMgr(styleMgr);
+    if (styleMgr) style.setStylesMgr(styleMgr);
     style.fills.push(fill);
     return style;
 }
@@ -257,7 +259,7 @@ export function newPathShape(name: string, frame: ShapeFrame, path: Path, styleM
     return shape;
 }
 
-export function newRectShape(name: string, frame: ShapeFrame, styleMgr: ResourceMgr<StyleMangerMember>): RectShape {
+export function newRectShape(name: string, frame: ShapeFrame, styleMgr?: ResourceMgr<StyleMangerMember>): RectShape {
     _checkFrame(frame);
     const style = newStyle(styleMgr);
     const curvePoint = new BasicArray<CurvePoint>();

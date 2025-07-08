@@ -36,3 +36,5 @@ export * as utils from './utils'
 export { ShapeDirList2, ShapeDirListIter2 } from './shapedirlist2'
 export * as fmtver from './fmtver'
 export * as types from './typesdefine'
+
+export { DataGuard } from './notransact'

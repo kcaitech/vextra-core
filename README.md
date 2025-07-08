@@ -46,10 +46,11 @@ npm install @kcdesign/data
 
 ```typescript
 import { IO } from '@kcdesign/data';
-
 // Import Figma file
 const document = await IO.importFigma(figmaData);
 ```
+
+For more examples, see [examples directory](examples/)
 
 ## Development Guide
 
@@ -96,7 +97,6 @@ src/
 ├── dataview/       # Data view layer
 ├── operator/       # Operator system
 ├── editor/         # Editor functionality
-├── tools/          # Tool collection
 ├── repo/           # Repository management
 └── schema/         # Data structure definitions
 ```

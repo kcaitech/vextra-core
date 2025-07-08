@@ -35,9 +35,6 @@ export * from "./editor"
 // 创建器模块导出
 export * as Creator from "./creator"
 
-// 工具模块导出
-export * as Tools from "./tools"
-
 // 初始化函数
 export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun, canvas?: {
     Path2D: typeof globalThis.Path2D;
