@@ -32,6 +32,9 @@ export * as Repo from "./repo"
 // 编辑器模块导出
 export * from "./editor"
 
+// 工具模块导出
+export * as Tools from "./tools"
+
 // 初始化函数
 export async function initModule(textMeasure: MeasureFun, text2path: TextPathFun, canvas?: {
     Path2D: typeof globalThis.Path2D;
