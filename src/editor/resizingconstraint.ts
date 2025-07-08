@@ -11,7 +11,7 @@
 import { IRepository } from "../repo";
 import { Document, Shape, ShapeType, Page, ResizingConstraints2 } from "../data";
 
-export class resizingConstraintEditor {
+export class ResizingConstraintEditor {
     protected __repo: IRepository;
     protected __page: Page;
     protected __document: Document;

@@ -32,8 +32,5 @@ export { TableEditor } from "./table"
 // 编辑器样式功能
 export * from "./style"
 
-// creator
-// export * as creator from "../creator"
-
 // linearapi
 export { LinearApi } from "./linearapi/linearapi"

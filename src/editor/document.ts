@@ -29,19 +29,12 @@ import { adapt2Shape, PageView, ShapeView } from "../dataview";
 import { Fill, Shadow, BlurType, UnderlineType,StrikethroughType,TextTransformType } from "../data/classes";
 import { BasicArray, Point2D, ResourceMgr } from "../data";
 
-// export function createDocument(documentName: string, repo: TransactDataGuard): Document {
-//     return newDocument(documentName, repo);
-// }
-
 export class DocEditor {
     private __repo: IRepository;
     private __document: Document;
 
     constructor(document: Document, repo: IRepository) {
-        // check
-        // if (!(repo instanceof IRepository)) throw new Error("repo wrong");
         if (!(document instanceof Document)) throw new Error("document wrong");
-
         this.__repo = repo;
         this.__document = document;
     }

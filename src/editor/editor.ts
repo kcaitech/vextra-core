@@ -6,23 +6,18 @@ import { Controller } from "./controller"; /* 逐步取消Controller */
 import { IRepository } from "../repo";
 import { TextShapeEditor } from "./textshape";
 import { TableEditor } from "./table";
-import { resizingConstraintEditor } from "./resizingConstraint";
+import { ResizingConstraintEditor } from "./resizingconstraint";
 import { ISave4Restore } from "../repo";
 import { PageView, ShapeView, TableCellView, TableView, TextShapeView } from "../dataview";
 import { Page } from "../data/page";
 
-
 export class Editor {
     private m_data: Document;
-    // private m_selection: Selection;
     private m_repo: IRepository;
-    // private m_shadows: ShapeNaviShadowMgr | undefined;
     private m_docEditor: DocEditor | undefined;
-    // private m_pageEditors: Map<string, PageEditor> = new Map();
 
     constructor(data: Document, repo: IRepository, selection: ISave4Restore) {
         this.m_data = data;
-        // this.m_selection = selection;
         this.m_repo = repo;
     }
 
@@ -34,40 +29,18 @@ export class Editor {
     }
 
     editor4Page(page: PageView): PageEditor {
-        // let e = this.m_pageEditors.get(page.id);
-        // if (e) {
-        //     return e;
-        // }
-        // e = new PageEditor(this.m_repo, page.data, this.m_data);
-        // this.m_pageEditors.set(page.id, e);
-        // return e;
         if ((!page.data) || (!(page.data instanceof Page))) throw Error("page.data is not Page!")
         return new PageEditor(this.m_repo, page, this.m_data);
     }
 
     editor4Shape(page: PageView, shape: ShapeView): ShapeEditor {
-        // get page
-        // const p: ShapeView | undefined = shape.getPage();
-        // if ((!p) || (!(p instanceof PageView))) throw Error("shape has not parent Page!")
-        // const pe = this.editor4Page(p);
-        // return pe.editor4Shape(shape);
         return new ShapeEditor(shape, page, this.m_repo, this.m_data);
     }
 
     editor4TextShape(page: PageView, shape: TextShapeView | TableCellView): TextShapeEditor {
-        // get page
-        // const p: ShapeView | undefined = shape.getPage();
-        // if ((!p) || (!(p instanceof PageView))) throw Error("shape has not parent Page!")
-        // const pe = this.editor4Page(p);
-        // return pe.editor4TextShape(shape);
         return new TextShapeEditor(shape, page, this.m_repo, this.m_data);
     }
     editor4Table(page: PageView, shape: TableView): TableEditor {
-        // get page
-        // const p: ShapeView | undefined = shape.getPage();
-        // if ((!p) || (!(p instanceof PageView))) throw Error("shape has not parent Page!")
-        // const pe = this.editor4Page(p);
-        // return pe.editor4Table(shape);
         return new TableEditor(shape, page, this.m_repo, this.m_data);
     }
     controller(): Controller {
@@ -75,7 +48,7 @@ export class Editor {
         return e;
     }
     editor4ResizingConstraint(page: Page) {
-        return new resizingConstraintEditor(page, this.m_repo, this.data);
+        return new ResizingConstraintEditor(page, this.m_repo, this.data);
     }
 
     get data() {
@@ -84,7 +57,4 @@ export class Editor {
     get repo() {
         return this.m_repo;
     }
-    // get selection() {
-    //     return this.m_selection;
-    // }
 }
