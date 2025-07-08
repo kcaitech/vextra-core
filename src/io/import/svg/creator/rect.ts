@@ -9,8 +9,8 @@
  */
 
 import { BaseCreator } from "./base"
-import * as shapeCreator from "../../../editor/creator/creator"
-import { PathShape, ShapeFrame } from "../../../data"
+import * as shapeCreator from "../../../../creator"
+import { PathShape, ShapeFrame } from "../../../../data"
 
 export class RectCreator extends BaseCreator {
     createShape() {

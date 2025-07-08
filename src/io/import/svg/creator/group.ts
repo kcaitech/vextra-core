@@ -8,11 +8,11 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import {GroupShape, Shape,} from "../../../data"
+import {GroupShape, Shape,} from "../../../../data"
 import {BaseCreator} from "./base"
 import {getRectBox, mergeRectBox} from "../utils"
-import * as shapeCreator from "../../../editor/creator/creator"
-import { ColVector3D } from "../../../basic/matrix2"
+import * as shapeCreator from "../../../../creator"
+import { ColVector3D } from "../../../../basic/matrix2"
 // 将父元素的属性合并到子元素
 export function mergeAttributes(parent: BaseCreator, child: BaseCreator) {
     const parentShape = parent.shape

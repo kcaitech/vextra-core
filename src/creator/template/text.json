@@ -1,0 +1,23 @@
+{
+    "paras": [
+        {
+            "text": "\n",
+            "spans": [
+                {
+                    "length": 1,
+                    "fontName": "PingFang SC",
+                    "fontSize": 14,
+                    "color": {
+                        "alpha": 0.85,
+                        "red": 0,
+                        "green": 0,
+                        "blue": 0
+                    }
+                }
+            ],
+            "attr": {
+                "minimumLineHeight": 24
+            }
+        }
+    ]
+}
