@@ -10,5 +10,5 @@
 
 export * from "./types"
 export { Repo } from "./repo"
-export { Operator as Api, ArrayOpSelection } from "../operator"
+export { ArrayOpSelection } from "../operator"
 export { isDiffStringArr, defaultSU, MockNet, cloneSelectionState, importShape, isDiffSelectionState } from "./utils"
