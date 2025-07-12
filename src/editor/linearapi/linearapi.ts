@@ -112,13 +112,13 @@ export class LinearApi {
         } finally {
             const duration = this.__duration;
 
-            if (!duration) this.disconnected();
-            else {
-                clearTimeout(this.__timer);
+            if (!duration) {
+                this.disconnected();
+            } else {
+                if (this.__timer) clearTimeout(this.__timer);
                 this.__timer = setTimeout(() => {
-                    this.disconnected();
-                    clearTimeout(this.__timer);
                     this.__timer = null;
+                    this.disconnected();
                 }, duration);
             }
         }
