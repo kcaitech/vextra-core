@@ -10,7 +10,7 @@
 
 import { AutoLayout, ShapeFrame, ShapeSize } from "../../../data";
 import { SymbolView } from "../../symbol";
-import { updateAutoLayout } from "../../../editor";
+import { updateAutoLayout } from "./auto_layout2";
 import { GroupLayout } from "./group";
 
 export class SymbolLayout extends GroupLayout {

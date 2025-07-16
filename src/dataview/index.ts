@@ -37,6 +37,9 @@ export { FrameCpt } from "./proxy/frame/basic"
 export { find4select } from "./find"
 export { hitContent, hitVisible, hitOuter } from "./hittest"
 
+// auto layout
+export * from "./proxy/layout/auto_layout2"
+
 import { Shape, ShapeType } from "../data";
 import { ArtboardView } from "./artboard";
 import { BoolShapeView } from "./boolshape";

@@ -10,7 +10,7 @@
 
 import { ArtboardView } from "../../artboard";
 import { AutoLayout, ShapeFrame, ShapeSize } from "../../../data";
-import { updateAutoLayout } from "../../../editor";
+import { updateAutoLayout } from "./auto_layout2";
 import { GroupLayout } from "./group";
 
 export class ArtboardLayout extends GroupLayout {

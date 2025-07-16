@@ -17,7 +17,7 @@ import { SymbolRefView } from "../../symbolref";
 import { ArtboardView } from "../../artboard";
 import { isEqual } from "../../../basic/number_utils";
 import { fixFrameByConstrain } from "../../shape";
-import { updateAutoLayout } from "../../../editor";
+import { updateAutoLayout } from "./auto_layout2";
 
 export class RefLayout extends ViewLayout {
     constructor(protected view: SymbolRefView) {
