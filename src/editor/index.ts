@@ -10,7 +10,7 @@
 
 
 export { TidyUpAlign, tidyUpLayout } from "./utils/auto_layout"
-export * from "./utils/auto_layout2"
+// export * from "../dataview/auto_layout2"
 
 export { RefUnbind } from "./symbol"
 

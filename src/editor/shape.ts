@@ -69,7 +69,7 @@ import { ShapeView, SymbolRefView, SymbolView, adapt2Shape, findOverride, Artboa
 import { is_part_of_symbol, is_symbol_or_union, modify_variable, modify_variable_with_api, shape4border, shape4contextSettings, shape4exportOptions, shape4fill, shape4shadow } from "./symbol";
 import { ISave4Restore, LocalCmd, SelectionState } from "../repo";
 import { exportCurvePoint } from "../data/baseexport";
-import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
+import { layoutShapesOrder2, layoutSpacing } from "../dataview";
 import { group, ungroup } from "./group";
 import { newArtboard } from "../creator";
 

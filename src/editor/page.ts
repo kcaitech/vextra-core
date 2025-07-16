@@ -174,7 +174,7 @@ import { getFormatFromBase64 } from "../basic/utils";
 import { modifyRadius, modifyStartingAngle, modifySweep, uniformScale, UniformScaleUnit, assign } from "./asyncapi";
 import { Path } from "@kcaitech/path";
 import { prepareVar } from "./symbol_utils";
-import { layoutShapesOrder2, layoutSpacing } from "./utils/auto_layout2";
+import { layoutShapesOrder2, layoutSpacing } from "../dataview";
 import { stroke } from "../render/stroke";
 
 export interface BatchAction { // target,index,value
