@@ -323,7 +323,9 @@ function generateNodeExport(node: Node, writer: Writer, config: ExportGeneration
             case 'array':
                 generateArrayExport(node, writer, config);
                 break;
-                
+            case 'native_array':
+                generateArrayExport(node, writer, config);
+                break;
             case 'object':
                 generateObjectExport(node, writer, config);
                 break;
@@ -339,7 +341,7 @@ function generateNodeExport(node: Node, writer: Writer, config: ExportGeneration
  * 生成数组类型的导出函数
  */
 function generateArrayExport(node: Node, writer: Writer, config: ExportGenerationConfig): void {
-    if (node.value.type !== 'array') {
+    if (node.value.type !== 'array' && node.value.type !== 'native_array') {
         throw new Error(`Expected array type, got ${node.value.type}`);
     }
     

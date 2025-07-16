@@ -212,16 +212,16 @@ function exportNode(node: Node, writer: Writer, baseClass: BaseClassConfig): voi
         writer.nl('/* ' + node.description + ' */');
     }
 
-    if (node.value.type === 'array') {
+    if (node.value.type === 'array' || node.value.type === 'native_array') {
         const exportKeyword = node.inner ? '' : 'export ';
         if (node.extend) {
             throw new Error('Array types cannot extend classes');
         }
-        
+        const arrayType = node.value.type === 'native_array' ? 'Array' : (baseClass.array || 'Array');
         const item = node.value.item;
-        writer.nl(`${exportKeyword}type ${node.name} = ${baseClass.array}<`);
+        writer.nl(`${exportKeyword}type ${node.name} = ${arrayType}<`);
         exportBaseProp(item, writer, {
-            arrayType: baseClass.array,
+            arrayType: arrayType,
             mapType: baseClass.map
         });
         writer.append('>');

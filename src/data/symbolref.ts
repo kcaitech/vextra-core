@@ -48,7 +48,7 @@ export class SymbolRefShape extends Shape implements classes.SymbolRefShape {
     // frameMaskDisabled?: boolean
     uniformScale?: number
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,

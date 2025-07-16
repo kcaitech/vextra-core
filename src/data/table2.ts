@@ -41,7 +41,7 @@ export class TableShape2 extends Shape implements classes.TableShape2 {
     // __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,

@@ -41,7 +41,7 @@ export class TableCell extends Shape implements classes.TableCell {
     private __cacheData?: { media: { buff: Uint8Array, base64: string }, ref: string };
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -189,7 +189,7 @@ export class TableShape extends Shape implements classes.TableShape {
     // private __widthTotalWeights: number;
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,

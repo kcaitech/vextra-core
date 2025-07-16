@@ -26,7 +26,7 @@ function exportNode(node: Node, writer: Writer): void {
                 writer.nl(toPascalCase(enumValue) + ' = "' + enumValue + '",');
             }
         });
-    } else if (node.value.type === 'array') {
+    } else if (node.value.type === 'array' || node.value.type === 'native_array') {
         const item = node.value.item;
         const extendsClause = node.extend ? node.extend + ' & ' : '';
         writer.nl(`export type ${node.name} = ${extendsClause}Array<`);

@@ -26,7 +26,7 @@ export class ContactShape extends PathShape implements ContactShapeStatic {
     from?: ContactForm
     to?: ContactForm
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,

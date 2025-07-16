@@ -141,7 +141,7 @@ export class BorderMaskType extends Basic implements classes.BorderMaskType {
 
 export class Fill extends Basic implements classes.Fill {
     typeId = 'fill'
-    crdtidx: BasicArray<number>
+    crdtidx: number[]
     id: string
     isEnabled: boolean
     fillType: FillType
@@ -164,7 +164,7 @@ export class Fill extends Basic implements classes.Fill {
     private __styleMgr?: ResourceMgr<StyleMangerMember>;
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         isEnabled: boolean,
         fillType: FillType,
@@ -338,9 +338,9 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
     id: string
     name: string
     variables: BasicArray<StyleMangerMember>
-    crdtidx: BasicArray<number>
+    crdtidx: number[]
 
-    constructor(crdtidx: BasicArray<number>, id: string, name: string, variables: StyleSheet_variables) {
+    constructor(crdtidx: number[], id: string, name: string, variables: StyleSheet_variables) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -417,7 +417,7 @@ export class StyleSheet extends Basic implements classes.StyleSheet {
 
 export class FillMask extends WatchableObject implements classes.FillMask {
     typeId = 'fill-mask';
-    crdtidx: BasicArray<number>;
+    crdtidx: number[];
     id: string;
     sheet: string;
     name: string;
@@ -425,7 +425,7 @@ export class FillMask extends WatchableObject implements classes.FillMask {
     fills: BasicArray<Fill>;
     disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, fills: BasicArray<Fill>, disabled?: boolean) {
+    constructor(crdtidx: number[], sheet: string, id: string, name: string, description: string, fills: BasicArray<Fill>, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -443,7 +443,7 @@ export class FillMask extends WatchableObject implements classes.FillMask {
 
 export class ShadowMask extends WatchableObject implements classes.ShadowMask {
     typeId = 'shadow-mask';
-    crdtidx: BasicArray<number>;
+    crdtidx: number[];
     id: string;
     sheet: string;
     name: string;
@@ -451,7 +451,7 @@ export class ShadowMask extends WatchableObject implements classes.ShadowMask {
     shadows: BasicArray<Shadow>;
     disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, shadows: BasicArray<Shadow>, disabled?: boolean) {
+    constructor(crdtidx: number[], sheet: string, id: string, name: string, description: string, shadows: BasicArray<Shadow>, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -469,7 +469,7 @@ export class ShadowMask extends WatchableObject implements classes.ShadowMask {
 
 export class BlurMask extends WatchableObject implements classes.BlurMask {
     typeId = 'blur-mask';
-    crdtidx: BasicArray<number>;
+    crdtidx: number[];
     id: string;
     sheet: string;
     name: string;
@@ -477,7 +477,7 @@ export class BlurMask extends WatchableObject implements classes.BlurMask {
     blur: Blur;
     disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, blur: Blur, disabled?: boolean) {
+    constructor(crdtidx: number[], sheet: string, id: string, name: string, description: string, blur: Blur, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -495,7 +495,7 @@ export class BlurMask extends WatchableObject implements classes.BlurMask {
 
 export class BorderMask extends WatchableObject implements classes.BorderMask {
     typeId = 'border-mask';
-    crdtidx: BasicArray<number>;
+    crdtidx: number[];
     id: string;
     sheet: string;
     name: string;
@@ -503,7 +503,7 @@ export class BorderMask extends WatchableObject implements classes.BorderMask {
     border: BorderMaskType;
     disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, border: BorderMaskType, disabled?: boolean) {
+    constructor(crdtidx: number[], sheet: string, id: string, name: string, description: string, border: BorderMaskType, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -521,7 +521,7 @@ export class BorderMask extends WatchableObject implements classes.BorderMask {
 
 export class RadiusMask extends WatchableObject implements classes.RadiusMask {
     typeId = 'radius-mask';
-    crdtidx: BasicArray<number>;
+    crdtidx: number[];
     id: string;
     sheet: string;
     name: string;
@@ -529,7 +529,7 @@ export class RadiusMask extends WatchableObject implements classes.RadiusMask {
     radius: BasicArray<number>;
     disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, radius: BasicArray<number>, disabled?: boolean) {
+    constructor(crdtidx: number[], sheet: string, id: string, name: string, description: string, radius: BasicArray<number>, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;
@@ -543,7 +543,7 @@ export class RadiusMask extends WatchableObject implements classes.RadiusMask {
 
 export class TextMask extends WatchableObject implements classes.TextMask {
     typeId = 'text-mask';
-    crdtidx: BasicArray<number>;
+    crdtidx: number[];
     id: string;
     sheet: string;
     name: string;
@@ -551,7 +551,7 @@ export class TextMask extends WatchableObject implements classes.TextMask {
     text: TextAttr;
     disabled?: boolean;
 
-    constructor(crdtidx: BasicArray<number>, sheet: string, id: string, name: string, description: string, text: TextAttr, disabled?: boolean) {
+    constructor(crdtidx: number[], sheet: string, id: string, name: string, description: string, text: TextAttr, disabled?: boolean) {
         super();
         this.crdtidx = crdtidx;
         this.id = id;

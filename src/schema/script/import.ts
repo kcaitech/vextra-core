@@ -416,7 +416,9 @@ function generateNodeImport(node: Node, writer: Writer, config: ImportGeneration
         case 'array':
             generateArrayImport(node, writer, implPrefix, config);
             break;
-            
+        case 'native_array':
+            generateArrayImport(node, writer, implPrefix, config);
+            break;
         case 'object':
             generateObjectImport(node, writer, config);
             break;
@@ -431,12 +433,12 @@ function generateNodeImport(node: Node, writer: Writer, config: ImportGeneration
  * 生成数组类型的导入函数
  */
 function generateArrayImport(node: Node, writer: Writer, implPrefix: string, config: ImportGenerationConfig): void {
-    if (node.value.type !== 'array') {
+    if (node.value.type !== 'array' && node.value.type !== 'native_array') {
         throw new Error(`Expected array type, got ${node.value.type}`);
     }
     
     const item = node.value.item;
-    const arrayType = config.baseTypes?.array || 'Array';
+    const arrayType = node.value.type === 'native_array' ? 'Array' : (config.baseTypes?.array || 'Array');
     
     const typesPrefix = config.namespaces?.types || '';
     writer.nl(`export function import${node.name}(source: ${typesPrefix}${node.name}, ctx?: IImportContext): ${implPrefix}${node.name} `).sub(() => {

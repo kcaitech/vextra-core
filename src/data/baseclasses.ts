@@ -207,7 +207,7 @@ export class CornerRadius extends Basic {
     }
 }
 /* crdtidx */
-export type Crdtidx = BasicArray<number>
+export type Crdtidx = Array<number>
 /* curve point */
 export class CurvePoint extends Basic {
     typeId = "curve-point"

@@ -45,6 +45,9 @@ type NodeValue = {
 } | {
     type: 'enum',
     enum: string[]
+} | {
+    type: 'native_array',
+    item: ItemProp
 }
 
 /**
@@ -184,7 +187,7 @@ function parseNodeValue(schema: Record<string, unknown>): NodeValue {
     }
     
     // 处理数组类型
-    if (schema.type === 'array') {
+    if (schema.type === 'array' || schema.type === 'native_array') {
         const items = schema.items as Record<string, unknown>;
         if (!items) {
             throw new Error('Array schema must have items property');
@@ -202,7 +205,7 @@ function parseNodeValue(schema: Record<string, unknown>): NodeValue {
         }
 
         return {
-            type: 'array',
+            type: schema.type,
             item: {
                 type: itemType
             } as ItemProp

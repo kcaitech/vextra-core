@@ -155,7 +155,7 @@ export function importCornerType(source: types.CornerType, ctx?: IImportContext)
 }
 /* crdtidx */
 export function importCrdtidx(source: types.Crdtidx, ctx?: IImportContext): impl.Crdtidx {
-    const ret: impl.Crdtidx = new BasicArray()
+    const ret: impl.Crdtidx = new Array()
     source.forEach((source, i) => {
         ret.push(source)
     })

@@ -57,7 +57,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
     frameMaskDisabled?: boolean;
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,

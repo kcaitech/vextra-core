@@ -43,7 +43,7 @@ export class Page extends GroupShape implements classes.Page {
     guides?: BasicArray<Guide>;
     connections: BasicArray<Connection>;
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,

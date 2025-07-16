@@ -121,7 +121,7 @@ export class Shape extends Basic implements classes.Shape {
     }
 
     typeId = 'shape'
-    crdtidx: BasicArray<number>
+    crdtidx: number[]
     id: string
     type: ShapeType
     style: Style
@@ -153,7 +153,7 @@ export class Shape extends Basic implements classes.Shape {
     radiusMask?: string;
 
     constructor(
-        crdtidx: BasicArray<number>, id: string, name: string, type: ShapeType, transform: Transform, style: Style
+        crdtidx: number[], id: string, name: string, type: ShapeType, transform: Transform, style: Style
     ) {
         super()
         this.crdtidx = crdtidx
@@ -393,7 +393,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
     fixedRadius?: number
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -533,7 +533,7 @@ export class BoolShape extends GroupShape implements classes.BoolShape {
     typeId = 'bool-shape'
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -640,7 +640,7 @@ export class SymbolShape extends GroupShape implements classes.SymbolShape {
     autoLayout?: classes.AutoLayout
     frameMaskDisabled?: boolean
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -731,7 +731,7 @@ export class SymbolUnionShape extends SymbolShape implements classes.SymbolUnion
     typeId = 'symbol-union-shape'
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -780,7 +780,7 @@ export class PathShape extends Shape implements classes.PathShape {
     fixedRadius?: number
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -846,7 +846,7 @@ export class PathShape2 extends Shape implements classes.PathShape2 {
     fixedRadius?: number
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -896,7 +896,7 @@ export class RectShape extends PathShape implements classes.RectShape {
     typeId = 'rect-shape'
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -929,7 +929,7 @@ export class ImageShape extends RectShape implements classes.ImageShape {
     private __cacheData?: { buff: Uint8Array, base64: string };
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -999,7 +999,7 @@ export class OvalShape extends PathShape implements classes.OvalShape {
     innerRadius?: number
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -1038,7 +1038,7 @@ export class LineShape extends PathShape implements classes.LineShape {
     typeId = 'line-shape'
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -1080,7 +1080,7 @@ export class TextShape extends Shape implements classes.TextShape {
     }
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -1158,7 +1158,7 @@ export class CutoutShape extends PathShape implements classes.CutoutShape {
     exportOptions?: ExportOptions
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -1211,7 +1211,7 @@ export class PolygonShape extends PathShape implements classes.PolygonShape {
     counts: number
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -1241,7 +1241,7 @@ export class StarShape extends PathShape implements classes.StarShape {
     innerAngle: number;
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,
@@ -1273,7 +1273,7 @@ export class Connection extends PathShape implements classes.Connection {
     to?: ContactForm;
 
     constructor(
-        crdtidx: BasicArray<number>,
+        crdtidx: number[],
         id: string,
         name: string,
         type: ShapeType,

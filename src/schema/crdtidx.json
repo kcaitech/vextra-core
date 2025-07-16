@@ -1,6 +1,6 @@
 {
     "description": "crdtidx",
-    "type": "array",
+    "type": "native_array",
     "items": {
         "type": "number"
     }
