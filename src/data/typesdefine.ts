@@ -205,7 +205,7 @@ export type GraphicsContextSettings = {
     blendMode: BlendMode,
     opacity: number,
 }
-export type GroupShape_childs = Array<GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape>
+export type GroupShape_childs = Array<GroupShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape>
 /* guide axis */
 export enum GuideAxis {
     X = "X",
@@ -361,7 +361,6 @@ export type PathSegment = {
     isClosed: boolean,
 }
 export type PathShape_pathsegs = Array<PathSegment>
-export type PathShape2_pathsegs = Array<PathSegment>
 /* pattern transform */
 export type PatternTransform = {
     m00: number,
@@ -518,10 +517,8 @@ export type ShapeSize = {
 /* shape types */
 export enum ShapeType {
     Path = "path",
-    Path2 = "path2",
     Group = "group",
     Artboard = "artboard",
-    Image = "image",
     Page = "page",
     Text = "text",
     SymbolRef = "symbol-ref",
@@ -538,7 +535,6 @@ export enum ShapeType {
     Contact = "contact",
     Cutout = "cutout",
     BoolShape = "bool-shape",
-    Table2 = "table2",
 }
 export type Shape_prototypeInteractions = Array<PrototypeInteraction>
 /* side type */
@@ -626,8 +622,6 @@ export enum TableCellType {
 }
 export type TableShape_rowHeights = Array<CrdtNumber>
 export type TableShape_colWidths = Array<CrdtNumber>
-export type TableShape2_rowHeights = Array<CrdtNumber>
-export type TableShape2_colWidths = Array<CrdtNumber>
 /* text behaviour */
 export enum TextBehaviour {
     Flexible = "flexible",
@@ -1113,12 +1107,6 @@ export type PathShape = Shape & {
     pathsegs: PathShape_pathsegs,
     fixedRadius?: number,
 }
-/* path shape */
-export type PathShape2 = Shape & {
-    size: ShapeSize,
-    pathsegs: PathShape2_pathsegs,
-    fixedRadius?: number,
-}
 /* polygon shape */
 export type PolygonShape = PathShape & {
     counts: number,
@@ -1157,10 +1145,6 @@ export type ContactShape = PathShape & {
 }
 /* cutout shape */
 export type CutoutShape = PathShape
-/* image shape */
-export type ImageShape = PathShape & {
-    imageRef: string,
-}
 /* line shape */
 export type LineShape = PathShape
 /* oval shape */
@@ -1215,12 +1199,3 @@ export type SymbolShape = GroupShape & {
 }
 /* symbol union shape */
 export type SymbolUnionShape = SymbolShape
-/* table shape2 */
-export type TableShape2 = Shape & {
-    size: ShapeSize,
-    cells: Map<string, Artboard>,
-    cellAttrs: Map<string, TableCellAttr>,
-    rowHeights: TableShape2_rowHeights,
-    colWidths: TableShape2_colWidths,
-    textAttr?: TextAttr,
-}

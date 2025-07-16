@@ -2,10 +2,8 @@
     "description": "shape types",
     "enum": [
         "path",
-        "path2",
         "group",
         "artboard",
-        "image",
         "page",
         "text",
         "symbol-ref",
@@ -21,8 +19,7 @@
         "table-cell",
         "contact",
         "cutout",
-        "bool-shape",
-        "table2"
+        "bool-shape"
     ],
     "default": "path"
 }

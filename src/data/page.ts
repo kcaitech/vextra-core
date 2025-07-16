@@ -12,7 +12,6 @@ import {
     Connection,
     CutoutShape,
     GroupShape,
-    ImageShape,
     PathShape,
     RectShape,
     Shape,
@@ -49,7 +48,7 @@ export class Page extends GroupShape implements classes.Page {
         type: ShapeType,
         transform: Transform,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
+        childs: BasicArray<(GroupShape | Shape | PathShape | RectShape | TextShape)>,
         guides?: BasicArray<Guide>,
         connections?: BasicArray<Connection>
     ) {

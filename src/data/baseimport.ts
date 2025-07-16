@@ -26,14 +26,13 @@ type DocumentMeta_stylelib = BasicArray<impl.StyleSheet>
 type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
 type FillMask_fills = BasicArray<impl.Fill>
 type Gradient_stops = BasicArray<impl.Stop>
-type GroupShape_childs = BasicArray<impl.GroupShape | impl.ImageShape | impl.PathShape | impl.PathShape2 | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape>
+type GroupShape_childs = BasicArray<impl.GroupShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape>
 type Guide_crdtidx = BasicArray<number>
 type Page_guides = BasicArray<impl.Guide>
 type Page_connections = BasicArray<impl.Connection>
 type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
-type PathShape2_pathsegs = BasicArray<impl.PathSegment>
 type PrototypeInteraction_crdtidx = BasicArray<number>
 type ShadowMask_shadows = BasicArray<impl.Shadow>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInteraction>
@@ -45,8 +44,6 @@ type Style_contacts = BasicArray<impl.ContactRole>
 type SymbolShape_guides = BasicArray<impl.Guide>
 type TableShape_rowHeights = BasicArray<impl.CrdtNumber>
 type TableShape_colWidths = BasicArray<impl.CrdtNumber>
-type TableShape2_rowHeights = BasicArray<impl.CrdtNumber>
-type TableShape2_colWidths = BasicArray<impl.CrdtNumber>
 type Text_paras = BasicArray<impl.Para>
 type Variable_0 = BasicArray<impl.Fill | impl.Shadow | impl.PrototypeInteraction>
 export function importArtboard_guides(source: types.Artboard_guides, ctx?: IImportContext): Artboard_guides {
@@ -270,14 +267,8 @@ export function importGroupShape_childs(source: types.GroupShape_childs, ctx?: I
             if (source.typeId === "group-shape") {
                 return importGroupShape(source as types.GroupShape, ctx)
             }
-            if (source.typeId === "image-shape") {
-                return importImageShape(source as types.ImageShape, ctx)
-            }
             if (source.typeId === "path-shape") {
                 return importPathShape(source as types.PathShape, ctx)
-            }
-            if (source.typeId === "path-shape2") {
-                return importPathShape2(source as types.PathShape2, ctx)
             }
             if (source.typeId === "rect-shape") {
                 return importRectShape(source as types.RectShape, ctx)
@@ -476,13 +467,6 @@ export function importPathSegment(source: types.PathSegment, ctx?: IImportContex
 }
 export function importPathShape_pathsegs(source: types.PathShape_pathsegs, ctx?: IImportContext): PathShape_pathsegs {
     const ret: PathShape_pathsegs = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(importPathSegment(source, ctx))
-    })
-    return ret
-}
-export function importPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx?: IImportContext): PathShape2_pathsegs {
-    const ret: PathShape2_pathsegs = new BasicArray()
     source.forEach((source, i) => {
         ret.push(importPathSegment(source, ctx))
     })
@@ -768,20 +752,6 @@ export function importTableShape_rowHeights(source: types.TableShape_rowHeights,
 }
 export function importTableShape_colWidths(source: types.TableShape_colWidths, ctx?: IImportContext): TableShape_colWidths {
     const ret: TableShape_colWidths = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(importCrdtNumber(source, ctx))
-    })
-    return ret
-}
-export function importTableShape2_rowHeights(source: types.TableShape2_rowHeights, ctx?: IImportContext): TableShape2_rowHeights {
-    const ret: TableShape2_rowHeights = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(importCrdtNumber(source, ctx))
-    })
-    return ret
-}
-export function importTableShape2_colWidths(source: types.TableShape2_colWidths, ctx?: IImportContext): TableShape2_colWidths {
-    const ret: TableShape2_colWidths = new BasicArray()
     source.forEach((source, i) => {
         ret.push(importCrdtNumber(source, ctx))
     })
@@ -1498,24 +1468,6 @@ export function importPathShape(source: types.PathShape, ctx?: IImportContext): 
     importPathShapeOptional(ret, source, ctx)
     return ret
 }
-/* path shape */
-function importPathShape2Optional(tar: impl.PathShape2, source: types.PathShape2, ctx?: IImportContext) {
-    importShapeOptional(tar, source)
-    if (source.fixedRadius !== undefined) tar.fixedRadius = source.fixedRadius
-}
-export function importPathShape2(source: types.PathShape2, ctx?: IImportContext): impl.PathShape2 {
-    const ret: impl.PathShape2 = new impl.PathShape2 (
-        importCrdtidx(source.crdtidx, ctx),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importTransform(source.transform, ctx),
-        importStyle(source.style, ctx),
-        importShapeSize(source.size, ctx),
-        importPathShape2_pathsegs(source.pathsegs, ctx))
-    importPathShape2Optional(ret, source, ctx)
-    return ret
-}
 /* polygon shape */
 const importPolygonShapeOptional = importPathShapeOptional
 export function importPolygonShape(source: types.PolygonShape, ctx?: IImportContext): impl.PolygonShape {
@@ -1660,22 +1612,6 @@ export function importCutoutShape(source: types.CutoutShape, ctx?: IImportContex
         importShapeSize(source.size, ctx),
         importPathShape_pathsegs(source.pathsegs, ctx))
     importCutoutShapeOptional(ret, source, ctx)
-    return ret
-}
-/* image shape */
-const importImageShapeOptional = importPathShapeOptional
-export function importImageShape(source: types.ImageShape, ctx?: IImportContext): impl.ImageShape {
-    const ret: impl.ImageShape = new impl.ImageShape (
-        importCrdtidx(source.crdtidx, ctx),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importTransform(source.transform, ctx),
-        importStyle(source.style, ctx),
-        importShapeSize(source.size, ctx),
-        importPathShape_pathsegs(source.pathsegs, ctx),
-        source.imageRef)
-    importImageShapeOptional(ret, source, ctx)
     return ret
 }
 /* line shape */
@@ -1891,40 +1827,5 @@ export function importSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IIm
             return ret
         })())
     importSymbolUnionShapeOptional(ret, source, ctx)
-    return ret
-}
-/* table shape2 */
-function importTableShape2Optional(tar: impl.TableShape2, source: types.TableShape2, ctx?: IImportContext) {
-    importShapeOptional(tar, source)
-    if (source.textAttr !== undefined) tar.textAttr = importTextAttr(source.textAttr, ctx)
-}
-export function importTableShape2(source: types.TableShape2, ctx?: IImportContext): impl.TableShape2 {
-    const ret: impl.TableShape2 = new impl.TableShape2 (
-        importCrdtidx(source.crdtidx, ctx),
-        source.id,
-        source.name,
-        importShapeType(source.type, ctx),
-        importTransform(source.transform, ctx),
-        importStyle(source.style, ctx),
-        importShapeSize(source.size, ctx),
-        (() => {
-            const ret = new BasicMap<string, impl.Artboard>()
-            const _val = source.cells as any
-            objkeys(_val).forEach((val, k) => {
-                ret.set(k, importArtboard(val, ctx))
-            })
-            return ret
-        })(),
-        (() => {
-            const ret = new BasicMap<string, impl.TableCellAttr>()
-            const _val = source.cellAttrs as any
-            objkeys(_val).forEach((val, k) => {
-                ret.set(k, importTableCellAttr(val, ctx))
-            })
-            return ret
-        })(),
-        importTableShape2_rowHeights(source.rowHeights, ctx),
-        importTableShape2_colWidths(source.colWidths, ctx))
-    importTableShape2Optional(ret, source, ctx)
     return ret
 }

@@ -12,7 +12,7 @@ import { CurvePoint } from "./shape";
 import { ContactType, CurveMode } from "./typesdefine";
 // import { Page } from "./page";
 import { importPolygonShape, importStarShape } from "./baseimport";
-import { importArtboard, importContactShape, importBoolShape, importGroupShape, importImageShape, importLineShape, importOvalShape, importPathShape, importPathShape2, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
+import { importArtboard, importContactShape, importBoolShape, importGroupShape, importLineShape, importOvalShape, importPathShape, importRectShape, importSymbolRefShape, importTableCell, importTableShape, importTextShape } from "./baseimport";
 import * as types from "./typesdefine"
 import { ContactShape } from "./classes";
 import { BasicArray } from "./basic";
@@ -564,14 +564,8 @@ export function copyShape(source: types.Shape) {
     if (source.typeId == 'group-shape') {
         return importGroupShape(source as types.GroupShape)
     }
-    if (source.typeId == 'image-shape') {
-        return importImageShape(source as types.ImageShape)
-    }
     if (source.typeId == 'path-shape') {
         return importPathShape(source as types.PathShape)
-    }
-    if (source.typeId == 'path-shape2') {
-        return importPathShape2(source as types.PathShape2)
     }
     if (source.typeId == 'rect-shape') {
         return importRectShape(source as types.RectShape)

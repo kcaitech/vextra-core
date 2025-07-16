@@ -270,7 +270,7 @@ export class Validator {
      * @returns 验证结果
      */
     private validateArrayValue(value: any, schema: Node): boolean {
-        if (schema.value.type !== 'array') {
+        if (schema.value.type !== 'array' && schema.value.type !== 'native_array') {
             throw new Error(`Expected array schema, got ${schema.value.type}`);
         }
         
@@ -311,7 +311,8 @@ export class Validator {
                 
             case 'array':
                 return this.validateArrayValue(value, schema);
-                
+            case 'native_array':
+                return this.validateArrayValue(value, schema);
             default:
                 const exhaustiveCheck: never = schema.value;
                 throw new Error(`Unknown schema type: ${JSON.stringify(exhaustiveCheck)}`);

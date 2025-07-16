@@ -237,14 +237,8 @@ export function exportGroupShape_childs(source: types.GroupShape_childs, ctx?: I
             if (source.typeId === "group-shape") {
                 return exportGroupShape(source as types.GroupShape, ctx)
             }
-            if (source.typeId === "image-shape") {
-                return exportImageShape(source as types.ImageShape, ctx)
-            }
             if (source.typeId === "path-shape") {
                 return exportPathShape(source as types.PathShape, ctx)
-            }
-            if (source.typeId === "path-shape2") {
-                return exportPathShape2(source as types.PathShape2, ctx)
             }
             if (source.typeId === "rect-shape") {
                 return exportRectShape(source as types.RectShape, ctx)
@@ -441,13 +435,6 @@ export function exportPathSegment(source: types.PathSegment, ctx?: IExportContex
 }
 export function exportPathShape_pathsegs(source: types.PathShape_pathsegs, ctx?: IExportContext): types.PathShape_pathsegs {
     const ret: types.PathShape_pathsegs = []
-    source.forEach((source) => {
-        ret.push(exportPathSegment(source, ctx))
-    })
-    return ret
-}
-export function exportPathShape2_pathsegs(source: types.PathShape2_pathsegs, ctx?: IExportContext): types.PathShape2_pathsegs {
-    const ret: types.PathShape2_pathsegs = []
     source.forEach((source) => {
         ret.push(exportPathSegment(source, ctx))
     })
@@ -733,20 +720,6 @@ export function exportTableShape_rowHeights(source: types.TableShape_rowHeights,
 }
 export function exportTableShape_colWidths(source: types.TableShape_colWidths, ctx?: IExportContext): types.TableShape_colWidths {
     const ret: types.TableShape_colWidths = []
-    source.forEach((source) => {
-        ret.push(exportCrdtNumber(source, ctx))
-    })
-    return ret
-}
-export function exportTableShape2_rowHeights(source: types.TableShape2_rowHeights, ctx?: IExportContext): types.TableShape2_rowHeights {
-    const ret: types.TableShape2_rowHeights = []
-    source.forEach((source) => {
-        ret.push(exportCrdtNumber(source, ctx))
-    })
-    return ret
-}
-export function exportTableShape2_colWidths(source: types.TableShape2_colWidths, ctx?: IExportContext): types.TableShape2_colWidths {
-    const ret: types.TableShape2_colWidths = []
     source.forEach((source) => {
         ret.push(exportCrdtNumber(source, ctx))
     })
@@ -1400,15 +1373,6 @@ export function exportPathShape(source: types.PathShape, ctx?: IExportContext): 
     if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
     return ret
 }
-/* path shape */
-export function exportPathShape2(source: types.PathShape2, ctx?: IExportContext): types.PathShape2 {
-    const ret: types.PathShape2 = exportShape(source, ctx) as types.PathShape2
-    ret.typeId = "path-shape2"
-    ret.size = exportShapeSize(source.size, ctx)
-    ret.pathsegs = exportPathShape2_pathsegs(source.pathsegs, ctx)
-    if (source.fixedRadius !== undefined) ret.fixedRadius = source.fixedRadius
-    return ret
-}
 /* polygon shape */
 export function exportPolygonShape(source: types.PolygonShape, ctx?: IExportContext): types.PolygonShape {
     const ret: types.PolygonShape = exportPathShape(source, ctx) as types.PolygonShape
@@ -1482,15 +1446,6 @@ export function exportContactShape(source: types.ContactShape, ctx?: IExportCont
 export function exportCutoutShape(source: types.CutoutShape, ctx?: IExportContext): types.CutoutShape {
     const ret: types.CutoutShape = exportPathShape(source, ctx) as types.CutoutShape
     ret.typeId = "cutout-shape"
-    return ret
-}
-/* image shape */
-export function exportImageShape(source: types.ImageShape, ctx?: IExportContext): types.ImageShape {
-    const ret: types.ImageShape = exportPathShape(source, ctx) as types.ImageShape
-    ret.typeId = "image-shape"
-    ret.imageRef = source.imageRef
-    if (ctx?.medias) ctx.medias.add(ret.imageRef);
-
     return ret
 }
 /* line shape */
@@ -1611,29 +1566,5 @@ export function exportSymbolShape(source: types.SymbolShape, ctx?: IExportContex
 export function exportSymbolUnionShape(source: types.SymbolUnionShape, ctx?: IExportContext): types.SymbolUnionShape {
     const ret: types.SymbolUnionShape = exportSymbolShape(source, ctx) as types.SymbolUnionShape
     ret.typeId = "symbol-union-shape"
-    return ret
-}
-/* table shape2 */
-export function exportTableShape2(source: types.TableShape2, ctx?: IExportContext): types.TableShape2 {
-    const ret: types.TableShape2 = exportShape(source, ctx) as types.TableShape2
-    ret.typeId = "table-shape2"
-    ret.size = exportShapeSize(source.size, ctx)
-    ret.cells = (() => {
-        const ret: any = {}
-        source.cells.forEach((source, k) => {
-            ret[k] = exportArtboard(source, ctx)
-        })
-        return ret
-    })()
-    ret.cellAttrs = (() => {
-        const ret: any = {}
-        source.cellAttrs.forEach((source, k) => {
-            ret[k] = exportTableCellAttr(source, ctx)
-        })
-        return ret
-    })()
-    ret.rowHeights = exportTableShape2_rowHeights(source.rowHeights, ctx)
-    ret.colWidths = exportTableShape2_colWidths(source.colWidths, ctx)
-    if (source.textAttr !== undefined) ret.textAttr = exportTextAttr(source.textAttr, ctx)
     return ret
 }

@@ -9,8 +9,6 @@
  */
 
 import { TableShape, TableCell, TableLayout } from "./table";
-import { TableShape2 } from "./table2";
-import { TableCellAttr } from "./typesdefine";
 /**
  * 
  * @param table 
@@ -20,7 +18,7 @@ import { TableCellAttr } from "./typesdefine";
  * @param colEnd 
  * @param visible 
  */
-export function getTableCells<T>(table: TableShape | TableShape2,
+export function getTableCells<T>(table: TableShape,
     cellGetter: (ri: number, ci: number) => T | undefined,
     rowStart: number,
     rowEnd: number,

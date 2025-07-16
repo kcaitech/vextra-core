@@ -389,7 +389,7 @@ export class Shape extends Basic implements classes.Shape {
 export class GroupShape extends Shape implements classes.GroupShape {
 
     typeId = 'group-shape';
-    childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
+    childs: BasicArray<(GroupShape | Shape | PathShape | RectShape | TextShape)>
     fixedRadius?: number
 
     constructor(
@@ -399,7 +399,7 @@ export class GroupShape extends Shape implements classes.GroupShape {
         type: ShapeType,
         transform: Transform,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>
+        childs: BasicArray<(GroupShape | Shape | PathShape | RectShape | TextShape)>
     ) {
         super(
             crdtidx,
@@ -830,68 +830,6 @@ export class PathShape extends Shape implements classes.PathShape {
     }
 }
 
-export class PathShape2 extends Shape implements classes.PathShape2 {
-    get frame(): classes.ShapeFrame {
-        return new ShapeFrame(0, 0, this.size.width, this.size.height);
-    }
-
-    hasSize(): boolean {
-        return true;
-    }
-
-    typeId = 'path-shape2'
-    // @ts-ignore
-    size: ShapeSize;
-    pathsegs: BasicArray<PathSegment>
-    fixedRadius?: number
-
-    constructor(
-        crdtidx: number[],
-        id: string,
-        name: string,
-        type: ShapeType,
-        transform: Transform,
-        style: Style,
-        size: ShapeSize,
-        pathsegs: BasicArray<PathSegment>
-    ) {
-        super(
-            crdtidx,
-            id,
-            name,
-            type,
-            transform,
-            style
-        )
-        this.size = size;
-        this.pathsegs = pathsegs
-    }
-
-    getPathOfSize(frame: ShapeSize, fixedRadius?: number): Path {
-        const width = frame.width;
-        const height = frame.height;
-
-        fixedRadius = this.fixedRadius ?? fixedRadius;
-
-        const path: Path = new Path();
-        this.pathsegs.forEach((seg) => {
-            path.addPath(parsePath(seg.points, seg.isClosed, width, height, fixedRadius));
-        });
-
-        return path
-    }
-
-    get pathType() {
-        return PathType.Editable;
-    }
-
-    get radiusType() {
-        return (this.pathsegs.length === 1 && this.pathsegs[0].points.length === 4 && this.pathsegs[0].isClosed)
-            ? RadiusType.Rect
-            : RadiusType.Fixed;
-    }
-}
-
 export class RectShape extends PathShape implements classes.RectShape {
     typeId = 'rect-shape'
 
@@ -920,75 +858,6 @@ export class RectShape extends PathShape implements classes.RectShape {
     get radiusType() {
         return this.haveEdit ? RadiusType.Fixed : RadiusType.Rect;
     }
-}
-
-export class ImageShape extends RectShape implements classes.ImageShape {
-    typeId = 'image-shape'
-    imageRef: string;
-    private __imageMgr?: ResourceMgr<{ buff: Uint8Array, base64: string }>;
-    private __cacheData?: { buff: Uint8Array, base64: string };
-
-    constructor(
-        crdtidx: number[],
-        id: string,
-        name: string,
-        type: ShapeType,
-        transform: Transform,
-        style: Style,
-        size: ShapeSize,
-        pathsegs: BasicArray<PathSegment>,
-        imageRef: string,
-    ) {
-        super(
-            crdtidx,
-            id,
-            name,
-            type,
-            transform,
-            style,
-            size,
-            pathsegs,
-        )
-        this.imageRef = imageRef
-    }
-
-    setImageMgr(imageMgr: ResourceMgr<{ buff: Uint8Array, base64: string }>) {
-        this.__imageMgr = imageMgr;
-    }
-
-    private __startLoad: boolean = false;
-
-    peekImage(startLoad: boolean = false) {
-        const ret = this.__cacheData?.base64;
-        if (ret) return ret;
-        if (!this.imageRef) return "";
-        if (startLoad && !this.__startLoad) {
-            this.__startLoad = true;
-            this.__imageMgr && this.__imageMgr.get(this.imageRef).then((val) => {
-                if (!this.__cacheData) {
-                    this.__cacheData = val;
-                    if (val) this.notify();
-                }
-            })
-        }
-        return ret;
-    }
-
-    // image shape
-    async loadImage(): Promise<string> {
-        if (this.__cacheData) return this.__cacheData.base64;
-        this.__cacheData = this.__imageMgr && await this.__imageMgr.get(this.imageRef)
-        if (this.__cacheData) this.notify();
-        return this.__cacheData && this.__cacheData.base64 || "";
-    }
-
-    get isPathIcon() {
-        return false;
-    }
-
-    // get isImageFill() {
-    //     return true;
-    // }
 }
 
 export class OvalShape extends PathShape implements classes.OvalShape {

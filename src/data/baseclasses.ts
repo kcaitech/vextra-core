@@ -263,7 +263,7 @@ export class GraphicsContextSettings extends Basic {
         this.opacity = opacity
     }
 }
-type GroupShape_childs = BasicArray<GroupShape | ImageShape | PathShape | PathShape2 | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape>
+type GroupShape_childs = BasicArray<GroupShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape>
 type Guide_crdtidx = BasicArray<number>
 /* guide */
 export class Guide extends Basic {
@@ -369,7 +369,6 @@ export class PathSegment extends Basic {
     }
 }
 type PathShape_pathsegs = BasicArray<PathSegment>
-type PathShape2_pathsegs = BasicArray<PathSegment>
 /* pattern transform */
 export class PatternTransform extends Basic {
     typeId = "pattern-transform"
@@ -526,8 +525,6 @@ export class TableCellAttr extends Basic {
 }
 type TableShape_rowHeights = BasicArray<CrdtNumber>
 type TableShape_colWidths = BasicArray<CrdtNumber>
-type TableShape2_rowHeights = BasicArray<CrdtNumber>
-type TableShape2_colWidths = BasicArray<CrdtNumber>
 type Text_paras = BasicArray<Para>
 /* transform */
 export class Transform extends Basic {
@@ -1219,18 +1216,6 @@ export class PathShape extends Shape {
         this.pathsegs = pathsegs
     }
 }
-/* path shape */
-export class PathShape2 extends Shape {
-    typeId = "path-shape2"
-    size: ShapeSize
-    pathsegs: PathShape2_pathsegs
-    fixedRadius?: number
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape2_pathsegs) {
-        super(crdtidx, id, name, type, transform, style)
-        this.size = size
-        this.pathsegs = pathsegs
-    }
-}
 /* polygon shape */
 export class PolygonShape extends PathShape {
     typeId = "polygon-shape"
@@ -1303,15 +1288,6 @@ export class ContactShape extends PathShape {
 export class CutoutShape extends PathShape {
     typeId = "cutout-shape"
 }
-/* image shape */
-export class ImageShape extends PathShape {
-    typeId = "image-shape"
-    imageRef: string
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, pathsegs: PathShape_pathsegs, imageRef: string) {
-        super(crdtidx, id, name, type, transform, style, size, pathsegs)
-        this.imageRef = imageRef
-    }
-}
 /* line shape */
 export class LineShape extends PathShape {
     typeId = "line-shape"
@@ -1364,24 +1340,6 @@ export class SymbolShape extends GroupShape {
 /* symbol union shape */
 export class SymbolUnionShape extends SymbolShape {
     typeId = "symbol-union-shape"
-}
-/* table shape2 */
-export class TableShape2 extends Shape {
-    typeId = "table-shape2"
-    size: ShapeSize
-    cells: BasicMap<string, Artboard>
-    cellAttrs: BasicMap<string, TableCellAttr>
-    rowHeights: TableShape2_rowHeights
-    colWidths: TableShape2_colWidths
-    textAttr?: TextAttr
-    constructor(crdtidx: Crdtidx, id: string, name: string, type: ShapeType, transform: Transform, style: Style, size: ShapeSize, cells: BasicMap<string, Artboard>, cellAttrs: BasicMap<string, TableCellAttr>, rowHeights: TableShape2_rowHeights, colWidths: TableShape2_colWidths) {
-        super(crdtidx, id, name, type, transform, style)
-        this.size = size
-        this.cells = cells
-        this.cellAttrs = cellAttrs
-        this.rowHeights = rowHeights
-        this.colWidths = colWidths
-    }
 }
 /* artboard shape */
 export class Artboard extends GroupShape {

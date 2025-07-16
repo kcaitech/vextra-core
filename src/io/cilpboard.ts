@@ -28,11 +28,10 @@ import {
     exportCutoutShape, exportFillMask,
     exportGradient,
     exportGroupShape,
-    exportImageShape,
     exportLineShape,
     exportOvalShape,
     exportPathShape,
-    exportPathShape2, exportPolygonShape, exportRadiusMask,
+    exportPolygonShape, exportRadiusMask,
     exportRectShape, exportShadowMask,
     exportStarShape,
     exportSymbolRefShape,
@@ -52,11 +51,9 @@ import {
     importCutoutShape,
     importGradient,
     importGroupShape,
-    importImageShape,
     importLineShape,
     importOvalShape,
     importPathShape,
-    importPathShape2,
     importPolygonShape,
     importRectShape,
     importStarShape,
@@ -116,14 +113,10 @@ export function export_shape(shapes: Shape[]) {
             content = exportOvalShape(shape as unknown as types.OvalShape, ctx);
         } else if (type === ShapeType.Line) {
             content = exportLineShape(shape as unknown as types.LineShape, ctx);
-        } else if (type === ShapeType.Image) {
-            content = exportImageShape(shape as unknown as types.ImageShape, ctx);
         } else if (type === ShapeType.Text) {
             content = exportTextShape(shape as unknown as types.TextShape, ctx);
         } else if (type === ShapeType.Path) {
             content = exportPathShape(shape as unknown as types.PathShape, ctx);
-        } else if (type === ShapeType.Path2) {
-            content = exportPathShape2(shape as unknown as types.PathShape2, ctx);
         } else if (type === ShapeType.Artboard) {
             content = exportArtboard(shape as unknown as types.Artboard, ctx);
         } else if (type === ShapeType.Group) {
@@ -328,14 +321,10 @@ export function import_shape_from_clipboard(document: Document, source: Shape[],
             r = importOvalShape(_s as any as types.OvalShape, ctx);
         } else if (type === ShapeType.Line) {
             r = importLineShape(_s as any as types.LineShape, ctx);
-        } else if (type === ShapeType.Image) {
-            r = importImageShape(_s as any as types.ImageShape, ctx);
         } else if (type === ShapeType.Text) {
             r = importTextShape(_s as any as types.TextShape, ctx);
         } else if (type === ShapeType.Path) {
             r = importPathShape(_s as any as types.PathShape, ctx);
-        } else if (type === ShapeType.Path2) {
-            r = importPathShape2(_s as any as types.PathShape2, ctx);
         } else if (type === ShapeType.Artboard) {
             const children = (_s as any).childs;
             children && children.length && set_childs_id(children, matched);

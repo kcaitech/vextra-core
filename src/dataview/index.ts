@@ -12,16 +12,13 @@ export * from "./artboard";
 export * from "./basic";
 export * from "./contactline";
 export * from "./groupshape";
-export * from "./imageshape";
 export * from "./line";
 export * from "./pathshape";
-export * from "./pathshape2";
 export * from "./shape";
 export * from "./symbol";
 export * from "./symbolref";
 export * from "./table";
 export * from "./tablecell";
-export * from "./table2";
 export * from "./textshape";
 export * from "./page"
 export * from "./el"
@@ -59,7 +56,6 @@ import { ShapeView } from "./shape";
 function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.Artboard, ArtboardView);
     comsMap.set(ShapeType.Group, GroupShapeView);
-    comsMap.set(ShapeType.Image, RectShapeView);
     comsMap.set(ShapeType.BoolShape, BoolShapeView);
     comsMap.set(ShapeType.Path, PathShapeView);
     comsMap.set(ShapeType.Oval, PathShapeView);

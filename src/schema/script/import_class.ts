@@ -321,7 +321,7 @@ export function exportNode(node: Node, writer: Writer, config: ImportGenerationC
         writer.nl(`/* ${node.description} */`);
     }
 
-    if (node.value.type === 'array') {
+    if (node.value.type === 'array' || node.value.type === 'native_array') {
         generateArrayTypeAlias(node, writer, config);
     } else if (node.value.type === 'object') {
         generateObjectClass(node, writer, config);
@@ -335,7 +335,7 @@ export function exportNode(node: Node, writer: Writer, config: ImportGenerationC
  * 生成数组类型别名
  */
 function generateArrayTypeAlias(node: Node, writer: Writer, config: ImportGenerationConfig): void {
-    if (node.value.type !== 'array') {
+    if (node.value.type !== 'array' && node.value.type !== 'native_array') {
         throw new Error(`Expected array type, got ${node.value.type}`);
     }
     
@@ -345,8 +345,8 @@ function generateArrayTypeAlias(node: Node, writer: Writer, config: ImportGenera
     
     const typeModifier = node.inner ? '' : 'export ';
     const item = node.value.item;
-    
-    writer.nl(`${typeModifier}type ${node.name} = ${config.baseTypes?.array || 'Array'}<`);
+    const arrayType = node.value.type === 'native_array' ? 'Array' : (config.baseTypes?.array || 'Array');
+    writer.nl(`${typeModifier}type ${node.name} = ${arrayType}<`);
     exportBaseProp(item, writer, node.root, config);
     writer.append('>');
 }

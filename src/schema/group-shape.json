@@ -10,13 +10,7 @@
                         "$ref": "#"
                     },
                     {
-                        "$ref": "./image-shape.json"
-                    },
-                    {
                         "$ref": "./path-shape.json"
-                    },
-                    {
-                        "$ref": "./path-shape2.json"
                     },
                     {
                         "$ref": "./rect-shape.json"

@@ -10,7 +10,6 @@
 
 import {
     GroupShape,
-    ImageShape,
     PathShape,
     RectShape,
     Shape,
@@ -63,7 +62,7 @@ export class Artboard extends GroupShape implements classes.Artboard {
         type: ShapeType,
         transform: Transform,
         style: Style,
-        childs: BasicArray<(GroupShape | Shape | ImageShape | PathShape | RectShape | TextShape)>,
+        childs: BasicArray<(GroupShape | Shape | PathShape | RectShape | TextShape)>,
         size: ShapeSize,
         haveEdit?: boolean,
         guides?: BasicArray<Guide>,
