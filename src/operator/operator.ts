@@ -17,7 +17,6 @@ import {
     GroupShape,
     PathSegment,
     PathShape,
-    PathShape2,
     PolygonShape,
     Shape,
     StarShape,
@@ -848,7 +847,7 @@ export class Operator {
         const cornerRadius = shape instanceof Variable ? shape.value : shape.cornerRadius;
         this.addOp(basicapi.shapeModifyRadius2(shape, cornerRadius, lt, rt, rb, lb));
     }
-    shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | PathShape2 | TextShape, fixedRadius: number | undefined) {
+    shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | TextShape, fixedRadius: number | undefined) {
         this._shapeModifyAttr(page, shape, "fixedRadius", fixedRadius);
     }
     shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: types.Point2D, segmentIndex: number) {

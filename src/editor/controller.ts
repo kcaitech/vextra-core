@@ -12,7 +12,7 @@ import {
     translate,
     translateTo,
 } from "./frame";
-import { CurvePoint, GroupShape, PathShape, PathShape2, Shape, ShapeFrame, ShapeType } from "../data/shape";
+import { CurvePoint, GroupShape, PathShape, Shape, ShapeFrame, ShapeType } from "../data/shape";
 import { CurveMode } from "../data/typesdefine";
 import {
     newDefaultTextShape,
@@ -352,7 +352,7 @@ export class Controller {
         const execute2 = (range: Map<number, number[]>, dx: number, dy: number) => {
             status === Status.Pending
             try {
-                const pathsegs = (shape as any as PathShape2).pathsegs;
+                const pathsegs = (shape as any as PathShape).pathsegs;
                 range.forEach((indexes, segment) => {
                     const points = pathsegs[segment].points;
                     if (!points?.length) {
@@ -369,7 +369,7 @@ export class Controller {
         const executeRadius = (range: Map<number, number[]>, r: number) => {
             status === Status.Pending
             try {
-                const pathsegs = (shape as any as PathShape2).pathsegs;
+                const pathsegs = (shape as any as PathShape).pathsegs;
                 range.forEach((indexes, segment) => {
                     const points = pathsegs[segment].points;
                     if (!points?.length) {

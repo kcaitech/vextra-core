@@ -8,23 +8,22 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { exportArtboard, exportGroupShape, exportImageShape, exportLineShape, 
+import { exportArtboard, exportGroupShape, exportLineShape, 
     exportOvalShape, exportPathShape, exportRectShape, 
     exportSymbolRefShape, exportTextShape, 
-    exportTableShape, exportPathShape2, exportTableCell, 
+    exportTableShape, exportTableCell, 
     exportContactShape, exportSymbolShape, exportSymbolUnionShape, 
     exportCutoutShape, exportPolygonShape, exportStarShape } from "../data/baseexport";
 import { Artboard } from "../data/artboard";
-import { GroupShape, ImageShape, LineShape, OvalShape, PathShape, 
-    PathShape2, RectShape, Shape, ShapeType, SymbolUnionShape, 
+import { GroupShape, LineShape, OvalShape, PathShape, 
+    RectShape, Shape, ShapeType, SymbolUnionShape, 
     SymbolShape, TextShape, CutoutShape, PolygonShape, StarShape } from "../data/shape";
 import { TableCell, TableShape } from "../data/table";
 import { ContactShape } from "../data/contact";
 import { Page } from "../data/page";
 import { SymbolRefShape } from "../data/classes";
-import { IImportContext, importArtboard, importContactShape, importGroupShape, 
-    importImageShape, 
-    importLineShape, importOvalShape, importPathShape, importPathShape2, 
+import { IImportContext, importArtboard, importContactShape, importGroupShape,  
+    importLineShape, importOvalShape, importPathShape, 
     importRectShape, importSymbolUnionShape, importSymbolRefShape, importSymbolShape, 
     importTableCell, importTableShape, importTextShape, importCutoutShape, importBoolShape, 
     importPolygonShape, importStarShape } from "../data/baseimport";
@@ -102,9 +101,7 @@ export function setFrame(page: Page, shape: Shape, x: number, y: number, w: numb
 const imhdl: { [key: string]: (source: any, ctx?: IImportContext) => any } = {};
 imhdl['bool-shape'] = importBoolShape;
 imhdl['group-shape'] = importGroupShape;
-imhdl['image-shape'] = importImageShape;
 imhdl['path-shape'] = importPathShape;
-imhdl['path-shape2'] = importPathShape2;
 imhdl['rect-shape'] = importRectShape;
 imhdl['symbol-ref-shape'] = importSymbolRefShape;
 imhdl['text-shape'] = importTextShape;
@@ -130,11 +127,9 @@ export function importShape(data: string | Object, document: Document, page: Pag
 export function exportShape(shape: Shape): Object {
     switch (shape.type) {
         case ShapeType.Artboard: return (exportArtboard(shape as Artboard))
-        case ShapeType.Image: return (exportImageShape(shape as ImageShape)) // todo 图片？？
         case ShapeType.Line: return (exportLineShape(shape as LineShape))
         case ShapeType.Oval: return (exportOvalShape(shape as OvalShape))
         case ShapeType.Path: return (exportPathShape(shape as PathShape))
-        case ShapeType.Path2: return (exportPathShape2(shape as PathShape2))
         case ShapeType.Rectangle: return (exportRectShape(shape as RectShape))
         case ShapeType.SymbolRef: return (exportSymbolRefShape(shape as SymbolRefShape))
         case ShapeType.Text: return (exportTextShape(shape as TextShape))

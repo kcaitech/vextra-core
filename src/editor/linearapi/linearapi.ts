@@ -32,7 +32,7 @@ import {
 } from "../../data";
 import { _ov, override_variable, shape4Autolayout, shape4border, shape4contextSettings, shape4cornerRadius, shape4fill, shape4shadow } from "../symbol";
 import { update_frame_by_points } from "../utils/path";
-import { GroupShape, PathShape2, SymbolShape, TextShape, RadiusType } from "../../data";
+import { GroupShape, SymbolShape, TextShape, RadiusType } from "../../data";
 import { BatchAction, BatchAction5, PageEditor } from "../page";
 import { TableEditor } from "../table";
 import { TidyUpAlign, tidyUpLayout } from "../utils/auto_layout";
@@ -319,7 +319,7 @@ export class LinearApi {
 
                     if (shape.isVirtualShape) continue;
 
-                    if (shape instanceof PathShape || shape instanceof PathShape2) {
+                    if (shape instanceof PathShape) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
@@ -333,7 +333,7 @@ export class LinearApi {
                     }
                 } else {
                     if (shape.isVirtualShape || shape.radiusType === RadiusType.None) continue;
-                    if (shape instanceof PathShape || shape instanceof PathShape2) {
+                    if (shape instanceof PathShape) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) continue;

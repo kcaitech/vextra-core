@@ -13,7 +13,6 @@ import {
     CornerRadius,
     GroupShape,
     PathShape,
-    PathShape2,
     PolygonShape,
     RectShape,
     Shape,
@@ -204,7 +203,7 @@ export function shapeModifyRadius2(parent: Artboard | SymbolShape | Variable, co
     if (cornerRadius.rb !== rb && rb >= 0) ops.push(crdtSetAttr(cornerRadius, 'rb', rb));
     return ops;
 }
-export function shapeModifyFixedRadius(shape: GroupShape | PathShape | PathShape2, fixedRadius: number | undefined) {
+export function shapeModifyFixedRadius(shape: GroupShape | PathShape, fixedRadius: number | undefined) {
     return crdtSetAttr(shape, 'fixedRadius', fixedRadius);
 }
 export function shapeModifyBoolOp(shape: Shape, op: BoolOp | undefined) {

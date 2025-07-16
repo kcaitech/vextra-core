@@ -10,7 +10,7 @@
 
 import { Operator } from "../../operator/operator";
 import { BorderPosition, CurveMode, ShapeType } from "../../data/typesdefine";
-import { CurvePoint, PathShape, PathShape2, Point2D, Shape } from "../../data/shape";
+import { CurvePoint, PathShape, Point2D, Shape } from "../../data/shape";
 import { Page } from "../../data/page";
 import { v4 } from "uuid";
 import { uuid } from "../../basic/uuid";
@@ -114,7 +114,7 @@ export function __round_curve_point(points: CurvePoint[], index: number) {
 }
 
 export function init_curve(order: 2 | 3, shape: Shape, page: Page, op: Operator, curve_point: CurvePoint, index: number, segmentIndex: number, init = (Math.sqrt(2) / 4)) {
-    const __shape = shape as PathShape2;
+    const __shape = shape as PathShape;
     const points = __shape.pathsegs[segmentIndex]?.points;
 
     if (!points?.length) return;

@@ -27,7 +27,6 @@ import {
     PaddingDir,
     Page,
     PathShape,
-    PathShape2,
     PolygonShape,
     RadiusType,
     RectShape,
@@ -1060,7 +1059,7 @@ export class PageEditor {
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
             });
-            pathShape = op.shapeInsert(this.__document, this.page, savep, pathShape, saveidx) as PathShape | PathShape2;
+            pathShape = op.shapeInsert(this.__document, this.page, savep, pathShape, saveidx) as PathShape;
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const s = adapt2Shape(shapes[i]);
                 const p = s.parent as GroupShape;
@@ -1664,7 +1663,7 @@ export class PageEditor {
 
                     if (shape.isVirtualShape) continue;
 
-                    if (shape instanceof PathShape || shape instanceof PathShape2) {
+                    if (shape instanceof PathShape) {
                         const points = shape.pathsegs[0].points;
                         for (let _i = 0; _i < 4; _i++) {
                             const val = values[_i];
@@ -1680,7 +1679,7 @@ export class PageEditor {
                     if (shape.isVirtualShape || shape.radiusType === RadiusType.None) continue;
                     if (shape instanceof ContactShape) {
                         op.shapeModifyFixedRadius(page, shape as ContactShape, values[0]);
-                    } else if (shape instanceof PathShape || shape instanceof PathShape2) {
+                    } else if (shape instanceof PathShape) {
                         shape.pathsegs.forEach((seg, index) => {
                             for (let _i = 0; _i < seg.points.length; _i++) {
                                 if (seg.points[_i].radius === values[0]) continue;
@@ -3418,7 +3417,7 @@ export class PageEditor {
                     op.shapeModifyRadius2(page, _shape, radius[0], radius[1], radius[2], radius[3]);
                 } else if (shape instanceof Artboard || shape instanceof SymbolShape) {
                     op.shapeModifyRadius2(page, shape, radius[0], radius[1], radius[2], radius[3]);
-                } else if (shape instanceof PathShape || shape instanceof PathShape2) {
+                } else if (shape instanceof PathShape) {
                     const isRect = shape.radiusType === RadiusType.Rect;
                     if (isRect) {
                         const points = shape.pathsegs[0].points;

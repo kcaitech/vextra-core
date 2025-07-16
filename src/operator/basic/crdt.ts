@@ -19,7 +19,7 @@ import { BasicArray } from "../../data/basic";
 // 定义数组的index为<[i1, i2, i3, ...], order>, uid.
 export interface CrdtItem {
     id: string; // uuid
-    crdtidx: BasicArray<number>;
+    crdtidx: Array<number>;
 }
 
 export interface CrdtArray extends Array<CrdtItem> { }
@@ -27,10 +27,10 @@ export interface CrdtArray extends Array<CrdtItem> { }
 // 数组的操作仅处理move
 export interface ArrayMoveOp extends Op {
     data: CrdtItem | string | undefined;
-    to: BasicArray<number> | undefined; // undefined表示不在列表里
+    to: Array<number> | undefined; // undefined表示不在列表里
 }
 export interface ArrayMoveOpRecord extends ArrayMoveOp {
-    from: BasicArray<number> | undefined;
+    from: Array<number> | undefined;
     origin: CrdtItem | string | undefined;
     target?: CrdtItem[];
     data2: CrdtItem | undefined; // 新插入的data
@@ -38,7 +38,7 @@ export interface ArrayMoveOpRecord extends ArrayMoveOp {
 
 export interface TreeIndex {
     id: string;
-    index: BasicArray<number>;
+    index: Array<number>;
 }
 
 export interface TreeMoveOp extends Op {
@@ -175,7 +175,7 @@ export function genArrIndex(preIndex: number[] | undefined, nextIndex: number[] 
 }
 
 // 数组操作
-export function crdtGetArrIndex(arr: Array<CrdtItem>, index: number): { valid: boolean, index: BasicArray<number> } {
+export function crdtGetArrIndex(arr: Array<CrdtItem>, index: number): { valid: boolean, index: Array<number> } {
     if (index < 0 || index > arr.length) throw new Error("index out of range")
     const preIdx = index > 0 ? arr[index - 1].crdtidx : undefined;
     const nexIdx = index < arr.length ? arr[index].crdtidx : undefined;
@@ -384,7 +384,7 @@ export function compArrIndex(a: number[], b: number[]): number {
     return a.length - b.length
 }
 
-export function arrLowerIndex(arr: CrdtArray, idx: BasicArray<number>): number {
+export function arrLowerIndex(arr: CrdtArray, idx: Array<number>): number {
     // 二分查找
     let li = 0, ri = arr.length; // 左闭右开区间
     while (li < ri) {

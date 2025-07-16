@@ -12,7 +12,6 @@ import {
     BoolShape,
     GroupShape,
     PathShape,
-    PathShape2,
     RectShape,
     Shape,
     ShapeType,
@@ -513,7 +512,7 @@ export class ShapeEditor {
     public setFixedRadius(fixedRadius: number) {
         if (this.shape instanceof GroupShape) {
             if (!(this.shape instanceof BoolShape)) return;
-        } else if (!(this.shape instanceof PathShape || this.shape instanceof PathShape2 || this.shape instanceof TextShape)) {
+        } else if (!(this.shape instanceof PathShape || this.shape instanceof TextShape)) {
             return;
         }
         this._repoWrap("setFixedRadius", (op) => {
