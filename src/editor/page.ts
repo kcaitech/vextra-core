@@ -142,10 +142,9 @@ import {
 } from "../data/baseclasses";
 import {
     calculateInnerAnglePosition,
-    getPolygonPoints,
-    getPolygonVertices,
     update_frame_by_points
 } from "./utils/path";
+import { getPolygonPoints, getPolygonVertices } from "../data/utils";
 import { adapt_for_artboard, modify_shapes_height, modify_shapes_width } from "./utils/common";
 import { IRepository, ISave4Restore, LocalCmd, SelectionState } from "../repo";
 import { Operator, TextShapeLike } from "../operator/operator";
