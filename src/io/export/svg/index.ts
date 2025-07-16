@@ -8,4 +8,23 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-export { exportSvg } from "./normal";
+import { Shape } from "../../../data/shape";
+import {
+    layoutShape
+} from "../../../dataview";
+import { ShapeView } from "../../../dataview/shape";
+
+export function exportSvg(shape: Shape | ShapeView): string {
+    let view: ShapeView;
+    if (shape instanceof Shape) {
+        view = layoutShape(shape).view;
+    } else {
+        view = shape;
+    }
+    view.render('SVG');
+    const content = view.toSVGString();
+    if (shape instanceof Shape) {
+        view.destroy();
+    }
+    return content;
+}

@@ -8,7 +8,9 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Fill, ImageScaleMode, ShapeSize } from "../../../data/classes";
+import { Fill, ImageScaleMode, ShapeSize } from "../../../data";
+
+import { Image, Path2D, OffscreenCanvas, DOMMatrix } from "../types";
 
 const default_url = 'data:image/svg+xml;base64,PHN2ZyBkYXRhLXYtM2YyZGNlYTM9IiIgZGF0YS12LTJkNjBmMTNlPSIiIHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiB2aWV3Qm94PSIwIDAgNDAwIDQwMCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4bWxuczp4aHRtbD0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pbllNaW4gbWVldCIgb3ZlcmZsb3c9InZpc2libGUiIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiB0cmFuc3BhcmVudDsiPjxnPjxnPjxwYXRoIGQ9Ik0gMCAwIEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgTCAwIDAgWiIgZmlsbD0icmdiKDIxNiwyMTYsMjE2KSIgZmlsbC1vcGFjaXR5PSIxIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsMTAwKSI+PHBhdGggZD0iTSAwIDAgTCAxMDAgMCBMIDEwMCAxMDAgTCAwIDEwMCBMIDAgMCBaIiBmaWxsPSJyZ2IoMjE2LDIxNiwyMTYpIiBmaWxsLW9wYWNpdHk9IjEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwyMDApIj48cGF0aCBkPSJNIDAgMCBMIDEwMCAwIEwgMTAwIDEwMCBMIDAgMTAwIEwgMCAwIFoiIGZpbGw9InJnYigyMTYsMjE2LDIxNikiIGZpbGwtb3BhY2l0eT0iMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLDMwMCkiPjxwYXRoIGQ9Ik0gMCAwIEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgTCAwIDAgWiIgZmlsbD0icmdiKDIxNiwyMTYsMjE2KSIgZmlsbC1vcGFjaXR5PSIxIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwMCwzMDApIj48cGF0aCBkPSJNIDAgMCBMIDEwMCAwIEwgMTAwIDEwMCBMIDAgMTAwIEwgMCAwIFoiIGZpbGw9InJnYigyMTYsMjE2LDIxNikiIGZpbGwtb3BhY2l0eT0iMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMDAsMzAwKSI+PHBhdGggZD0iTSAwIDAgTCAxMDAgMCBMIDEwMCAxMDAgTCAwIDEwMCBMIDAgMCBaIiBmaWxsPSJyZ2IoMjU1LDI1NSwyNTUpIiBmaWxsLW9wYWNpdHk9IjEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzAwLDMwMCkiPjxwYXRoIGQ9Ik0gMCAwIEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgTCAwIDAgWiIgZmlsbD0icmdiKDAsMCwwKSIgZmlsbC1vcGFjaXR5PSIxIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwMCwyMDApIj48cGF0aCBkPSJNIDAgMCBMIDEwMCAwIEwgMTAwIDEwMCBMIDAgMTAwIEwgMCAwIFoiIGZpbGw9InJnYigyMTYsMjE2LDIxNikiIGZpbGwtb3BhY2l0eT0iMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMDAsMjAwKSI+PHBhdGggZD0iTSAwIDAgTCAxMDAgMCBMIDEwMCAxMDAgTCAwIDEwMCBMIDAgMCBaIiBmaWxsPSJyZ2IoMCwwLDApIiBmaWxsLW9wYWNpdHk9IjEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzAwLDIwMCkiPjxwYXRoIGQ9Ik0gMCAwIEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgTCAwIDAgWiIgZmlsbD0icmdiKDI1NSwyNTUsMjU1KSIgZmlsbC1vcGFjaXR5PSIxIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwMCwxMDApIj48cGF0aCBkPSJNIDAgMCBMIDEwMCAwIEwgMTAwIDEwMCBMIDAgMTAwIEwgMCAwIFoiIGZpbGw9InJnYigyMTYsMjE2LDIxNikiIGZpbGwtb3BhY2l0eT0iMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMDAsMTAwKSI+PHBhdGggZD0iTSAwIDAgTCAxMDAgMCBMIDEwMCAxMDAgTCAwIDEwMCBMIDAgMCBaIiBmaWxsPSJyZ2IoMjU1LDI1NSwyNTUpIiBmaWxsLW9wYWNpdHk9IjEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzAwLDEwMCkiPjxwYXRoIGQ9Ik0gMCAwIEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgTCAwIDAgWiIgZmlsbD0icmdiKDAsMCwwKSIgZmlsbC1vcGFjaXR5PSIxIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwMCwwKSI+PHBhdGggZD0iTSAwIDAgTCAxMDAgMCBMIDEwMCAxMDAgTCAwIDEwMCBMIDAgMCBaIiBmaWxsPSJyZ2IoMjE2LDIxNiwyMTYpIiBmaWxsLW9wYWNpdHk9IjEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAwLDApIj48cGF0aCBkPSJNIDAgMCBMIDEwMCAwIEwgMTAwIDEwMCBMIDAgMTAwIEwgMCAwIFoiIGZpbGw9InJnYigwLDAsMCkiIGZpbGwtb3BhY2l0eT0iMSIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMDAsMCkiPjxwYXRoIGQ9Ik0gMCAwIEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgTCAwIDAgWiIgZmlsbD0icmdiKDI1NSwyNTUsMjU1KSIgZmlsbC1vcGFjaXR5PSIxIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsMzAwKSI+PHBhdGggZD0iTSAwIDAgTCAxMDAgMCBMIDEwMCAxMDAgTCAwIDEwMCBMIDAgMCBaIiBmaWxsPSJyZ2IoMjU1LDI1NSwyNTUpIiBmaWxsLW9wYWNpdHk9IjEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLDMwMCkiPjxwYXRoIGQ9Ik0gMCAwIEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgTCAwIDAgWiIgZmlsbD0icmdiKDAsMCwwKSIgZmlsbC1vcGFjaXR5PSIxIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsMjAwKSI+PHBhdGggZD0iTSAwIDAgTCAxMDAgMCBMIDEwMCAxMDAgTCAwIDEwMCBMIDAgMCBaIiBmaWxsPSJyZ2IoMCwwLDApIiBmaWxsLW9wYWNpdHk9IjEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLDIwMCkiPjxwYXRoIGQ9Ik0gMCAwIEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgTCAwIDAgWiIgZmlsbD0icmdiKDI1NSwyNTUsMjU1KSIgZmlsbC1vcGFjaXR5PSIxIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsMTAwKSI+PHBhdGggZD0iTSAwIDAgTCAxMDAgMCBMIDEwMCAxMDAgTCAwIDEwMCBMIDAgMCBaIiBmaWxsPSJyZ2IoMjU1LDI1NSwyNTUpIiBmaWxsLW9wYWNpdHk9IjEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAwLDEwMCkiPjxwYXRoIGQ9Ik0gMCAwIEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgTCAwIDAgWiIgZmlsbD0icmdiKDAsMCwwKSIgZmlsbC1vcGFjaXR5PSIxIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9nPjxnPjxwYXRoIGQ9Ik0gMCAwIEwgMTAwIDAgTCAxMDAgMTAwIEwgMCAxMDAgTCAwIDAgWiIgZmlsbD0icmdiKDAsMCwwKSIgZmlsbC1vcGFjaXR5PSIxIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCwwKSI+PHBhdGggZD0iTSAwIDAgTCAxMDAgMCBMIDEwMCAxMDAgTCAwIDEwMCBMIDAgMCBaIiBmaWxsPSJyZ2IoMjU1LDI1NSwyNTUpIiBmaWxsLW9wYWNpdHk9IjEiIHN0cm9rZT0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIwIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L2c+PC9nPjwvc3ZnPg=='
 
@@ -16,14 +18,14 @@ const handler: { [key: string]: (ctx: CanvasRenderingContext2D | OffscreenCanvas
 
 handler[ImageScaleMode.Fill] = function (ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, frame: ShapeSize, fill: Fill, path2D: Path2D): any {
     const url = fill.peekImage(true) || default_url;
-    let image_w = fill.originalImageWidth || frame.width;
-    let image_h = fill.originalImageHeight || frame.height;
     const m = ctx.getTransform();
     const img = new Image();
     img.src = url;
-    img.width = image_w;
-    img.height = image_h;
     img.onload = () => {
+        // Use actual image dimensions after loading
+        const image_w = img.width;
+        const image_h = img.height;
+        
         ctx.save();
         ctx.setTransform(m)
         ctx.clip(path2D, "evenodd");
@@ -31,7 +33,7 @@ handler[ImageScaleMode.Fill] = function (ctx: CanvasRenderingContext2D | Offscre
         const offCtx = offscreen.getContext('2d')!;
         const pattern = offCtx.createPattern(img, 'no-repeat');
         let matrix = new DOMMatrix();
-        const rotatedDims = calculateRotatedDimensions(img.width, img.height, fill.rotation || 0);
+        const rotatedDims = calculateRotatedDimensions(image_w, image_h, fill.rotation || 0);
         const fitScaleX = frame.width / rotatedDims.width;
         const fitScaleY = frame.height / rotatedDims.height;
         const fitScale = Math.max(fitScaleX, fitScaleY);
@@ -40,7 +42,7 @@ handler[ImageScaleMode.Fill] = function (ctx: CanvasRenderingContext2D | Offscre
             .translate(frame.width / 2, frame.height / 2)
             .rotate(fill.rotation || 0)
             .scale(fitScale)
-            .translate(-img.width / 2, -img.height / 2);
+            .translate(-image_w / 2, -image_h / 2);
         if (pattern && offCtx) {
             pattern.setTransform(matrix);
             offCtx.fillStyle = pattern;
@@ -57,14 +59,14 @@ handler[ImageScaleMode.Fill] = function (ctx: CanvasRenderingContext2D | Offscre
 
 handler[ImageScaleMode.Fit] = function (ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, frame: ShapeSize, fill: Fill, path2D: Path2D): any {
     const url = fill.peekImage(true) || default_url;
-    let image_w = fill.originalImageWidth || frame.width;
-    let image_h = fill.originalImageHeight || frame.height;
     const m = ctx.getTransform();
     const img = new Image();
     img.src = url;
-    img.width = image_w;
-    img.height = image_h;
     img.onload = () => {
+        // Use actual image dimensions after loading
+        const image_w = img.width;
+        const image_h = img.height;
+        
         ctx.save();
         ctx.setTransform(m);
         ctx.clip(path2D, "evenodd");
@@ -72,7 +74,7 @@ handler[ImageScaleMode.Fit] = function (ctx: CanvasRenderingContext2D | Offscree
         const offCtx = offscreen.getContext('2d')!;
         let matrix = new DOMMatrix();
         const pattern = offCtx.createPattern(img, 'no-repeat');
-        const containDims = calculateRotatedDimensions(img.width, img.height, fill.rotation || 0);
+        const containDims = calculateRotatedDimensions(image_w, image_h, fill.rotation || 0);
         const containScaleX = frame.width / containDims.width;
         const containScaleY = frame.height / containDims.height;
         const containScale = Math.min(containScaleX, containScaleY);
@@ -80,13 +82,13 @@ handler[ImageScaleMode.Fit] = function (ctx: CanvasRenderingContext2D | Offscree
             .translate(frame.width / 2, frame.height / 2)
             .rotate(fill.rotation || 0)
             .scale(containScale)
-            .translate(-img.width / 2, -img.height / 2);
+            .translate(-image_w / 2, -image_h / 2);
         if (pattern && offCtx) {
             offCtx.save();
             pattern.setTransform(matrix);
             offCtx.setTransform(matrix)
             const path = new Path2D();
-            path.rect(0, 0, img.width, img.height);
+            path.rect(0, 0, image_w, image_h);
             offCtx.clip(path, "evenodd");
             offCtx.resetTransform();
             offCtx.fillStyle = pattern;
@@ -104,14 +106,14 @@ handler[ImageScaleMode.Fit] = function (ctx: CanvasRenderingContext2D | Offscree
 
 handler[ImageScaleMode.Stretch] = function (ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, frame: ShapeSize, fill: Fill, path2D: Path2D): any {
     const url = fill.peekImage(true) || default_url;
-    let image_w = fill.originalImageWidth || frame.width;
-    let image_h = fill.originalImageHeight || frame.height;
     const m = ctx.getTransform();
     const img = new Image();
     img.src = url;
-    img.width = image_w;
-    img.height = image_h;
     img.onload = () => {
+        // Use actual image dimensions after loading
+        const image_w = img.width;
+        const image_h = img.height;
+        
         ctx.save();
         ctx.setTransform(m);
         ctx.clip(path2D, "evenodd");
@@ -125,13 +127,13 @@ handler[ImageScaleMode.Stretch] = function (ctx: CanvasRenderingContext2D | Offs
         const rotatedWidth = frame.width * cos + frame.height * sin;
         const rotatedHeight = frame.width * sin + frame.height * cos;
 
-        const baseScaleX = rotatedWidth / img.width;
-        const baseScaleY = rotatedHeight / img.height;
+        const baseScaleX = rotatedWidth / image_w;
+        const baseScaleY = rotatedHeight / image_h;
         matrix = matrix
             .translate(frame.width / 2, frame.height / 2)
             .rotate(fill.rotation || 0)
             .scale(baseScaleX, baseScaleY)
-            .translate(-img.width / 2, -img.height / 2);
+            .translate(-image_w / 2, -image_h / 2);
         if (pattern && offCtx) {
             pattern.setTransform(matrix);
             offCtx.fillStyle = pattern;
@@ -151,16 +153,16 @@ handler[ImageScaleMode.Crop] = function (ctx: CanvasRenderingContext2D | Offscre
 }
 
 handler[ImageScaleMode.Tile] = function (ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, frame: ShapeSize, fill: Fill, path2D: Path2D): any {
-    let image_w = fill.originalImageWidth || frame.width;
-    let image_h = fill.originalImageHeight || frame.height;
     const m = ctx.getTransform();
     let scale = typeof fill.scale === 'number' ? fill.scale : 0.5;
     const url = fill.peekImage(true) || default_url;
     const img = new Image();
     img.src = url;
-    img.width = image_w;
-    img.height = image_h;
     img.onload = () => {
+        // Use actual image dimensions after loading
+        const image_w = img.width;
+        const image_h = img.height;
+        
         ctx.save();
         ctx.setTransform(m);
         ctx.clip(path2D, "evenodd");
@@ -169,7 +171,7 @@ handler[ImageScaleMode.Tile] = function (ctx: CanvasRenderingContext2D | Offscre
         const pattern = offCtx.createPattern(img, 'repeat');
         let matrix = new DOMMatrix();
 
-        const offset = calculateOffset(img, scale, fill.rotation || 0);
+        const offset = calculateOffset(image_w, image_h, scale, fill.rotation || 0);
         matrix = matrix
             .translate(offset.x, offset.y)
             .rotate(fill.rotation || 0)
@@ -188,9 +190,9 @@ handler[ImageScaleMode.Tile] = function (ctx: CanvasRenderingContext2D | Offscre
     }
 }
 
-function calculateOffset(img: HTMLImageElement, scale: number, rotation: number) {
-    const w = img.width;
-    const h = img.height;
+function calculateOffset(width: number, height: number, scale: number, rotation: number) {
+    const w = width;
+    const h = height;
     const rad = rotation * Math.PI / 180;
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);

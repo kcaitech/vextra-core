@@ -9,8 +9,8 @@
  */
 
 import { DViewCtx, GraphicsLibrary, PropsType } from "./viewctx";
-import { Shape, SymbolRefShape, SymbolShape } from "../data";
-import { getShapeViewId, stringh } from "./basic";
+import { Shape, ShapeType, SymbolRefShape, SymbolShape } from "../data";
+import { getShapeViewId } from "./basic";
 import { EL } from "./el";
 import { objectId } from "../basic/objectid";
 import { IRenderer } from "../render/basic";
@@ -125,7 +125,11 @@ export class DataView extends EventEL {
         return this.m_children;
     }
 
-    get renderer() {
+    getRenderer(gl?: GraphicsLibrary) {
+        if (gl && gl !== this.m_gl) {
+            this.m_gl = gl;
+            this.m_renderer = this.rendererBuilder(this.m_gl);
+        }
         return this.m_renderer;
     }
 
@@ -146,17 +150,24 @@ export class DataView extends EventEL {
     }
 
     rendererBuilder(gl: GraphicsLibrary): IRenderer {
-        const view = this as unknown as any;
+        const view = this;
         switch (gl) {
             case "SVG":
-                const SVGRendererConstructor = SVGConstructorMap.get(view.type)!;
-                return new SVGRendererConstructor(view);
+                let SVGRendererConstructor = SVGConstructorMap.get(view.type);
+                if (!SVGRendererConstructor) {
+                    console.error(`SVGRendererConstructor not found for type: ${view.type}`);
+                    SVGRendererConstructor = SVGConstructorMap.get(ShapeType.Rectangle)!;
+                }
+                return new SVGRendererConstructor(view as any); // todo: fix type
             case "Canvas":
-                const CanvasRendererConstructor = CanvasConstructorMap.get(view.type)!;
-                return new CanvasRendererConstructor(view);
+                let CanvasRendererConstructor = CanvasConstructorMap.get(view.type);
+                if (!CanvasRendererConstructor) {
+                    console.error(`CanvasRendererConstructor not found for type: ${view.type}`);
+                    CanvasRendererConstructor = CanvasConstructorMap.get(ShapeType.Rectangle)!;
+                }
+                return new CanvasRendererConstructor(view as any); // todo: fix type
             default:
-                const DefaultCon = SVGConstructorMap.get(view.type)!;
-                return new DefaultCon(view);
+                throw new Error(`Unsupported graphics library: ${gl}`);
         }
     }
 
@@ -358,20 +369,6 @@ export class DataView extends EventEL {
             });
         }
         return dom;
-    }
-
-    toSVGString(): string {
-        const frame = this.m_data.size;
-        const attrs: { [kye: string]: string | number } = {};
-        attrs['version'] = "1.1";
-        attrs['xmlns'] = "http://www.w3.org/2000/svg";
-        attrs['xmlns:xlink'] = "http://www.w3.org/1999/xlink";
-        attrs['xmlns:xhtml'] = "http://www.w3.org/1999/xhtml";
-        attrs['preserveAspectRatio'] = "xMinYMin meet";
-        attrs.width = frame.width;
-        attrs.height = frame.height;
-        attrs.overflow = "visible";
-        return stringh('svg', attrs, this.outerHTML);
     }
 
     destroy() {

@@ -37,6 +37,9 @@ export { FrameCpt } from "./proxy/frame/basic"
 export { find4select } from "./find"
 export { hitContent, hitVisible, hitOuter } from "./hittest"
 
+// auto layout
+export * from "./proxy/layout/auto_layout2"
+
 import { Shape, ShapeType } from "../data";
 import { ArtboardView } from "./artboard";
 import { BoolShapeView } from "./boolshape";
@@ -52,7 +55,7 @@ import { SymbolView } from "./symbol";
 import { SymbolRefView } from "./symbolref";
 import { TextShapeView } from "./textshape";
 import { DViewCtx, ViewType } from "./viewctx";
-import { DataView } from "./view";
+import { ShapeView } from "./shape";
 function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.Artboard, ArtboardView);
     comsMap.set(ShapeType.Group, GroupShapeView);
@@ -72,12 +75,12 @@ function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.Page, PageView);
 }
 
-export function layoutShape(shape: Shape): {view: DataView, ctx: DViewCtx} {
+export function layoutShape(shape: Shape): {view: ShapeView, ctx: DViewCtx} {
     const ctx = new DViewCtx();
     initComsMap(ctx.comsMap);
     const ViewClass = ctx.comsMap.get(shape.type);
     if (!ViewClass) throw new Error("export svg, unknow shape type : " + shape.type)
-    const view = new ViewClass(ctx, { data: shape, scale: undefined, layoutSize: undefined, varsContainer: undefined, isVirtual: undefined }) as DataView;
+    const view = new ViewClass(ctx, { data: shape, scale: undefined, layoutSize: undefined, varsContainer: undefined, isVirtual: undefined }) as ShapeView;
     ctx.layoutAll();
     return { view, ctx };
 }

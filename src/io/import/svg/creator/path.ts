@@ -9,11 +9,11 @@
  */
 
 import { BaseCreator } from "./base"
-import * as shapeCreator from "../../../editor/creator/creator"
-import { ShapeFrame } from "../../../data"
+import * as shapeCreator from "../../../../creator"
+import { ShapeFrame } from "../../../../data"
 import {BaseTreeNode} from "../tree"
 import { Path } from "@kcaitech/path";
-import { ColVector3D } from "../../../basic/matrix2";
+import { ColVector3D } from "../../../../basic/matrix2";
 
 
 export class PathCreator extends BaseCreator {

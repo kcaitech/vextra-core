@@ -9,11 +9,11 @@
  */
 
 import { BaseCreator } from "./base"
-import * as shapeCreator from "../../../editor/creator/creator"
-import { ShapeFrame } from "../../../data"
+import * as shapeCreator from "../../../../creator"
+import { ShapeFrame } from "../../../../data"
 import { Path } from "@kcaitech/path";
-import { ColVector3D } from "../../../basic/matrix2";
-import { Transform } from "../../../basic/transform";
+import { ColVector3D } from "../../../../basic/matrix2";
+import { Transform } from "../../../../basic/transform";
 
 export class Polyline extends BaseCreator {
     createShape() {

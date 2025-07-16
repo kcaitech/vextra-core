@@ -34,6 +34,9 @@ export function startLoader(lzdata: LzData, document: Document) {
     const loadPage = async (ctx: LoadContext, id: string): Promise<Page> => {
         // ctx.shapeIds.clear();
         const json: IJSON = await __remote.loadJson('pages/' + id + '.json')
+        if (!json) {
+            throw new Error(`Page ${id} not found`);
+        }
         const page = importPage(ctx, json, importer)
         updatePageFrame(page)
         return page;

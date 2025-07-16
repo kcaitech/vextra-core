@@ -15,11 +15,7 @@ import { objectId } from "../basic/objectid";
 import { Notifiable } from "../data/basic";
 import { ShapeSize } from "../data/baseclasses";
 
-let Canvas: typeof import('skia-canvas').Canvas;
-if (typeof window === 'undefined') {
-    // Node.js environment
-    Canvas = require('skia-canvas').Canvas;
-}
+import { OffscreenCanvas } from "../basic/canvas"
 
 export type GraphicsLibrary = 'SVG' | 'Canvas' | 'H5';
 
@@ -131,7 +127,7 @@ export class DViewCtx extends EventEmitter {
     get canvas(): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
         if (!this.m_canvas) {
             // 判断是否是node环境
-            const canvas = new Canvas(1000, 1000);
+            const canvas = new OffscreenCanvas(1000, 1000);
             this.m_canvas = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
         }
         return this.m_canvas;

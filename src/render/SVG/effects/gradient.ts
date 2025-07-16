@@ -25,7 +25,7 @@ function renderStop(h: Function, d: Stop): any {
 }
 
 export function render(h: Function, value: Gradient, frame: ShapeSize): { id: string, style: string | undefined, node: any } {
-    const id = "gradient" + objectId(value) + frame.height + '-' + frame.width;
+    const id = "gradient-" + objectId(value) + '-' + Math.round(frame.height * 10000) + '-' + Math.round(frame.width * 10000);
     let style;
     let node: any;
     if (value.gradientType == GradientType.Linear) {

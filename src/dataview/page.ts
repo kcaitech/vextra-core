@@ -10,6 +10,7 @@
 
 import { Page } from "../data";
 import { ArtboardView } from "./artboard";
+import { stringh } from "./basic";
 import { CutoutShapeView } from "./cutout";
 import { GroupShapeView } from "./groupshape";
 import { ShapeView } from "./shape";
@@ -120,5 +121,21 @@ export class PageView extends GroupShapeView implements RootView {
 
     get backgroundColor() {
         return this.data.backgroundColor;
+    }
+
+    toSVGString(): string {
+        const frame = this.frame;
+        const attrs: { [kye: string]: string | number } = {};
+        attrs['version'] = "1.1";
+        attrs['xmlns'] = "http://www.w3.org/2000/svg";
+        attrs['xmlns:xlink'] = "http://www.w3.org/1999/xlink";
+        attrs['xmlns:xhtml'] = "http://www.w3.org/1999/xhtml";
+        attrs['preserveAspectRatio'] = "xMinYMin meet";
+        attrs.width = frame.width;
+        attrs.height = frame.height;
+        attrs.overflow = "visible";
+        // const transform = this.transform;
+        attrs['viewBox'] = `${frame.x} ${frame.y} ${frame.width} ${frame.height}`;
+        return stringh('svg', attrs, this.innerHTML);
     }
 }

@@ -13,6 +13,8 @@ import { Props } from "../painters/view";
 import { ShapeView } from "../../../dataview";
 import { render as renderGradient } from "./gradient";
 import { stroke } from "../../stroke";
+import { Path2D, OffscreenCanvas } from "../types";
+
 
 export function render(view: ShapeView, props: Props, ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, border: Border, fillPath: Path2D) {
     for (const paint of border.strokePaints) {

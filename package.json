@@ -16,8 +16,7 @@
     "build": "rollup --config",
     "test": "jest",
     "eslint": "eslint --ext .js,.ts,.vue src",
-    "schema": "tsx src/schema/script",
-    "check-circular(need install magde on DEV)": "madge --circular --extensions ts src/"
+    "schema": "tsx src/schema/script"
   },
   "dependencies": {
     "@kcaitech/path": "^0.1.4",
@@ -25,7 +24,6 @@
     "jszip": "^3.10.1",
     "kiwi-schema": "^0.5.0",
     "pako": "^2.1.0",
-    "skia-canvas": "^2.0.2",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
@@ -48,7 +46,6 @@
     "eslint-plugin-import": "^2.27.5",
     "graphviz": "^0.0.9",
     "jest": "^29.5.0",
-    "madge": "^8.0.0",
     "rollup": "^4.18.0",
     "rollup-plugin-clear": "^2.0.7",
     "ts-jest": "^29.0.5",

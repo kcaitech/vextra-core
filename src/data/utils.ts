@@ -8,7 +8,6 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { v4 } from "uuid";
 import { CurvePoint } from "./shape";
 import { ContactType, CurveMode } from "./typesdefine";
 // import { Page } from "./page";
@@ -18,6 +17,10 @@ import * as types from "./typesdefine"
 import { ContactShape } from "./classes";
 import { BasicArray } from "./basic";
 import { Transform } from "./transform";
+import { Shape, SymbolShape, Variable } from "./shape";
+import { OverrideType } from "./typesdefine";
+import { SymbolRefShape } from "./classes";
+import { uuid } from "../basic/uuid";
 
 /**
  * @description root -> 图形自身上且单位为比例系数的矩阵
@@ -248,7 +251,7 @@ class AStar {
     run() {
         this.openList = [
             {
-                id: v4(),
+                id: uuid(),
                 point: this.startPoint, // 起点加入openList
                 cost: 0, // 代价
                 parent: null, // 父节点
@@ -269,7 +272,7 @@ class AStar {
                     if (this.is_exist_list(cur, this.closeList)) continue;
                     if (!this.is_exist_list(cur, this.openList)) {
                         const pointObj: AP = {
-                            id: v4(),
+                            id: uuid(),
                             point: cur,
                             parent: point, // 设置point为下一个点的父节点
                             cost: 0,
@@ -285,7 +288,7 @@ class AStar {
     run_easy() {
         this.openList = [
             {
-                id: v4(),
+                id: uuid(),
                 point: this.startPoint, // 起点加入openList
                 cost: 0, // 代价
                 parent: null, // 父节点
@@ -306,7 +309,7 @@ class AStar {
                     if (this.is_exist_list(cur, this.closeList)) continue;
                     if (!this.is_exist_list(cur, this.openList)) {
                         const pointObj: AP = {
-                            id: v4(),
+                            id: uuid(),
                             point: cur,
                             parent: point, // 设置point为下一个点的父节点
                             cost: 0,
@@ -519,7 +522,7 @@ export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2
     const points: CurvePoint[] = [];
     for (let i = 0, len = path.length; i < len; i++) {
         const p = m3.computeCoord3(path[i]);
-        points.push(new CurvePoint([i] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
+        points.push(new CurvePoint([i] as BasicArray<number>, uuid(), p.x, p.y, CurveMode.Straight));
     }
 
     return points;
@@ -553,17 +556,6 @@ export function d(a: XY, b: XY): 'ver' | 'hor' | false {
     if (Math.abs(a.y - b.y) < 0.0001) return 'hor';
     return false;
 }
-// export function update_contact_points(api: Api, shape: ContactShape, page: Page) {
-//     const _p = shape.getPoints();
-//     const len = shape.points.length;
-//     api.deletePoints(page, shape as PathShape, 0, len, 0);
-//     for (let i = 0, len2 = _p.length; i < len2; i++) {
-//         const p = importCurvePoint((_p[i]));
-//         p.id = v4();
-//         _p[i] = p;
-//     }
-//     api.addPoints(page, shape as PathShape, _p, 0);
-// }
 
 export function copyShape(source: types.Shape) {
     if (source.typeId == 'bool-shape') {
@@ -628,26 +620,26 @@ const __handle: { [key: string]: (points: CurvePoint[], start: CurvePoint, end: 
 __handle['horizontal'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint, width: number, height: number) {
     points.length = 0;
     if (Math.abs(start.x - end.x) * width < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), start.x, end.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2] as BasicArray<number>), uuid(), start.x, end.y, CurveMode.Straight));
     } else if (Math.abs(start.y - end.y) * height < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2] as BasicArray<number>), uuid(), end.x, start.y, CurveMode.Straight));
     } else {
         const mid = (end.x + start.x) / 2;
-        const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), mid, start.y, CurveMode.Straight);
-        const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), mid, end.y, CurveMode.Straight);
+        const _p1 = new CurvePoint([1] as BasicArray<number>, uuid(), mid, start.y, CurveMode.Straight);
+        const _p2 = new CurvePoint(([2] as BasicArray<number>), uuid(), mid, end.y, CurveMode.Straight);
         points.push(start, _p1, _p2, end);
     }
 }
 __handle['vertical'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint, width: number, height: number) {
     points.length = 0;
     if (Math.abs(start.x - end.x) * width < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), start.x, end.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2] as BasicArray<number>), uuid(), start.x, end.y, CurveMode.Straight));
     } else if (Math.abs(start.y - end.y) * height < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2] as BasicArray<number>), uuid(), end.x, start.y, CurveMode.Straight));
     } else {
         const mid = (end.y + start.y) / 2;
-        const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), start.x, mid, CurveMode.Straight);
-        const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), end.x, mid, CurveMode.Straight);
+        const _p1 = new CurvePoint([1] as BasicArray<number>, uuid(), start.x, mid, CurveMode.Straight);
+        const _p2 = new CurvePoint(([2] as BasicArray<number>), uuid(), end.x, mid, CurveMode.Straight);
         points.push(start, _p1, _p2, end);
     }
 }
@@ -673,11 +665,11 @@ export function path_for_free_end_contact(shape: ContactShape, points: CurvePoin
     const end = points.pop()!;
 
     if (Math.abs(start.y - end.y) * shape.size.height < 5) {
-        points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
+        points.push(new CurvePoint(([points.length] as BasicArray<number>), uuid(), end.x, start.y, CurveMode.Straight));
     } else if (Math.abs(start.x - end.x) * shape.size.width < 5) {
-        points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), start.x, end.y, CurveMode.Straight));
+        points.push(new CurvePoint(([points.length] as BasicArray<number>), uuid(), start.x, end.y, CurveMode.Straight));
     } else {
-        points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight), end);
+        points.push(new CurvePoint(([points.length] as BasicArray<number>), uuid(), end.x, start.y, CurveMode.Straight), end);
     }
 }
 export function path_for_free_start_contact(points: CurvePoint[], end: XY | undefined, width: number, height: number) {
@@ -685,7 +677,7 @@ export function path_for_free_start_contact(points: CurvePoint[], end: XY | unde
         return path_for_free_contact(points, width, height);
     }
     const start = points[0];
-    const _end = new CurvePoint(([points.length - 1] as BasicArray<number>), v4(), end.x, end.y, CurveMode.Straight);
+    const _end = new CurvePoint(([points.length - 1] as BasicArray<number>), uuid(), end.x, end.y, CurveMode.Straight);
 
     const _start = {x: start.x * width, y: start.y * height};
     const __end = {x: end.x * width, y: end.y * height};
@@ -694,9 +686,6 @@ export function path_for_free_start_contact(points: CurvePoint[], end: XY | unde
 
     __handle[direction](points, start, _end, width, height);
 }
-import { Shape, SymbolShape, Variable } from "./shape";
-import { OverrideType } from "./typesdefine";
-import { SymbolRefShape } from "./classes";
 
 export function findVar(varId: string, ret: Variable[], varsContainer: (SymbolRefShape | SymbolShape)[], revertStart: number | undefined = undefined, fOverride: boolean = false) {
     let i = revertStart === undefined ? varsContainer.length - 1 : revertStart;
@@ -775,4 +764,40 @@ export function findOverrideAndVar(
 
 export function is_mac() {
     return navigator && /macintosh|mac os x/i.test(navigator.userAgent);
+}
+
+
+// 生成一个顶点为 (0.5, 0)，中心点为 (0.5, 0.5)，边数为 n 的等边多边形的顶点坐标
+export function getPolygonVertices(sidesCount: number, offsetPercent?: number) {
+    const cx = 0.5;
+    const cy = 0.5;
+    const angleStep = (2 * Math.PI) / sidesCount;
+
+    let vertices = [{ x: 0.5, y: 0 }];
+    for (let i = 1; i < sidesCount; i++) {
+        const angle = i * angleStep;
+        let x = cx + (0.5 - cx) * Math.cos(angle) - (0 - cy) * Math.sin(angle);
+        let y = cy + (0.5 - cx) * Math.sin(angle) + (0 - cy) * Math.cos(angle);
+        if (i % 2 === 1 && offsetPercent) {
+            // 计算偏移后的点
+            const offsetX = (x - cx) * offsetPercent;
+            const offsetY = (y - cy) * offsetPercent;
+            x = cx + offsetX;
+            y = cy + offsetY;
+        }
+        vertices.push({ x, y });
+    }
+
+    return vertices;
+}
+
+export function getPolygonPoints(counts: { x: number, y: number }[], radius?: number) {
+    const curvePoint = new BasicArray<CurvePoint>();
+    for (let i = 0; i < counts.length; i++) {
+        const count = counts[i];
+        const point = new CurvePoint([i] as BasicArray<number>, uuid(), count.x, count.y, CurveMode.Straight);
+        if (radius) point.radius = radius;
+        curvePoint.push(point);
+    }
+    return curvePoint;
 }

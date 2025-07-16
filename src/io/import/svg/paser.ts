@@ -21,7 +21,7 @@ import {TextCreator} from "./creator/text"
 import {ImageCreator} from "./creator/image"
 import {Polyline} from "./creator/polyline"
 import {UseCreator} from "./creator/use"
-import { ResourceMgr, Shape, StyleMangerMember } from "../../data"
+import { ResourceMgr, Shape, StyleMangerMember } from "../../../data"
 
 export class Parser {
     svgRoot: Element

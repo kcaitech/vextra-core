@@ -70,12 +70,12 @@ import {
 } from "../../../data";
 import { uuid } from "../../../basic/uuid";
 import { IJSON, ImportFun, LoadContext } from "./basic";
-import * as shapeCreator from "../../../editor/creator/creator";
+import * as shapeCreator from "../../../creator";
 import * as types from "../../../data/typesdefine";
 import { v4 } from "uuid";
 import { float_accuracy } from "../../../basic/consts";
 import { ColVector3D } from "../../../basic/matrix2";
-import { getPolygonPoints, getPolygonVertices } from "../../../editor/utils/path";
+import { getPolygonPoints, getPolygonVertices } from "../../../data/utils";
 import { importText } from "./textio";
 import { importColor } from "./common";
 

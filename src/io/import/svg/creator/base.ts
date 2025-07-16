@@ -33,11 +33,11 @@ import {
     FillType, Gradient, GradientType, Point2D, ResourceMgr,
     Shadow, Shape, ShapeFrame, SideType, Stop, Style,
     StyleMangerMember
-} from "../../../data"
-import { Transform } from "../../../basic/transform"
-import * as shapeCreator from "../../../editor/creator/creator"
-import { ColVector3D, Matrix } from "../../../basic/matrix2"
-import { Transform as ShapeTransform } from "../../../data"
+} from "../../../../data"
+import { Transform } from "../../../../basic/transform"
+import * as shapeCreator from "../../../../creator"
+import { ColVector3D, Matrix } from "../../../../basic/matrix2"
+import { Transform as ShapeTransform } from "../../../../data"
 
 export function castTransform(transform: ShapeTransform): Transform {
     return new Transform({

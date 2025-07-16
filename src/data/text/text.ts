@@ -469,7 +469,7 @@ export class Text extends Basic implements classes.Text {
         insertSimpleText(this, text, index, props);
         this.__layouts.forEach(l => l.layout = l.layout && layoutAtInsert(this, l.__frame, index, text.length, l.layout));
     }
-    // 这个没走api,纯是用于更新排版
+    // 这个没走Operator,纯是用于更新排版
     composingInputUpdate(index: number) {
         if (index < 0) {
             throw new Error("index < 0");

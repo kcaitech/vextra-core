@@ -20,6 +20,14 @@ export class ArtboardSVGRenderer extends ViewSVGRenderer {
         super(view);
     }
 
+    getProps(): { [key: string]: string } & { style: any } {
+        const props: any = {};
+        const size = this.view.size;
+        props.width = size.width;
+        props.height = size.height;
+        return props;
+    }
+
     render(): number {
         const view = this.view as ArtboardView;
         if (!this.checkAndResetDirty()) return this.m_render_version;
@@ -41,7 +49,7 @@ export class ArtboardSVGRenderer extends ViewSVGRenderer {
         if (view.autoLayout && view.autoLayout.stackReverseZIndex) childs.reverse();
         const borders = this.renderBorder();
 
-        const svgprops: any = {}; // ??? 很大的疑惑，可能不是这里的问题
+        const svgprops: any = this.getProps();
 
         const filterId = `${objectId(view)}`;
         const shadows = this.renderShadows(filterId);

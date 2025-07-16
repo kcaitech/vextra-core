@@ -88,7 +88,7 @@ class ProxyHandler {
             throw new Error(`NOT inside transact: set '${propertyKey.toString()}'`);
         }
         if (this.__context.settrap) {
-            throw new Error(`NOT inside Api: set '${propertyKey.toString()}'`);
+            throw new Error(`NOT inside Operator: set '${propertyKey.toString()}'`);
         }
 
         let needNotify = false;
@@ -160,7 +160,7 @@ class ProxyHandler {
             throw new Error(`NOT inside transact: delete '${propertyKey.toString()}'`);
         }
         if (this.__context.settrap) {
-            throw new Error(`NOT inside Api: delete '${propertyKey.toString()}'`);
+            throw new Error(`NOT inside Operator: delete '${propertyKey.toString()}'`);
         }
         if (!swapCached(this.__context, target, propertyKey)) {
             const r = new Rec(target, propertyKey, Reflect.get(target, propertyKey));
@@ -190,7 +190,7 @@ class ProxyHandler {
                 throw new Error(`NOT inside transact: set '${propertyKey.toString()}'`);
             }
             if (this.__context.settrap) {
-                throw new Error(`NOT inside Api: set '${propertyKey.toString()}'`);
+                throw new Error(`NOT inside Operator: set '${propertyKey.toString()}'`);
             }
             return Reflect.get(this.sub(this.__context, target, this.__context), propertyKey);
         } else if (propertyKey === 'size') { // map对象上唯一的一个可访问属性

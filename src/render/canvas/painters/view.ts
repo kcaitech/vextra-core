@@ -18,6 +18,8 @@ import { render as renderBlur } from "../effects/blur"
 import { renderTextLayout } from "../effects/text";
 import { stroke } from "../../stroke";
 
+import { Path2D } from "../types";
+
 export type Props = {
     transform: [number, number, number, number, number, number];
     opacity?: number;
@@ -108,13 +110,12 @@ export class ViewCanvasRenderer extends IRenderer {
             path.addPath(new Path2D(borderP.toString()));
         }
         const childs = this.view.children as ShapeView[];
-        if (childs.length) {
-            childs.forEach((c) => {
-                const flat = (c.renderer as ViewCanvasRenderer).flat;
-                const m = c.matrix2Parent().toArray();
-                path.addPath(flat, { a: m[0], b: m[1], c: m[2], d: m[3], e: m[4], f: m[5] });
-            });
-        }
+        childs.forEach((c) => {
+            const flat = (c.getRenderer('Canvas') as ViewCanvasRenderer).flat;
+            const m = c.matrix2Parent().toArray();
+            path.addPath(flat, { a: m[0], b: m[1], c: m[2], d: m[3], e: m[4], f: m[5] });
+        });
+
         return path;
     }
 
