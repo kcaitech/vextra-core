@@ -81,7 +81,7 @@ import {
 import { ResizingConstraints2 } from "../data";
 import { SymbolMgr } from "../data/symbolmgr";
 import { newText } from "../data/text/textutils";
-import { getPolygonPoints, getPolygonVertices } from "../editor/utils/path";
+import { getPolygonPoints, getPolygonVertices } from "../data/utils";
 import { is_mac } from "../data/utils";
 import { Path } from "@kcaitech/path";
 import { convertPath2CurvePoints } from "../data/pathconvert";
