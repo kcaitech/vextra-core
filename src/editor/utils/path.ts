@@ -368,40 +368,6 @@ export function is_straight(shape: Shape) {
     return points.length === 2 && !points[0].hasFrom && !points[1].hasTo; // 两个点的，那就是直线
 }
 
-// 生成一个顶点为 (0.5, 0)，中心点为 (0.5, 0.5)，边数为 n 的等边多边形的顶点坐标
-export function getPolygonVertices(sidesCount: number, offsetPercent?: number) {
-    const cx = 0.5;
-    const cy = 0.5;
-    const angleStep = (2 * Math.PI) / sidesCount;
-
-    let vertices = [{ x: 0.5, y: 0 }];
-    for (let i = 1; i < sidesCount; i++) {
-        const angle = i * angleStep;
-        let x = cx + (0.5 - cx) * Math.cos(angle) - (0 - cy) * Math.sin(angle);
-        let y = cy + (0.5 - cx) * Math.sin(angle) + (0 - cy) * Math.cos(angle);
-        if (i % 2 === 1 && offsetPercent) {
-            // 计算偏移后的点
-            const offsetX = (x - cx) * offsetPercent;
-            const offsetY = (y - cy) * offsetPercent;
-            x = cx + offsetX;
-            y = cy + offsetY;
-        }
-        vertices.push({ x, y });
-    }
-
-    return vertices;
-}
-
-export function getPolygonPoints(counts: { x: number, y: number }[], radius?: number) {
-    const curvePoint = new BasicArray<CurvePoint>();
-    for (let i = 0; i < counts.length; i++) {
-        const count = counts[i];
-        const point = new CurvePoint([i] as BasicArray<number>, uuid(), count.x, count.y, CurveMode.Straight);
-        if (radius) point.radius = radius;
-        curvePoint.push(point);
-    }
-    return curvePoint;
-}
 
 export function calculateInnerAnglePosition(percent: number, angle: number) {
     const cx = 0.5;

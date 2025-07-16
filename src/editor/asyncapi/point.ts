@@ -28,9 +28,11 @@ import {
 import { Artboard } from "../../data/artboard";
 import {
     calculateInnerAnglePosition,
-    getPolygonPoints,
-    getPolygonVertices,
 } from "../utils/path";
+import {
+    getPolygonPoints,
+    getPolygonVertices
+} from "../../data/utils";
 import { Operator } from "../../operator";
 
 export class PointModifyHandler extends AsyncApiCaller {

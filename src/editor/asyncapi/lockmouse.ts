@@ -38,9 +38,11 @@ import {
 } from "../../data";
 import {
     calculateInnerAnglePosition,
+} from "../utils/path";
+import {
     getPolygonPoints,
     getPolygonVertices
-} from "../utils/path";
+} from "../../data/utils";
 import {
     RangeRecorder,
     reLayoutBySizeChanged,
