@@ -1,0 +1,10 @@
+{
+    "description": "resize type",
+    "enum": [
+        "stretch",
+        "pinToEdge",
+        "resize",
+        "float"
+    ],
+    "default": "stretch"
+}

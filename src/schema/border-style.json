@@ -1,0 +1,19 @@
+{
+    "description": "border style",
+    "type": "object",
+    "properties": {
+        "length": {
+            "type": "number",
+            "default": 0
+        },
+        "gap": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "length",
+        "gap"
+    ],
+    "additionalProperties": false
+}

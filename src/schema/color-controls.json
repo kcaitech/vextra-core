@@ -1,0 +1,34 @@
+{
+    "description": "color controls",
+    "type": "object",
+    "properties": {
+        "isEnabled": {
+            "type": "boolean",
+            "default": false
+        },
+        "brightness": {
+            "type": "number",
+            "default": 0
+        },
+        "contrast": {
+            "type": "number",
+            "default": 0
+        },
+        "hue": {
+            "type": "number",
+            "default": 0
+        },
+        "saturation": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "isEnabled",
+        "brightness",
+        "contrast",
+        "hue",
+        "saturation"
+    ],
+    "additionalProperties": false
+}

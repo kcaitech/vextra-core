@@ -6,7 +6,7 @@ A powerful design tool core library that provides complete design document data 
 
 ## Project Overview
 
-Vextra Core (@kcdesign/data) is a high-performance design tool core library developed by [KCai Technology](https://kcaitech.com), providing underlying data structures and processing capabilities for modern design tools. The library supports import and export of various design formats, including complete graphic rendering, style management, editing operations, and more.
+Vextra Core (@kcdesign/data) is a high-performance design tool core library developed by [KCai Technology](https://kcaitech.com), providing underlying data structures and processing capabilities for modern design tools. The library supports import and export of various design formats, including complete graphic rendering and more.
 
 ## Key Features
 
@@ -37,7 +37,7 @@ Vextra Core (@kcdesign/data) is a high-performance design tool core library deve
 ## Installation
 
 ```bash
-npm install @kcdesign/data
+npm install @kcaitech/vextra-core
 ```
 
 ## Quick Start
@@ -45,7 +45,7 @@ npm install @kcdesign/data
 ### Import Design Files
 
 ```typescript
-import { IO } from '@kcdesign/data';
+import { IO } from '@kcaitech/vextra-core';
 // Import Figma file
 const document = await IO.importFigma(figmaData);
 ```
@@ -95,22 +95,7 @@ src/
 ├── io/             # Import/export module
 ├── render/         # Rendering engine
 ├── dataview/       # Data view layer
-├── operator/       # Operator system
-├── editor/         # Editor functionality
-├── repo/           # Repository management
 └── schema/         # Data structure definitions
-```
-
-## Module Dependencies
-
-```
-editor     → data + dataview + operator + io + creator
-operator   → data + dataview + io + creator
-dataview   → data + render + io + creator
-render     → data
-io         → data + creator
-creator    → data
-data       → basic
 ```
 
 ## License
@@ -120,5 +105,5 @@ This project is licensed under the [AGPL-3.0 License](https://www.gnu.org/licens
 ## Contact Us
 
 - Website: [https://kcaitech.com](https://kcaitech.com)
-- Email: support@kcaitech.com
+
 

@@ -1,0 +1,29 @@
+{
+    "description": "shape frame\n * x,y为parent坐标系里的点\n * width,height为当前shape的坐标空间大小",
+    "type": "object",
+    "properties": {
+        "x": {
+            "type": "number",
+            "default": 0
+        },
+        "y": {
+            "type": "number",
+            "default": 0
+        },
+        "width": {
+            "type": "number",
+            "default": 0
+        },
+        "height": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+    ],
+    "additionalProperties": false
+}

@@ -1,0 +1,13 @@
+{
+    "description": "export file format",
+    "enum": [
+        "png",
+        "jpg",
+        "tiff",
+        "eps",
+        "pdf",
+        "webp",
+        "svg"
+    ],
+    "default": "png"
+}

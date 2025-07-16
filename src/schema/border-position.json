@@ -1,0 +1,9 @@
+{
+    "description": "border position",
+    "enum": [
+        "inner",
+        "center",
+        "outer"
+    ],
+    "default": "center"
+}

@@ -23,15 +23,6 @@ export * from "./dataview"
 // IO模块导出
 export * as IO from "./io"
 
-// 操作模块导出
-export * as Opt from "./operator"
-
-// 仓库模块导出
-export * as Repo from "./repo"
-
-// 编辑器模块导出
-export * from "./editor"
-
 // 创建器模块导出
 export * as Creator from "./creator"
 

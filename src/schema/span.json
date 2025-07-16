@@ -1,0 +1,20 @@
+{
+    "description": "span attr",
+    "type": "object",
+    "properties": {
+        "length": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0
+        }
+    },
+    "required": [
+        "length"
+    ],
+    "additionalProperties": false,
+    "allOf": [
+        {
+            "$ref": "./span-attr.json"
+        }
+    ]
+}

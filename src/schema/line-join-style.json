@@ -1,0 +1,9 @@
+{
+    "description": "line join style",
+    "enum": [
+        "miter",
+        "round",
+        "bevel"
+    ],
+    "default": "miter"
+}

@@ -1,0 +1,11 @@
+{
+    "description": "text horizontal alignment",
+    "enum": [
+        "left",
+        "right",
+        "centered",
+        "justified",
+        "natural"
+    ],
+    "default": "left"
+}

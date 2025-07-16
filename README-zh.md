@@ -6,7 +6,7 @@
 
 ## 项目简介
 
-Vextra Core (@kcdesign/data) 是由 [KCai Technology](https://kcaitech.com) 开发的高性能设计工具核心库，为现代设计工具提供底层数据结构和处理能力。该库支持多种设计格式的导入导出，包含完整的图形渲染、样式管理、编辑操作等功能。
+Vextra Core (@kcdesign/data) 是由 [KCai Technology](https://kcaitech.com) 开发的高性能设计工具核心库，为现代设计工具提供底层数据结构和处理能力。该库支持多种设计格式的导入导出，包含完整的图形渲染等功能。
 
 ## 主要特性
 
@@ -37,7 +37,7 @@ Vextra Core (@kcdesign/data) 是由 [KCai Technology](https://kcaitech.com) 开�
 ## 安装
 
 ```bash
-npm install @kcdesign/data
+npm install @kcaitech/vextra-core
 ```
 
 ## 示例代码
@@ -45,7 +45,7 @@ npm install @kcdesign/data
 ### 导入设计文件
 
 ```typescript
-import { IO } from '@kcdesign/data';
+import { IO } from '@kcaitech/vextra-core';
 // 导入 Figma 文件
 const document = await IO.importFigma(figmaData);
 ```
@@ -95,22 +95,7 @@ src/
 ├── io/             # 导入导出模块
 ├── render/         # 渲染引擎
 ├── dataview/       # 数据视图层
-├── operator/       # 操作符系统
-├── editor/         # 编辑器功能
-├── repo/           # 仓库管理
 └── schema/         # 数据结构定义
-```
-
-## 模块依赖关系
-
-```
-editor     → data + dataview + operator + io + creator
-operator   → data + dataview + io + creator
-dataview   → data + render + io + creator
-render     → data
-io         → data + creator
-creator    → data
-data       → basic
 ```
 
 ## 许可证
@@ -120,5 +105,5 @@ data       → basic
 ## 联系我们
 
 - 官网：[https://kcaitech.com](https://kcaitech.com)
-- 邮箱：support@kcaitech.com
+
 

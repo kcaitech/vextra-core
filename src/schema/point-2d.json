@@ -1,0 +1,19 @@
+{
+    "description": "point 2d",
+    "type": "object",
+    "properties": {
+        "x": {
+            "type": "number",
+            "default": 0
+        },
+        "y": {
+            "type": "number",
+            "default": 0
+        }
+    },
+    "required": [
+        "x",
+        "y"
+    ],
+    "additionalProperties": false
+}
