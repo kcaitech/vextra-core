@@ -1,0 +1,11 @@
+test
+*.test.ts
+*.test.js
+.*
+tsconfig.json
+src
+package-lock.json
+rollup.config.*
+.VSCodeCounter
+docs
+scripts
