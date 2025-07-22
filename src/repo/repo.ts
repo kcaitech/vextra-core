@@ -9,9 +9,7 @@ export class Repo implements IRepository {
     private __onChange?: (cmdId: string) => void;
     private __selection?: ISave4Restore;
     private __operator: Operator;
-    private __cmds: LocalCmd[] = [];
     private __curCmd: LocalCmd | undefined;
-    private __cmdIdx: number = 0;
     private __initing: boolean = false
     constructor(data: Document, repo: TransactDataGuard) {
         this.__repo = repo;
@@ -36,9 +34,9 @@ export class Repo implements IRepository {
         return this.__repo.isInTransact();
     }
     undo(): void {
-        if (!this.__repo.undo()) return;
-        this.__cmdIdx--;
-        const cmd = this.__cmds[this.__cmdIdx];
+        const saved_data = this.__repo.undo() as LocalCmd;
+        if (!saved_data) return;
+        const cmd = saved_data;
         if (cmd && this.__selection) {
             // selection
             cmd.selectionupdater(this.__selection, true, cmd);
@@ -46,9 +44,9 @@ export class Repo implements IRepository {
         if (this.__onChange) this.__onChange(cmd.id)
     }
     redo(): void {
-        if (!this.__repo.redo()) return;
-        this.__cmdIdx++;
-        const cmd = this.__cmds[this.__cmdIdx];
+        const saved_data = this.__repo.redo() as LocalCmd;
+        if (!saved_data) return;
+        const cmd = saved_data;
         if (cmd && this.__selection) {
             // selection
             cmd.selectionupdater(this.__selection, false, cmd);
@@ -89,7 +87,7 @@ export class Repo implements IRepository {
     }
     commit(mergetype: CmdMergeType = CmdMergeType.None) {
         if (!this.__curCmd) throw new Error("commit failed");
-        this.__repo.commit(!this.__initing);
+        this.__repo.commit(!this.__initing, this.__curCmd);
         if (this.__initing) {
             this.__curCmd = undefined;
             return
@@ -97,7 +95,6 @@ export class Repo implements IRepository {
         const cmd = this.__curCmd;
 
         cmd.mergetype = mergetype;
-        this.__cmds.push(cmd);
         this.__curCmd = undefined;
         if (this.__onChange) this.__onChange(cmd.id)
     }
