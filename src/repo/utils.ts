@@ -31,7 +31,7 @@ import { Document } from "../data/document";
 import { FMT_VER_latest } from "../data/fmtver";
 
 
-import { Cmd, INet, ISave4Restore, LocalCmd, SelectionState } from "./types";
+import { ISave4Restore, LocalCmd, SelectionState } from "./types";
 
 export function isDiffStringArr(lhs: string[], rhs: string[]): boolean {
     if (lhs.length !== rhs.length) return true;
@@ -144,27 +144,6 @@ export function exportShape(shape: Shape): Object {
         case ShapeType.Polygon: return exportPolygonShape(shape as PolygonShape);
         case ShapeType.Star: return exportStarShape(shape as StarShape);
         default: throw new Error("unknow shape type: " + shape.type)
-    }
-}
-
-
-export class MockNet implements INet {
-    hasConnected(): boolean {
-        return false;
-    }
-    async pullCmds(from: number, to: number): Promise<Cmd[]> {
-        return [];
-    }
-    async postCmds(cmds: Cmd[]): Promise<boolean> {
-        return false;
-    }
-
-    watchCmds(watcher: (cmds: Cmd[]) => void) {
-        return () => { };
-    }
-
-    watchError(watcher: (errorInfo: any) => void): void {
-
     }
 }
 

@@ -8,8 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import * as basicapi from "./basicop"
-import { crdtSetAttr } from "./basicop"
+import { BasicOp, BasicOpImpl } from "./basicop"
 import { Page } from "../data/page";
 import { Document } from "../data/document";
 import {
@@ -108,10 +107,20 @@ import {
     PrototypeInteraction
 } from "../data/baseclasses";
 import { ContactShape } from "../data/contact"
-import { Op, OpType } from "./basic/op";
 import { TransactDataGuard } from "../data/transact";
 import { ShapeView, TableCellView, TextShapeView } from "../dataview";
 import { Basic, BasicArray, PaddingDir } from "../data";
+import { BorderOp } from "./border";
+import { ContactOp } from "./contact";
+import { CutoutOp } from "./cutout";
+import { FillOp } from "./fill";
+import { PageOp } from "./page";
+import { PointsOp } from "./points";
+import { ShadowOp } from "./shadow";
+import { ShapeOp } from "./shape";
+import { TableOp } from "./table";
+import { TextOp } from "./text";
+import { StyleLibOp } from "./stylelib";
 
 
 // 要支持variable的修改
@@ -152,35 +161,79 @@ class TrapHdl { // wap api's function
     }
 }
 
-export class Operator {
-    private constructor() { // 仅能从createApi创建
-    }
-    static create(repo: TransactDataGuard): Operator {
-        return new Proxy<Operator>(new Operator(), new TrapHdl(repo));
+export class OperatorT<T extends BasicOp> {
+    private _borderop: BorderOp;
+    private _contactop: ContactOp;
+    private _cutoutop: CutoutOp;
+    private _fillop: FillOp;
+    private _pageop: PageOp;
+    private _pointsop: PointsOp;
+    private _shadowop: ShadowOp;
+    private _shapeop: ShapeOp;
+    private _stylelibop: StyleLibOp;
+    private _tableop: TableOp;
+    private _textop: TextOp;
+
+    private constructor(private _basicop: T) { // 仅能从createApi创建
+        this._borderop = new BorderOp(_basicop);
+        this._contactop = new ContactOp(_basicop);
+        this._cutoutop = new CutoutOp(_basicop);
+        this._fillop = new FillOp(_basicop);
+        this._pageop = new PageOp(_basicop);
+        this._pointsop = new PointsOp(_basicop);
+        this._shadowop = new ShadowOp(_basicop);
+        this._shapeop = new ShapeOp(_basicop);
+        this._stylelibop = new StyleLibOp(_basicop);
+        this._tableop = new TableOp(_basicop);
+        this._textop = new TextOp(_basicop);
     }
 
-    // private cmd: LocalCmd | undefined;
-    // 不可以更新
-    // private needUpdateFrame = new FrameUpdateArr();
-    private _ops: Op[] = [];
-
-    get ops() {
-        return this._ops;
+    get basicop() {
+        return this._basicop;
+    }
+    get borderop() {
+        return this._borderop;
+    }
+    get contactop() {
+        return this._contactop;
+    }
+    get cutoutop() {
+        return this._cutoutop;
+    }
+    get fillop() {
+        return this._fillop;
+    }
+    get pageop() {
+        return this._pageop;
+    }
+    get pointsop() {
+        return this._pointsop;
+    }
+    get shadowop() {
+        return this._shadowop;
+    }
+    get shapeop() {
+        return this._shapeop;
+    }
+    get stylelibop() {
+        return this._stylelibop;
+    }
+    get tableop() {
+        return this._tableop;
+    }
+    get textop() {
+        return this._textop;
     }
 
-    reset() {
-        this._ops = [];
-    }
-
-    private addOp(op: Op[] | Op | undefined) {
-        if (Array.isArray(op)) this._ops.push(...op);
-        else if (op) this._ops.push(op);
-        else return false;
-        return true;
+    static create(repo: TransactDataGuard, _basicop?: BasicOp): OperatorT<BasicOp>
+    static create<T extends BasicOp>(repo: TransactDataGuard, _basicop: T): OperatorT<T>
+    static create<T extends BasicOp>(repo: TransactDataGuard, _basicop: T): OperatorT<T> {
+        if (!_basicop) _basicop = new BasicOpImpl() as T;
+        return new Proxy<OperatorT<T>>(new OperatorT<T>(_basicop), new TrapHdl(repo));
     }
 
     modifyDocumentName(document: Document, name: string) {
-        this.addOp(basicapi.crdtSetAttr(document, 'name', name));
+        this._basicop.crdtSetAttr(document, 'name', name);
     }
 
     styleInsert(document: Document, style: StyleMangerMember) {
@@ -192,8 +245,8 @@ export class Operator {
             document.stylelib = libs;
         }
         const lib = libs.find(s => s.id === document.id)!;
-        this.addOp(basicapi.addStyle(lib, style));
-        this.addOp(crdtSetAttr(document.stylesMgr, style.id, style));
+        this._stylelibop.addStyle(lib, style);
+        this._basicop.crdtSetAttr(document.stylesMgr, style.id, style);
     }
 
     modifyStyleName(document: Document, sheetid: string, maskid: string, name: string) {
@@ -203,7 +256,7 @@ export class Operator {
         if (!lib) return
         const mask = lib.variables.find(s => s.id === maskid)
         if (!mask) return
-        this.addOp(basicapi.crdtSetAttr(mask, "name", name));
+        this._basicop.crdtSetAttr(mask, "name", name);
     }
 
     modifyStyleDescription(document: Document, sheetid: string, maskid: string, des: string | undefined) {
@@ -214,7 +267,7 @@ export class Operator {
         const mask = lib.variables.find(s => s.id === maskid)
         if (!mask) return
         const v = des ? des : ''
-        this.addOp(basicapi.crdtSetAttr(mask, "description", v));
+        this._basicop.crdtSetAttr(mask, "description", v);
     }
 
     modifyRadiusMaskRadiusSetting(document: Document, sheetid: string, maskid: string, value: number[]) {
@@ -224,7 +277,7 @@ export class Operator {
         if (!lib) return
         const radiusMask = lib.variables.find(s => s.id === maskid)
         if (!(radiusMask && radiusMask instanceof RadiusMask)) return
-        this.addOp(basicapi.crdtSetAttr(radiusMask, "radius", value));
+        this._basicop.crdtSetAttr(radiusMask, "radius", value);
     }
 
     modifyTextMaskFontName(document: Document, sheetid: string, maskid: string, value: string) {
@@ -234,7 +287,7 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "fontName", value));
+        this._basicop.crdtSetAttr(textMask.text, "fontName", value);
     }
 
     modifyTextMaskWeight(document: Document, sheetid: string, maskid: string, weight: number) {
@@ -244,7 +297,7 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "weight", weight));
+        this._basicop.crdtSetAttr(textMask.text, "weight", weight);
     }
 
     modifyTextMaskItalic(document: Document, sheetid: string, maskid: string, italic: boolean) {
@@ -254,7 +307,7 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "italic", italic));
+        this._basicop.crdtSetAttr(textMask.text, "italic", italic);
     }
 
     modifyTextMaskFontSize(document: Document, sheetid: string, maskid: string, size: number) {
@@ -264,7 +317,7 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "fontSize", size));
+        this._basicop.crdtSetAttr(textMask.text, "fontSize", size);
     }
 
     modifyTextMaskAutoHeight(document: Document, sheetid: string, maskid: string, isAuto: boolean) {
@@ -274,7 +327,7 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "autoLineHeight", isAuto));
+        this._basicop.crdtSetAttr(textMask.text, "autoLineHeight", isAuto);
     }
 
     modifyTextMaskMinHeight(document: Document, sheetid: string, maskid: string, lineHeight: number | undefined) {
@@ -284,7 +337,7 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "minimumLineHeight", lineHeight));
+        this._basicop.crdtSetAttr(textMask.text, "minimumLineHeight", lineHeight);
     }
 
     modifyTextMaskMaxHeight(document: Document, sheetid: string, maskid: string, lineHeight: number | undefined) {
@@ -294,7 +347,7 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "maximumLineHeight", lineHeight));
+        this._basicop.crdtSetAttr(textMask.text, "maximumLineHeight", lineHeight);
     }
 
     modifyTextMaskKerning(document: Document, sheetid: string, maskid: string, kerning: number) {
@@ -304,7 +357,7 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "kerning", kerning));
+        this._basicop.crdtSetAttr(textMask.text, "kerning", kerning);
     }
 
     modifyTextMaskUnderline(document: Document, sheetid: string, maskid: string, underline: UnderlineType | undefined) {    
@@ -314,7 +367,7 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "underline", underline));
+        this._basicop.crdtSetAttr(textMask.text, "underline", underline);
     }
 
     modifyTextMaskStrikethrough(document: Document, sheetid: string, maskid: string, strikethrough: StrikethroughType | undefined) {    
@@ -324,7 +377,7 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "strikethrough", strikethrough));
+        this._basicop.crdtSetAttr(textMask.text, "strikethrough", strikethrough);
     }
 
     modifyTextMaskTransform(document: Document, sheetid: string, maskid: string, transform: TextTransformType | undefined) {    
@@ -334,31 +387,31 @@ export class Operator {
         if (!lib) return
         const textMask = lib.variables.find(s => s.id === maskid)
         if (!(textMask && textMask instanceof TextMask)) return
-        this.addOp(basicapi.crdtSetAttr(textMask.text, "transform", transform));
+        this._basicop.crdtSetAttr(textMask.text, "transform", transform);
     }
 
     pageInsert(document: Document, page: Page, index: number) {
-        this.addOp(basicapi.pageInsert(document, page, index));
+        this._pageop.pageInsert(document, page, index);
     }
     pageDelete(document: Document, index: number) {
-        this.addOp(basicapi.pageDelete(document, index));
+        this._pageop.pageDelete(document, index);
     }
     pageModifyName(document: Document, pageId: string, name: string) {
-        this.addOp(basicapi.pageModifyName(document, pageId, name));
+        this._pageop.pageModifyName(document, pageId, name);
     }
     pageModifyBackground(document: Document, pageId: string, color: Color) {
         const item = document.pagesMgr.getSync(pageId);
         if (!item) return;
-        this.addOp(basicapi.crdtSetAttr(item, "backgroundColor", color));
+        this._basicop.crdtSetAttr(item, "backgroundColor", color);
     }
     pageMove(document: Document, fromIdx: number, toIdx: number) {
-        this.addOp(basicapi.pageMove(document, fromIdx, toIdx));
+        this._pageop.pageMove(document, fromIdx, toIdx);
     }
     insertGuideToPage(page: Page, guide: Guide) {
         if (!page.guides) {
             page.guides = new BasicArray<Guide>();
         }
-        this.addOp(basicapi.crdtArrayInsert(page.guides, page.guides.length, guide));
+        this._basicop.crdtArrayInsert(page.guides, page.guides.length, guide);
         return page.guides.length - 1;
     }
     deleteGuideFromPage(page: Page, index: number) {
@@ -369,7 +422,7 @@ export class Operator {
         if (!g) {
             return;
         }
-        this.addOp(basicapi.crdtArrayRemove(page.guides, index));
+        this._basicop.crdtArrayRemove(page.guides, index);
         return g;
     }
     insertGuide(shape: Shape, guide: Guide) {
@@ -381,7 +434,7 @@ export class Operator {
             (shape as Artboard).guides = new BasicArray<Guide>();
             guides = (shape as Artboard).guides!;
         }
-        this.addOp(basicapi.crdtArrayInsert(guides, guides.length, guide));
+        this._basicop.crdtArrayInsert(guides, guides.length, guide);
         return guides.length - 1;
     }
     deleteGuide(shape: Shape, index: number) {
@@ -394,7 +447,7 @@ export class Operator {
         if (!guide) {
             return;
         }
-        this.addOp(basicapi.crdtArrayRemove(guides, index));
+        this._basicop.crdtArrayRemove(guides, index);
         return guide;
     }
     modifyGuideOffset(shape: Shape, index: number, offset: number) {
@@ -406,28 +459,28 @@ export class Operator {
         if (!guide) {
             return;
         }
-        this.addOp(basicapi.crdtSetAttr(guide, 'offset', offset));
+        this._basicop.crdtSetAttr(guide, 'offset', offset);
     }
     // registSymbol(document: Document, symbolId: string, pageId: string) {
-    //     this.addOp(basicapi.registSymbol(document, symbolId, pageId));
+    //     (this.basicapi.registSymbol(document, symbolId, pageId));
     // }
     shapeInsert(document: Document, page: Page, parent: GroupShape, shape: Shape, index: number) {
-        this.addOp(basicapi.shapeInsert(document, page, parent, shape, index));
+        this._pageop.shapeInsert(document, page, parent, shape, index);
         return page.getShape(shape.id) as Shape;
     }
     shapeDelete(document: Document, page: Page, parent: GroupShape, index: number) {
-        this.addOp(basicapi.shapeDelete(document, page, parent, index));
+        this._pageop.shapeDelete(document, page, parent, index);
     }
     shapeMove(page: Page, fromParent: GroupShape, fromIdx: number, toParent: GroupShape, toIdx: number) {
-        this.addOp(basicapi.shapeMove(page, fromParent, fromIdx, toParent, toIdx));
+        this._pageop.shapeMove(page, fromParent, fromIdx, toParent, toIdx);
     }
     shapeModifyXY(page: Page, shape: Shape, x: number, y: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyXY(page, shape, x, y));
+        this._shapeop.shapeModifyXY(page, shape, x, y);
     }
     // shapeModifyY(page: Page, shape: Shape, y: number) {
     //     checkShapeAtPage(page, shape);
-    //     this.addOp(basicapi.shapeModifyY(page, shape, y));
+    //     (this.basicapi.shapeModifyY(page, shape, y));
     // }
     shapeModifyWH(page: Page, shape: Shape, w: number, h: number) {
         this.shapeModifyWidth(page, shape, w);
@@ -435,60 +488,60 @@ export class Operator {
     }
     shapeModifyWidth(page: Page, shape: Shape, w: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyWidth(page, shape, Math.max(w, 0.01)));
+        this._shapeop.shapeModifyWidth(page, shape, Math.max(w, 0.01));
     }
     shapeModifyHeight(page: Page, shape: Shape, h: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyHeight(page, shape, Math.max(h, 0.01)));
+        this._shapeop.shapeModifyHeight(page, shape, Math.max(h, 0.01));
     }
     shapeModifyCounts(page: Page, shape: (PolygonShape | StarShape), counts: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyCounts(shape, counts));
+        this._shapeop.shapeModifyCounts(shape, counts);
     }
     shapeModifyInnerAngle(page: Page, shape: StarShape, offset: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyInnerAngle(shape, offset));
+        this._shapeop.shapeModifyInnerAngle(shape, offset);
     }
     shapeModifyStartMarkerType(page: Page, shape: Shape, mt: MarkerType) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyStartMarkerType(shape, mt));
+        this._shapeop.shapeModifyStartMarkerType(shape, mt);
     }
     shapeModifyEndMarkerType(page: Page, shape: Shape, mt: MarkerType) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyEndMarkerType(shape, mt));
+        this._shapeop.shapeModifyEndMarkerType(shape, mt);
     }
 
     shapeModifyContactFrom(page: Page, shape: ContactShape, from: ContactForm | undefined) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "from", from));
+        this._basicop.crdtSetAttr(shape, "from", from);
     }
     shapeModifyContactTo(page: Page, shape: ContactShape, to: ContactForm | undefined) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "to", to));
+        this._basicop.crdtSetAttr(shape, "to", to);
     }
     contactModifyEditState(page: Page, shape: ContactShape, state: boolean) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "isEdited", state));
+        this._basicop.crdtSetAttr(shape, "isEdited", state);
     }
     shapeModifyTransform(page: Page, shape: Shape, transform: Transform) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyTransform(page, shape, transform));
+        this._shapeop.shapeModifyTransform(page, shape, transform);
     }
     shapeModifyRotate(page: Page, shape: Shape, rotate: Transform) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyTransform(page, shape, rotate));
+        this._shapeop.shapeModifyTransform(page, shape, rotate);
     }
     shapeModifyConstrainerProportions(page: Page, shape: Shape, prop: boolean) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyConstrainerProportions(shape, prop));
+        this._shapeop.shapeModifyConstrainerProportions(shape, prop);
     }
     shapeModifyName(page: Page, shape: Shape, name: string) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "name", name));
+        this._basicop.crdtSetAttr(shape, "name", name);
     }
     shapeModifyNameFixed(page: Page, shape: Shape, isFixed: boolean) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyNameFixed(shape, isFixed));
+        this._shapeop.shapeModifyNameFixed(shape, isFixed);
     }
     shapeModifyVariable(page: Page, _var: Variable, value: any) {
         // modify text var
@@ -500,48 +553,48 @@ export class Operator {
             return;
         }
         checkShapeAtPage(page, _var);
-        this.addOp(basicapi.crdtSetAttr(_var, "value", value));
+        this._basicop.crdtSetAttr(_var, "value", value);
     }
     shapeModifyVariableName(page: Page, _var: Variable, name: string) {
         checkShapeAtPage(page, _var);
-        this.addOp(basicapi.crdtSetAttr(_var, "name", name));
+        this._basicop.crdtSetAttr(_var, "name", name);
     }
     shapeAddVariable(page: Page, shape: SymbolShape | SymbolRefShape, _var: Variable) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeAddVariable(page, shape, _var));
+        this._shapeop.shapeAddVariable(page, shape, _var);
     }
     shapeRemoveVariable(page: Page, shape: SymbolShape | SymbolRefShape, key: string) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeRemoveVariable(page, shape, key));
+        this._shapeop.shapeRemoveVariable(page, shape, key);
     }
     shapeRemoveOverride(page: Page, shape: SymbolRefShape, key: string) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeRemoveOverride(shape, key));
+        this._shapeop.shapeRemoveOverride(shape, key);
     }
     shapeBindVar(page: Page, shape: Shape, type: OverrideType, varId: string) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeBindVar(page, shape, type, varId));
+        this._shapeop.shapeBindVar(page, shape, type, varId);
     }
     shapeUnbinVar(page: Page, shape: Shape, type: OverrideType) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeUnbindVar(shape, type));
+        this._shapeop.shapeUnbindVar(shape, type);
     }
 
     shapeAddOverride(page: Page, shape: SymbolRefShape, refId: string, value: string) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeAddOverride(page, shape, refId, value));
+        this._shapeop.shapeAddOverride(page, shape, refId, value);
     }
 
     private _shapeModifyAttr(page: Page, shape: Shape, attr: string, val: any) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, attr, val));
+        this._basicop.crdtSetAttr(shape, attr, val);
     }
     /**
      * @description 初始化或修改组件的状态属性
      */
     shapeModifyVartag(page: Page, shape: SymbolShape, varId: string, tag: string) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyVartag(page, shape, varId, tag));
+        this._shapeop.shapeModifyVartag(page, shape, varId, tag);
     }
     shapeModifyVisible(page: Page, shape: Shape, isVisible: boolean) {
         this._shapeModifyAttr(page, shape, "isVisible", isVisible);
@@ -557,11 +610,11 @@ export class Operator {
     }
     shapeModifyHFlip(page: Page, shape: Shape) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyHFlip(page, shape));
+        this._shapeop.shapeModifyHFlip(page, shape);
     }
     shapeModifyVFlip(page: Page, shape: Shape,) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyVFlip(page, shape));
+        this._shapeop.shapeModifyVFlip(page, shape);
     }
 
     shapeModifyContextSettingsOpacity(page: Page, shape: Shape | Variable, contextSettingsOpacity: number) {
@@ -576,7 +629,7 @@ export class Operator {
         } else {
             contextSettings = shape.value;
         }
-        this.addOp(basicapi.crdtSetAttr(contextSettings, 'opacity', contextSettingsOpacity));
+        this._basicop.crdtSetAttr(contextSettings, 'opacity', contextSettingsOpacity);
     }
     shapeModifyContextSettingsBlendMode(page: Page, shape: Shape | Variable, blendMode: BlendMode) {
         checkShapeAtPage(page, shape);
@@ -587,16 +640,16 @@ export class Operator {
         } else {
             contextSettings = shape.value;
         }
-        this.addOp(basicapi.crdtSetAttr(contextSettings, 'blenMode', blendMode));
+        this._basicop.crdtSetAttr(contextSettings, 'blenMode', blendMode);
     }
     setShapeProtoStart(page: Page, shape: Shape, PSPoint: PrototypeStartingPoint | undefined) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "prototypeStartingPoint", PSPoint));
+        this._basicop.crdtSetAttr(shape, "prototypeStartingPoint", PSPoint);
     }
 
     delShapeProtoStart(page: Page, shape: Shape) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, "prototypeStartingPoint", undefined));
+        this._basicop.crdtSetAttr(shape, "prototypeStartingPoint", undefined);
     }
 
     insertShapeprototypeInteractions(page: Page, shape: Shape | Variable, action: PrototypeInteraction) {
@@ -607,15 +660,15 @@ export class Operator {
             prototypeInteractions = shape.prototypeInteractions!;
         }
         if (!prototypeInteractions) throw new Error();
-        this.addOp(basicapi.crdtArrayInsert(prototypeInteractions, prototypeInteractions.length, action))
+        (this._basicop.crdtArrayInsert(prototypeInteractions, prototypeInteractions.length, action))
     }
 
     deleteShapePrototypeInteractions(page: Page, shape: Shape | Variable, id: string) {
         checkShapeAtPage(page, shape)
         const prototypeInteractions: BasicArray<PrototypeInteraction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
         if (!prototypeInteractions) return;
-        const index = prototypeInteractions?.findIndex(i => i.id === id)
-        this.addOp(basicapi.crdtArrayRemove(prototypeInteractions, index))
+        const index = prototypeInteractions.findIndex(i => i.id === id)
+        this._basicop.crdtArrayRemove(prototypeInteractions, index)
     }
 
     shapeModifyPrototypeActionDeleted(page: Page, shape: Shape | Variable, id: string, isDeleted: boolean) {
@@ -623,7 +676,7 @@ export class Operator {
         const prototypeInteractions: BasicArray<PrototypeInteraction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
         const action = prototypeInteractions?.find(i => i.id === id)
         if (!action || (!!action.isDeleted) === isDeleted) return;
-        this.addOp(basicapi.crdtSetAttr(action, 'isDeleted', isDeleted))
+        this._basicop.crdtSetAttr(action, 'isDeleted', isDeleted)
     }
 
     shapeModifyPrototypeActionEvent(page: Page, shape: Shape | Variable, id: string, value: PrototypeEvents) {
@@ -631,7 +684,7 @@ export class Operator {
         const prototypeInteractions: BasicArray<PrototypeInteraction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
         const action = prototypeInteractions?.find(i => i.id === id)
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action.event, 'interactionType', value))
+        this._basicop.crdtSetAttr(action.event, 'interactionType', value)
     }
 
     shapeModifyPrototypeActionEventTime(page: Page, shape: Shape | Variable, id: string, value: number) {
@@ -639,7 +692,7 @@ export class Operator {
         const prototypeInteractions: BasicArray<PrototypeInteraction> = shape instanceof Variable ? shape.value : shape.prototypeInteractions;
         const action = prototypeInteractions?.find(i => i.id === id)
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action.event, 'transitionTimeout', value))
+        this._basicop.crdtSetAttr(action.event, 'transitionTimeout', value)
     }
 
     shapeModifyPrototypeActionConnNav(page: Page, shape: Shape | Variable, id: string, conn: PrototypeConnectionType | undefined, nav: PrototypeNavigationType | undefined) {
@@ -648,8 +701,8 @@ export class Operator {
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action, 'connectionType', conn))
-        this.addOp(basicapi.crdtSetAttr(action, 'navigationType', nav))
+        this._basicop.crdtSetAttr(action, 'connectionType', conn)
+        this._basicop.crdtSetAttr(action, 'navigationType', nav)
     }
 
     shapeModifyPrototypeActionTargetNodeID(page: Page, shape: Shape | Variable, id: string, value: string | undefined) {
@@ -658,7 +711,7 @@ export class Operator {
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action, 'targetNodeID', value))
+        this._basicop.crdtSetAttr(action, 'targetNodeID', value)
     }
 
     shapeModifyPrototypeActionTransitionType(page: Page, shape: Shape | Variable, id: string, value: PrototypeTransitionType) {
@@ -667,7 +720,7 @@ export class Operator {
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action, 'transitionType', value))
+        this._basicop.crdtSetAttr(action, 'transitionType', value)
     }
 
     shapeModifyPrototypeActionTransitionDuration(page: Page, shape: Shape | Variable, id: string, value: number) {
@@ -676,7 +729,7 @@ export class Operator {
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action, 'transitionDuration', value))
+        this._basicop.crdtSetAttr(action, 'transitionDuration', value)
     }
 
     shapeModifyPrototypeActionEasingType(page: Page, shape: Shape | Variable, id: string, value: PrototypeEasingType) {
@@ -685,7 +738,7 @@ export class Operator {
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action, 'easingType', value));
+        this._basicop.crdtSetAttr(action, 'easingType', value)
     }
 
     shapeModifyPrototypeActionConnectionURL(page: Page, shape: Shape | Variable, id: string, value: string) {
@@ -694,7 +747,7 @@ export class Operator {
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action, 'connectionURL', value))
+        this._basicop.crdtSetAttr(action, 'connectionURL', value)
     }
 
     shapeModifyPrototypeIsOpenNewTab(page: Page, shape: Shape | Variable, id: string, value: boolean) {
@@ -703,7 +756,7 @@ export class Operator {
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action, 'openUrlInNewTab', value))
+        this._basicop.crdtSetAttr(action, 'openUrlInNewTab', value)
     }
 
     shapeModifyPrototypeActionOpenUrlInNewTab(page: Page, shape: Shape | Variable, id: string, value: boolean) {
@@ -712,7 +765,7 @@ export class Operator {
         if (!prototypeInteractions) return;
         const action = prototypeInteractions?.find(i => i.id === id)?.actions;
         if (!action) return;
-        this.addOp(basicapi.crdtSetAttr(action, 'openUrlInNewTab', value))
+        this._basicop.crdtSetAttr(action, 'openUrlInNewTab', value)
     }
 
     shapeModifyPrototypeActionEasingFunction(page: Page, shape: Shape | Variable, id: string, value: PrototypeEasingBezier) {
@@ -724,9 +777,9 @@ export class Operator {
         let easingFunction = action.easingFunction;
         if (!easingFunction) {
             easingFunction = new PrototypeEasingBezier(0, 0, 1, 1)
-            this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', easingFunction))
+            this._basicop.crdtSetAttr(action, 'easingFunction', easingFunction)
         }
-        this.addOp(basicapi.crdtSetAttr(action, 'easingFunction', value))
+        this._basicop.crdtSetAttr(action, 'easingFunction', value)
     }
 
     shapeModifyPrototypeExtraScrollOffsetX(page: Page, shape: Shape | Variable, id: string, value: number) {
@@ -739,9 +792,9 @@ export class Operator {
         if (!extraScrollOffset) {
             const id = uuid()
             extraScrollOffset = new Point2D(0, 0)
-            this.addOp(basicapi.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset))
+            this._basicop.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset)
         }
-        this.addOp(basicapi.crdtSetAttr(extraScrollOffset, 'x', value))
+        this._basicop.crdtSetAttr(extraScrollOffset, 'x', value)
     }
 
     shapeModifyPrototypeExtraScrollOffsetY(page: Page, shape: Shape | Variable, id: string, value: number) {
@@ -754,9 +807,9 @@ export class Operator {
         if (!extraScrollOffset) {
             const id = uuid()
             extraScrollOffset = new Point2D(0, 0)
-            this.addOp(basicapi.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset))
+            this._basicop.crdtSetAttr(action, 'extraScrollOffset', extraScrollOffset)
         }
-        this.addOp(basicapi.crdtSetAttr(extraScrollOffset, 'y', value))
+        this._basicop.crdtSetAttr(extraScrollOffset, 'y', value)
 
     }
 
@@ -768,13 +821,13 @@ export class Operator {
             shape.overlayPosition = overlayPosition;
         }
         if (!overlayPosition) throw new Error();
-        this.addOp(basicapi.crdtSetAttr(overlayPosition, 'position', value))
+        this._basicop.crdtSetAttr(overlayPosition, 'position', value)
         const margin = overlayPosition.margin
         if (!margin) return;
-        if (margin.top) this.addOp(basicapi.crdtSetAttr(margin, 'top', 0))
-        if (margin.bottom) this.addOp(basicapi.crdtSetAttr(margin, 'bottom', 0))
-        if (margin.left) this.addOp(basicapi.crdtSetAttr(margin, 'left', 0))
-        if (margin.right) this.addOp(basicapi.crdtSetAttr(margin, 'right', 0))
+        if (margin.top) this._basicop.crdtSetAttr(margin, 'top', 0)
+        if (margin.bottom) this._basicop.crdtSetAttr(margin, 'bottom', 0)
+        if (margin.left) this._basicop.crdtSetAttr(margin, 'left', 0)
+        if (margin.right) this._basicop.crdtSetAttr(margin, 'right', 0)
     }
 
     shapeModifyOverlayPositionTypeMarginTop(page: Page, shape: Shape, value: number) {
@@ -782,7 +835,7 @@ export class Operator {
         const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
         const margin = overlayPosition?.margin
         if (!margin) return;
-        this.addOp(basicapi.crdtSetAttr(margin, 'top', value))
+        this._basicop.crdtSetAttr(margin, 'top', value)
     }
 
     shapeModifyOverlayPositionTypeMarginBottom(page: Page, shape: Shape, value: number) {
@@ -790,7 +843,7 @@ export class Operator {
         const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
         const margin = overlayPosition?.margin
         if (!margin) return;
-        this.addOp(basicapi.crdtSetAttr(margin, 'bottom', value))
+        this._basicop.crdtSetAttr(margin, 'bottom', value)
     }
 
     shapeModifyOverlayPositionTypeMarginLeft(page: Page, shape: Shape, value: number) {
@@ -798,7 +851,7 @@ export class Operator {
         const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
         const margin = overlayPosition?.margin
         if (!margin) return;
-        this.addOp(basicapi.crdtSetAttr(margin, 'left', value))
+        this._basicop.crdtSetAttr(margin, 'left', value)
     }
 
     shapeModifyOverlayPositionTypeMarginRight(page: Page, shape: Shape, value: number) {
@@ -806,12 +859,12 @@ export class Operator {
         const overlayPosition: OverlayPosition | undefined = shape.overlayPosition
         const margin = overlayPosition?.margin
         if (!margin) return;
-        this.addOp(basicapi.crdtSetAttr(margin, 'right', value))
+        this._basicop.crdtSetAttr(margin, 'right', value)
     }
 
     shapeModifyOverlayBackgroundInteraction(page: Page, shape: Shape, value: OverlayBackgroundInteraction) {
         checkShapeAtPage(page, shape)
-        this.addOp(basicapi.crdtSetAttr(shape, "overlayBackgroundInteraction", value));
+        this._basicop.crdtSetAttr(shape, "overlayBackgroundInteraction", value);
     }
 
     shapeModifyOverlayBackgroundAppearance(page: Page, shape: Shape, value?: OverlayBackgroundAppearance) {
@@ -819,20 +872,20 @@ export class Operator {
         let Appearance = (shape as Artboard).overlayBackgroundAppearance
         if (!Appearance) {
             const val = new OverlayBackgroundAppearance(OverlayBackgroundType.SOLIDCOLOR, new Color(0.25, 0, 0, 0))
-            this.addOp(basicapi.crdtSetAttr(shape, "overlayBackgroundAppearance", val));
+            this._basicop.crdtSetAttr(shape, "overlayBackgroundAppearance", val);
         } else {
-            this.addOp(basicapi.crdtSetAttr(shape, "overlayBackgroundAppearance", value));
+            this._basicop.crdtSetAttr(shape, "overlayBackgroundAppearance", value);
         }
     }
 
     shapeModifyscrollDirection(page: Page, shape: Shape, value: ScrollDirection) {
         checkShapeAtPage(page, shape)
-        this.addOp(basicapi.crdtSetAttr(shape, "scrollDirection", value));
+        this._basicop.crdtSetAttr(shape, "scrollDirection", value);
     }
 
     shapeModifyScrollBehavior(page: Page, shape: Shape, value: ScrollBehavior) {
         checkShapeAtPage(page, shape)
-        this.addOp(basicapi.crdtSetAttr(shape, "scrollBehavior", value));
+        this._basicop.crdtSetAttr(shape, "scrollBehavior", value);
     }
 
     shapeModifyResizingConstraint(page: Page, shape: Shape, resizingConstraint: number) {
@@ -840,27 +893,27 @@ export class Operator {
     }
     shapeModifyRadius(page: Page, shape: RectShape, lt: number, rt: number, rb: number, lb: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyRadius(shape, lt, rt, rb, lb));
+        this._shapeop.shapeModifyRadius(shape, lt, rt, rb, lb);
     }
     shapeModifyRadius2(page: Page, shape: Artboard | SymbolShape | Variable, lt: number, rt: number, rb: number, lb: number) {
         checkShapeAtPage(page, shape);
         const cornerRadius = shape instanceof Variable ? shape.value : shape.cornerRadius;
-        this.addOp(basicapi.shapeModifyRadius2(shape, cornerRadius, lt, rt, rb, lb));
+        this._shapeop.shapeModifyRadius2(shape, cornerRadius, lt, rt, rb, lb);
     }
     shapeModifyFixedRadius(page: Page, shape: GroupShape | PathShape | TextShape, fixedRadius: number | undefined) {
         this._shapeModifyAttr(page, shape, "fixedRadius", fixedRadius);
     }
     shapeModifyCurvPoint(page: Page, shape: PathShape, index: number, point: types.Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyCurvPoint(shape, index, point, segmentIndex));
+        this._shapeop.shapeModifyCurvPoint(shape, index, point, segmentIndex);
     }
     shapeModifyCurvFromPoint(page: Page, shape: PathShape, index: number, point: types.Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyCurvFromPoint(shape, index, point, segmentIndex));
+        this._shapeop.shapeModifyCurvFromPoint(shape, index, point, segmentIndex);
     }
     shapeModifyCurvToPoint(page: Page, shape: PathShape, index: number, point: types.Point2D, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyCurvToPoint(shape, index, point, segmentIndex));
+        this._shapeop.shapeModifyCurvToPoint(shape, index, point, segmentIndex);
     }
     shapeModifyBoolOp(page: Page, shape: Shape, op: BoolOp | undefined) {
         this._shapeModifyAttr(page, shape, "boolOp", op);
@@ -874,7 +927,7 @@ export class Operator {
     shapeAutoLayout(page: Page, shape: Shape | Variable, autoLayout: AutoLayout | undefined) {
         checkShapeAtPage(page, shape);
         if (!(shape instanceof Variable) && !(shape instanceof Artboard) && !(shape instanceof SymbolShape)) return;
-        this.addOp(basicapi.shapeAutoLayout(shape, autoLayout));
+        this._shapeop.shapeAutoLayout(shape, autoLayout);
     }
 
     shapeModifyAutoLayoutPadding(page: Page, shape: Shape | Variable, padding: number, direction: PaddingDir) {
@@ -882,13 +935,13 @@ export class Operator {
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
         if (!autoLayout) return;
         if (direction === 'top') {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackVerticalPadding', padding));
+            this._basicop.crdtSetAttr(autoLayout, 'stackVerticalPadding', padding);
         } else if (direction === 'right') {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPaddingRight', padding));
+            this._basicop.crdtSetAttr(autoLayout, 'stackPaddingRight', padding);
         } else if (direction === 'bottom') {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPaddingBottom', padding));
+            this._basicop.crdtSetAttr(autoLayout, 'stackPaddingBottom', padding);
         } else if (direction === 'left') {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackHorizontalPadding', padding));
+            this._basicop.crdtSetAttr(autoLayout, 'stackHorizontalPadding', padding);
         }
     }
     shapeModifyAutoLayoutHorPadding(page: Page, shape: Shape | Variable, hor: number, right: number) {
@@ -896,28 +949,28 @@ export class Operator {
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
 
         if (!autoLayout) return;
-        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackHorizontalPadding', hor));
-        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPaddingRight', right));
+        this._basicop.crdtSetAttr(autoLayout, 'stackHorizontalPadding', hor);
+        this._basicop.crdtSetAttr(autoLayout, 'stackPaddingRight', right);
     }
     shapeModifyAutoLayoutVerPadding(page: Page, shape: Shape | Variable, ver: number, bottom: number) {
         checkShapeAtPage(page, shape);
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
         if (!autoLayout) return;
-        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackVerticalPadding', ver));
-        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPaddingBottom', bottom));
+        this._basicop.crdtSetAttr(autoLayout, 'stackVerticalPadding', ver);
+        this._basicop.crdtSetAttr(autoLayout, 'stackPaddingBottom', bottom);
     }
     shapeModifyAutoLayoutWrap(page: Page, shape: Shape | Variable, wrap: StackWrap) {
         checkShapeAtPage(page, shape);
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
         if (!autoLayout || autoLayout.stackWrap === wrap) return;
-        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackWrap', wrap));
+        this._basicop.crdtSetAttr(autoLayout, 'stackWrap', wrap);
     }
 
     shapeModifyAutoLayoutMode(page: Page, shape: Shape | Variable, mode: StackMode) {
         checkShapeAtPage(page, shape);
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
         if (!autoLayout || autoLayout.stackMode === mode) return;
-        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackMode', mode));
+        this._basicop.crdtSetAttr(autoLayout, 'stackMode', mode);
     }
 
     shapeModifyAutoLayoutSpace(page: Page, shape: Shape | Variable, space: number, direction: PaddingDir) {
@@ -925,9 +978,9 @@ export class Operator {
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
         if (!autoLayout) return;
         if (direction === 'ver') {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackCounterSpacing', space));
+            this._basicop.crdtSetAttr(autoLayout, 'stackCounterSpacing', space);
         } else if (direction === 'hor') {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackSpacing', space));
+            this._basicop.crdtSetAttr(autoLayout, 'stackSpacing', space);
         }
     }
 
@@ -936,10 +989,10 @@ export class Operator {
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
         if (!autoLayout) return;
         if (autoLayout.stackCounterAlignItems !== counter) {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackCounterAlignItems', counter));
+            this._basicop.crdtSetAttr(autoLayout, 'stackCounterAlignItems', counter);
         }
         if (autoLayout.stackPrimaryAlignItems !== primary) {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPrimaryAlignItems', primary));
+            this._basicop.crdtSetAttr(autoLayout, 'stackPrimaryAlignItems', primary);
         }
     }
 
@@ -948,9 +1001,9 @@ export class Operator {
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
         if (!autoLayout) return;
         if (direction === 'ver' && autoLayout.stackCounterSizing !== sizing) {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackCounterSizing', sizing));
+            this._basicop.crdtSetAttr(autoLayout, 'stackCounterSizing', sizing);
         } else if (direction === 'hor' && autoLayout.stackPrimarySizing !== sizing) {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackPrimarySizing', sizing));
+            this._basicop.crdtSetAttr(autoLayout, 'stackPrimarySizing', sizing);
         }
     }
     shapeModifyAutoLayoutGapSizing(page: Page, shape: Shape | Variable, sizing: StackSizing, direction: PaddingDir) {
@@ -958,35 +1011,35 @@ export class Operator {
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
         if (!autoLayout) return;
         if (direction === 'ver' && autoLayout.stackVerticalGapSizing !== sizing) {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackVerticalGapSizing', sizing));
+            this._basicop.crdtSetAttr(autoLayout, 'stackVerticalGapSizing', sizing);
         } else if (direction === 'hor' && autoLayout.stackHorizontalGapSizing !== sizing) {
-            this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackHorizontalGapSizing', sizing));
+            this._basicop.crdtSetAttr(autoLayout, 'stackHorizontalGapSizing', sizing);
         }
     }
     shapeModifyAutoLayoutStackZIndex(page: Page, shape: Shape | Variable, stack: boolean) {
         checkShapeAtPage(page, shape);
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
         if (!autoLayout) return;
-        this.addOp(basicapi.crdtSetAttr(autoLayout, 'stackReverseZIndex', stack));
+        this._basicop.crdtSetAttr(autoLayout, 'stackReverseZIndex', stack);
     }
     shapeModifyAutoLayoutStroke(page: Page, shape: Shape | Variable, stroke: boolean) {
         checkShapeAtPage(page, shape);
         const autoLayout = shape instanceof Variable ? shape.value : (shape as Artboard).autoLayout;
         if (!autoLayout) return;
-        this.addOp(basicapi.crdtSetAttr(autoLayout, 'bordersTakeSpace', stroke));
+        this._basicop.crdtSetAttr(autoLayout, 'bordersTakeSpace', stroke);
     }
 
     addStrokePaint(page: Page, shape: Shape | Variable, strokePaint: Fill, index: number) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-        this.addOp(basicapi.addStrokePaint(borders.strokePaints, strokePaint, index));
+        this._borderop.addStrokePaint(borders.strokePaints, strokePaint, index);
     }
     addStrokePaints(page: Page, shape: Shape | Variable, strokePaints: Fill[]) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
         for (let i = 0; i < strokePaints.length; i++) {
             const strokePaint = strokePaints[i];
-            this.addOp(basicapi.addStrokePaint(borders.strokePaints, strokePaint, i))
+            this._borderop.addStrokePaint(borders.strokePaints, strokePaint, i)
         }
     }
 
@@ -994,196 +1047,196 @@ export class Operator {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
         if (borders && borders.strokePaints) {
-            this.addOp(basicapi.deleteStrokePaintAt(borders.strokePaints, index));
+            this._borderop.deleteStrokePaintAt(borders.strokePaints, index);
         }
     }
 
     deleteStrokePaints(page: Page, shape: Shape | Variable, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         const bordersOld = shape instanceof Shape ? shape.style.borders : shape.value;
-        this.addOp(basicapi.deleteStrokePaints(bordersOld.strokePaints, index, strength));
+        this._borderop.deleteStrokePaints(bordersOld.strokePaints, index, strength);
     }
 
     /* 添加一条填充 */
     addFillAt(fills: BasicArray<Fill>, fill: Fill, index: number) {
-        this.addOp(basicapi.addFillAt(fills, fill, index));
+        this._fillop.addFillAt(fills, fill, index);
     }
 
     /* 添加多条填充 */
     addFills(fills: BasicArray<Fill>, plus: Fill[]) {
-        plus.forEach(fill => this.addOp(basicapi.addFillAt(fills, fill, fills.length)))
+        plus.forEach(fill => this._fillop.addFillAt(fills, fill, fills.length))
     }
 
     /* 删除一条填充 */
     deleteFillAt(fills: BasicArray<Fill>, index: number) {
-        this.addOp(basicapi.deleteFillAt(fills, index));
+        this._fillop.deleteFillAt(fills, index);
     }
 
     /* 批量删除fill */
     deleteFills(fills: BasicArray<Fill>, index: number, strength: number) {
-        this.addOp(basicapi.deleteFills(fills, index, strength));
+        this._fillop.deleteFills(fills, index, strength);
     }
 
     /* 设置一条填充的填充类型 */
     setFillType(fill: Fill, fillType: FillType) {
-        this.addOp(basicapi.crdtSetAttr(fill, "fillType", fillType));
+        this._basicop.crdtSetAttr(fill, "fillType", fillType);
     }
 
     /* 修改一条填充的颜色 */
     setFillColor(fill: Fill, color: Color) {
-        this.addOp(basicapi.crdtSetAttr(fill, "color", color));
+        this._basicop.crdtSetAttr(fill, "color", color);
     }
 
     /* 隐藏与显示一条填充 */
     setFillEnable(fill: Fill, isEnable: boolean) {
-        this.addOp(basicapi.crdtSetAttr(fill, "isEnabled", isEnable));
+        this._basicop.crdtSetAttr(fill, "isEnabled", isEnable);
     }
 
     /* 当一个填充以图片作为填充物时，用于修改图片的填充方式 */
     setFillScaleMode(fill: Fill, mode: ImageScaleMode) {
-        this.addOp(basicapi.crdtSetAttr(fill, "imageScaleMode", mode));
+        this._basicop.crdtSetAttr(fill, "imageScaleMode", mode);
     }
 
     /* 当一个填充以图片作为填充物时，用于修改图片的资源链接 */
     setFillImageRef(document: Document, fill: Fill, urlRef: string, imageMgr: { buff: Uint8Array, base64: string }) {
         document.mediasMgr.add(urlRef, imageMgr);
         fill.setImageMgr(document.mediasMgr);
-        this.addOp(basicapi.crdtSetAttr(fill, "imageRef", urlRef));
+        this._basicop.crdtSetAttr(fill, "imageRef", urlRef);
     }
 
     /* 当一个填充以图片作为填充物时，用于修改图片的原始宽度 */
     setFillImageOriginWidth(fill: Fill, width: number) {
-        this.addOp(basicapi.crdtSetAttr(fill, "originalImageWidth", width));
+        this._basicop.crdtSetAttr(fill, "originalImageWidth", width);
     }
 
     /* 当一个填充以图片作为填充物时，用于修改图片的原始高度 */
     setFillImageOriginHeight(fill: Fill, height: number) {
-        this.addOp(basicapi.crdtSetAttr(fill, "originalImageHeight", height));
+        this._basicop.crdtSetAttr(fill, "originalImageHeight", height);
     }
 
     /* 当一个填充以图片作为填充物并以平铺方式填充时，用于修改图片相对于原始尺寸的缩放值 */
     setFillImageScale(fill: Fill, scale: number) {
-        this.addOp(basicapi.crdtSetAttr(fill, "scale", scale));
+        this._basicop.crdtSetAttr(fill, "scale", scale);
     }
 
     /* 当一个填充以图片作为填充物并以平铺方式填充时，用于旋转图片 */
     setFillImageRotate(fill: Fill, rotate: number) {
-        this.addOp(basicapi.crdtSetAttr(fill, "rotation", rotate));
+        this._basicop.crdtSetAttr(fill, "rotation", rotate);
     }
 
     /* 当一个填充以图片作为填充物并以平铺方式填充时，用于修改图片滤镜 */
     setFillImageFilter(fill: Fill, key: PaintFilterType, value: number) {
         if (fill.paintFilter) {
-            this.addOp(basicapi.crdtSetAttr(fill.paintFilter, key, value));
+            this._basicop.crdtSetAttr(fill.paintFilter, key, value);
         } else {
             const paintFilter = new PaintFilter(0, 0, 0, 0, 0, 0, 0);
             paintFilter[key] = value;
-            this.addOp(basicapi.crdtSetAttr(fill, "paintFilter", paintFilter));
+            this._basicop.crdtSetAttr(fill, "paintFilter", paintFilter);
         }
     }
 
     /* 修改一条填充的渐变色 */
     setFillGradient(fill: Fill, gradient: Gradient) {
-        this.addOp(basicapi.crdtSetAttr(fill, "gradient", gradient));
+        this._basicop.crdtSetAttr(fill, "gradient", gradient);
     }
 
     setGradientOpacity(gradient: Gradient, opacity: number) {
-        this.addOp(basicapi.crdtSetAttr(gradient, "gradientOpacity", opacity));
+        this._basicop.crdtSetAttr(gradient, "gradientOpacity", opacity);
     }
 
     setBorderGradient(page: Page, shape: Shape | Variable, idx: number, gradient: Gradient) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
         const strokePaint: Fill = borders.strokePaints[idx];
-        this.addOp(basicapi.crdtSetAttr(strokePaint, "gradient", gradient));
+        this._basicop.crdtSetAttr(strokePaint, "gradient", gradient);
     }
     setBorderColor(page: Page, shape: Shape | Variable | FillMask, idx: number, color: Color) {
         // checkShapeAtPage(page, shape);
         if (shape instanceof FillMask) {
             const fill: Fill = shape.fills[idx];
             if (!fill) return;
-            this.addOp(basicapi.crdtSetAttr(fill, "color", color));
+            this._basicop.crdtSetAttr(fill, "color", color);
         } else {
             const borders = shape instanceof Shape ? shape.style.borders : shape.value;
             const strokePaint: Fill = borders.strokePaints[idx];
-            this.addOp(basicapi.crdtSetAttr(strokePaint, "color", color));
+            this._basicop.crdtSetAttr(strokePaint, "color", color);
         }
     }
     setBorderEnable(page: Page, shape: Shape | Variable, idx: number, isEnable: boolean) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
         const strokePaint: Fill = borders.strokePaints[idx];
-        this.addOp(basicapi.crdtSetAttr(strokePaint, "isEnabled", isEnable));
+        this._basicop.crdtSetAttr(strokePaint, "isEnabled", isEnable);
     }
     setBorderPosition(border: Border | BorderMaskType, position: BorderPosition) {
-        this.addOp(basicapi.crdtSetAttr(border, "position", position));
+        this._basicop.crdtSetAttr(border, "position", position);
     }
     setBorderStyle(page: Page, shape: Shape | Variable, borderStyle: BorderStyle) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-        this.addOp(basicapi.crdtSetAttr(borders, "borderStyle", borderStyle));
+        this._basicop.crdtSetAttr(borders, "borderStyle", borderStyle);
     }
 
     setBorderFillMask(style: Style, value: string | undefined) {
-        this.addOp(basicapi.crdtSetAttr(style.borders, "fillsMask", value));
+        this._basicop.crdtSetAttr(style.borders, "fillsMask", value);
     }
 
     delBorderFillMask(style: Style) {
-        this.addOp(basicapi.crdtSetAttr(style.borders, "fillsMask", undefined));
+        this._basicop.crdtSetAttr(style.borders, "fillsMask", undefined);
     }
 
     moveFill(page: Page, shape: Shape | Variable, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
         const fills = shape instanceof Shape ? shape.style.fills : shape.value;
-        this.addOp(basicapi.moveFill(fills, idx, idx2));
+        this._fillop.moveFill(fills, idx, idx2);
     }
     moveStrokePaint(page: Page, shape: Shape | Variable, idx: number, idx2: number) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-        this.addOp(basicapi.moveStrokePaint(borders.strokePaints, idx, idx2));
+        this._borderop.moveStrokePaint(borders.strokePaints, idx, idx2);
     }
     setBorderCornerType(page: Page, shape: Shape | Variable, cornerType: CornerType) {
         checkShapeAtPage(page, shape);
         const borders = shape instanceof Shape ? shape.style.borders : shape.value;
-        this.addOp(basicapi.crdtSetAttr(borders, "cornerType", cornerType));
+        this._basicop.crdtSetAttr(borders, "cornerType", cornerType);
     }
     setBorderSide(border: Border, sideSetting: BorderSideSetting) {
-        this.addOp(basicapi.crdtSetAttr(border, "sideSetting", sideSetting))
+        this._basicop.crdtSetAttr(border, "sideSetting", sideSetting)
     }
     setBorderThicknessTop(border: Border, thickness: number) {
-        this.addOp(basicapi.crdtSetAttr(border.sideSetting, "thicknessTop", thickness))
+        this._basicop.crdtSetAttr(border.sideSetting, "thicknessTop", thickness)
     }
     setBorderThicknessLeft(border: Border, thickness: number) {
-        this.addOp(basicapi.crdtSetAttr(border.sideSetting, "thicknessLeft", thickness));
+        this._basicop.crdtSetAttr(border.sideSetting, "thicknessLeft", thickness);
     }
     setBorderThicknessBottom(border: Border, thickness: number) {
-        this.addOp(basicapi.crdtSetAttr(border.sideSetting, "thicknessBottom", thickness));
+        this._basicop.crdtSetAttr(border.sideSetting, "thicknessBottom", thickness);
     }
     setBorderThicknessRight(border: Border, thickness: number) {
-        this.addOp(basicapi.crdtSetAttr(border.sideSetting, "thicknessRight", thickness));
+        this._basicop.crdtSetAttr(border.sideSetting, "thicknessRight", thickness);
     }
     // points
     addPointAt(page: Page, shape: PathShape, idx: number, point: CurvePoint, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.addPointAt(shape, point, idx, segmentIndex));
+        this._pointsop.addPointAt(shape, point, idx, segmentIndex);
     }
     addSegmentAt(page: Page, shape: PathShape, idx: number, segment: PathSegment) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.addSegmentAt(shape, segment, idx));
+        this._pointsop.addSegmentAt(shape, segment, idx);
     }
     deletePoints(page: Page, shape: PathShape, index: number, strength: number, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.deletePoints(shape, index, strength, segmentIndex));
+        this._pointsop.deletePoints(shape, index, strength, segmentIndex);
     }
     deletePoint(page: Page, shape: PathShape, index: number, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.deletePointAt(shape, index, segmentIndex));
+        this._pointsop.deletePointAt(shape, index, segmentIndex);
     }
     addPoints(page: Page, shape: PathShape, points: CurvePoint[], segmentIndex: number) {
         checkShapeAtPage(page, shape);
         for (let i = 0; i < points.length; i++) {
             const point = points[i];
-            this.addOp(basicapi.addPointAt(shape, point, i, segmentIndex));
+            this._pointsop.addPointAt(shape, point, i, segmentIndex);
         }
     }
     shapeEditPoints(page: Page, shape: Shape, haveEdit: boolean) {
@@ -1192,131 +1245,131 @@ export class Operator {
 
     modifyPointCurveMode(page: Page, shape: PathShape, index: number, curveMode: CurveMode, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyCurveMode(shape, index, curveMode, segmentIndex))
+        this._shapeop.shapeModifyCurveMode(shape, index, curveMode, segmentIndex)
     }
     modifyPointHasFrom(page: Page, shape: PathShape, index: number, hasFrom: boolean, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyHasFrom(shape, index, hasFrom, segmentIndex));
+        this._shapeop.shapeModifyHasFrom(shape, index, hasFrom, segmentIndex);
     }
     modifyPointHasTo(page: Page, shape: PathShape, index: number, hasTo: boolean, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyHasTo(shape, index, hasTo, segmentIndex));
+        this._shapeop.shapeModifyHasTo(shape, index, hasTo, segmentIndex);
     }
     modifyPointCornerRadius(page: Page, shape: PathShape, index: number, cornerRadius: number, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyPointCornerRadius(shape, index, cornerRadius, segmentIndex));
+        this._shapeop.shapeModifyPointCornerRadius(shape, index, cornerRadius, segmentIndex);
     }
     setCloseStatus(page: Page, shape: PathShape, isClosed: boolean, segmentIndex: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.shapeModifyPathShapeClosedStatus(shape, isClosed, segmentIndex));
+        this._shapeop.shapeModifyPathShapeClosedStatus(shape, isClosed, segmentIndex);
     }
     // insertSegmentAt(page: Page, shape: PathShape, index: number, segment: PathSegment) {
     //     checkShapeAtPage(page, shape);
-    //     this.addOp(basicapi.insertSegmentAt(shape, index, segment));
+    //     (this.basicapi.insertSegmentAt(shape, index, segment));
     // }
     deleteSegmentAt(page: Page, shape: PathShape, segment: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.deleteSegmentAt(shape, segment));
+        this._pointsop.deleteSegmentAt(shape, segment);
     }
     // contacts
     addContactAt(page: Page, shape: Shape, contactRole: ContactRole, idx: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.addContactShape(shape.style, contactRole));
+        this._contactop.addContactShape(shape.style, contactRole);
     }
     removeContactRoleAt(page: Page, shape: Shape, index: number) {
         checkShapeAtPage(page, shape);
         if (!shape.style.contacts || !shape.style.contacts[index]) return;
-        this.addOp(basicapi.removeContactRoleAt(shape.style, index));
+        this._contactop.removeContactRoleAt(shape.style, index);
     }
     // shadow
     addShadows(shadows: BasicArray<Shadow>, plus: Shadow[]) {
         for (let i = 0; i < plus.length; i++) {
-            this.addOp(basicapi.addShadow(shadows, plus[i], i));
+            this._shadowop.addShadow(shadows, plus[i], i);
         }
     }
 
     addShadow(shadows: BasicArray<Shadow>, shadow: Shadow, index: number) {
-        this.addOp(basicapi.addShadow(shadows, shadow, index));
+        this._shadowop.addShadow(shadows, shadow, index);
     }
     deleteShadows(shadows: BasicArray<Shadow>, index: number, strength: number) {
-        this.addOp(basicapi.deleteShadows(shadows, index, strength));
+        this._shadowop.deleteShadows(shadows, index, strength);
     }
     deleteShadowAt(shadows: Shadow[], idx: number) {
-        this.addOp(basicapi.deleteShadowAt(shadows as BasicArray<Shadow>, idx));
+        this._shadowop.deleteShadowAt(shadows as BasicArray<Shadow>, idx);
     }
     setShadowEnable(shadow: Shadow, isEnable: boolean) {
-        this.addOp(basicapi.crdtSetAttr(shadow, "isEnabled", isEnable));
+        this._basicop.crdtSetAttr(shadow, "isEnabled", isEnable);
     }
     setShadowOffsetX(shadow: Shadow, offsetX: number) {
-        this.addOp(basicapi.crdtSetAttr(shadow, "offsetX", offsetX));
+        this._basicop.crdtSetAttr(shadow, "offsetX", offsetX);
     }
     setShadowOffsetY(shadow: Shadow, offsetY: number) {
-        this.addOp(basicapi.crdtSetAttr(shadow, "offsetY", offsetY));
+        this._basicop.crdtSetAttr(shadow, "offsetY", offsetY);
     }
     setShadowBlur(shadow: Shadow, blur: number) {
-        this.addOp(basicapi.crdtSetAttr(shadow, "blurRadius", blur));
+        this._basicop.crdtSetAttr(shadow, "blurRadius", blur);
     }
     setShadowSpread(shadow: Shadow, spread: number) {
-        this.addOp(basicapi.crdtSetAttr(shadow, "spread", spread));
+        this._basicop.crdtSetAttr(shadow, "spread", spread);
     }
     setShadowColor(shadow: Shadow, color: Color) {
-        this.addOp(basicapi.crdtSetAttr(shadow, "color", color));
+        this._basicop.crdtSetAttr(shadow, "color", color);
     }
     setShadowPosition(shadow: Shadow, position: ShadowPosition) {
-        this.addOp(basicapi.crdtSetAttr(shadow, "position", position));
+        this._basicop.crdtSetAttr(shadow, "position", position);
     }
 
     /* 添加模糊 */
     addBlur(blurContainer: Basic & { blur?: Blur }, blur: Blur) {
-        this.addOp(basicapi.crdtSetAttr(blurContainer, 'blur', blur));
+        this._basicop.crdtSetAttr(blurContainer, 'blur', blur);
     }
 
     /* 删除模糊 */
     deleteBlur(blurContainer: Basic & { blur?: Blur }) {
-        this.addOp(basicapi.crdtSetAttr(blurContainer, 'blur', undefined));
+        this._basicop.crdtSetAttr(blurContainer, 'blur', undefined);
     }
 
     /* 修改模糊值 */
     shapeModifyBlurSaturation(blur: Blur, saturation: number) {
-        this.addOp(basicapi.crdtSetAttr(blur, 'saturation', saturation));
+        this._basicop.crdtSetAttr(blur, 'saturation', saturation);
     }
 
     /* 修改模糊类型 */
     shapeModifyBlurType(blur: Blur, type: BlurType) {
-        this.addOp(basicapi.crdtSetAttr(blur, 'type', type));
+        this._basicop.crdtSetAttr(blur, 'type', type);
     }
 
     /* 隐藏与显示模糊 */
     shapeModifyBlurEnabled(blur: Blur, isEnabled: boolean) {
-        this.addOp(basicapi.crdtSetAttr(blur, 'isEnabled', isEnabled));
+        this._basicop.crdtSetAttr(blur, 'isEnabled', isEnabled);
     }
 
     /* 修改图层的填充遮罩 */
     modifyFillsMask(page: Page, shape: Shape, id: string | undefined) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape.style, 'fillsMask', id));
+        this._basicop.crdtSetAttr(shape.style, 'fillsMask', id);
     }
 
     /* 修改图层的阴影遮罩 */
     modifyShadowsMask(page: Page, shape: Shape, id: string | undefined) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape.style, 'shadowsMask', id));
+        this._basicop.crdtSetAttr(shape.style, 'shadowsMask', id);
     }
 
     /* 修改图层的模糊遮罩 */
     modifyBlurMask(page: Page, shape: Shape, id: string | undefined) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape.style, 'blursMask', id));
+        this._basicop.crdtSetAttr(shape.style, 'blursMask', id);
     }
 
     /* 修改图层的边框遮罩 */
     modifyBorderMask(style: Style, id: string | undefined) {
-        this.addOp(basicapi.crdtSetAttr(style, 'bordersMask', id));
+        this._basicop.crdtSetAttr(style, 'bordersMask', id);
     }
 
     /* 修改图层的圆角遮罩 */
     modifyRadiusMask(shape: Shape, id: string | undefined) {
-        this.addOp(basicapi.crdtSetAttr(shape, 'radiusMask', id));
+        this._basicop.crdtSetAttr(shape, 'radiusMask', id);
     }
 
     /**
@@ -1325,7 +1378,7 @@ export class Operator {
     delfillmask(page: Page, shape: Shape | Variable) {
         checkShapeAtPage(page, shape);
         const style: Style = shape instanceof Shape ? shape.style : shape.value;
-        this.addOp(basicapi.crdtSetAttr(style, 'fillsMask', undefined));
+        this._basicop.crdtSetAttr(style, 'fillsMask', undefined);
     }
 
     /**
@@ -1334,54 +1387,54 @@ export class Operator {
     delblurmask(page: Page, shape: Shape | Variable) {
         checkShapeAtPage(page, shape);
         const style: Style = shape instanceof Shape ? shape.style : shape.value;
-        this.addOp(basicapi.crdtSetAttr(style, 'blursMask', undefined));
+        this._basicop.crdtSetAttr(style, 'blursMask', undefined);
     }
 
     /**
      * @deprecated
      */
     delradiusmask(shape: Shape | Variable) {
-        this.addOp(basicapi.crdtSetAttr(shape, 'radiusMask', undefined));
+        this._basicop.crdtSetAttr(shape, 'radiusMask', undefined);
     }
 
     modifyMaskRadius(radiusMask: RadiusMask, value: number[]) {
-        this.addOp(basicapi.crdtSetAttr(radiusMask, "radius", value));
+        this._basicop.crdtSetAttr(radiusMask, "radius", value);
     }
 
     disableMask(mask: StyleMangerMember) {
-        this.addOp(basicapi.crdtSetAttr(mask, 'disabled', true));
+        this._basicop.crdtSetAttr(mask, 'disabled', true);
     }
 
     shapeModifyBlurMotionAngle(page: Page, shape: Shape | Variable, motionAngle: number) {
         checkShapeAtPage(page, shape);
         const blur = shape instanceof Shape ? shape.style.blur : shape.value;
-        this.addOp(basicapi.crdtSetAttr(blur, 'motionAngle', motionAngle));
+        this._basicop.crdtSetAttr(blur, 'motionAngle', motionAngle);
     }
 
     shapeModifyBlurRadius(page: Page, shape: Shape | Variable, radius: number) {
         checkShapeAtPage(page, shape);
         const blur = shape instanceof Shape ? shape.style.blur : shape.value;
-        this.addOp(basicapi.crdtSetAttr(blur, 'radius', radius));
+        this._basicop.crdtSetAttr(blur, 'radius', radius);
     }
 
     ovalModifyStartingAngle(page: Page, shape: Shape | Variable, angle: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, 'startingAngle', angle));
+        this._basicop.crdtSetAttr(shape, 'startingAngle', angle);
     }
 
     ovalModifyEndingAngle(page: Page, shape: Shape | Variable, angle: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, 'endingAngle', angle));
+        this._basicop.crdtSetAttr(shape, 'endingAngle', angle);
     }
 
     ovalModifyInnerRadius(page: Page, shape: Shape | Variable, radius: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, 'innerRadius', radius));
+        this._basicop.crdtSetAttr(shape, 'innerRadius', radius);
     }
 
     modifyContainersFrameMaskStatus(page: Page, shape: Shape | Variable, val: boolean) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.crdtSetAttr(shape, 'frameMaskDisabled', val));
+        this._basicop.crdtSetAttr(shape, 'frameMaskDisabled', val);
     }
 
     // cutout
@@ -1389,219 +1442,219 @@ export class Operator {
         checkShapeAtPage(page, shape);
         const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
         if (!options) return;
-        this.addOp(basicapi.deleteExportFormatAt(options, idx));
+        this._cutoutop.deleteExportFormatAt(options, idx);
     }
     deletePageExportFormatAt(page: Page, idx: number) {
         if (!page.exportOptions) return;
-        this.addOp(basicapi.deletePageExportFormatAt(page.exportOptions, idx));
+        this._cutoutop.deletePageExportFormatAt(page.exportOptions, idx);
     }
     deleteExportFormats(page: Page, shape: Shape, index: number, strength: number) {
         checkShapeAtPage(page, shape);
         if (!shape.exportOptions) return;
-        this.addOp(basicapi.deleteExportFormats(shape.exportOptions, index, strength));
+        this._cutoutop.deleteExportFormats(shape.exportOptions, index, strength);
     }
     addExportFormats(page: Page, shape: Shape, formats: ExportFormat[]) {
         checkShapeAtPage(page, shape);
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
-            this.addOp(basicapi.addExportFormat(shape, format, i));
+            this._cutoutop.addExportFormat(shape, format, i);
         }
     }
     addExportFormat(page: Page, shape: Shape | Variable, format: ExportFormat, index: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(basicapi.addExportFormat(shape, format, index));
+        this._cutoutop.addExportFormat(shape, format, index);
     }
     addPageExportFormat(page: Page, format: ExportFormat, index: number) {
-        this.addOp(basicapi.addPageExportFormat(page, format, index));
+        this._cutoutop.addPageExportFormat(page, format, index);
     }
     setExportFormatScale(page: Page, shape: Shape | Variable, idx: number, scale: number) {
         checkShapeAtPage(page, shape);
         const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
         if (!options) return;
-        this.addOp(basicapi.setExportFormatScale(options, idx, scale));
+        this._cutoutop.setExportFormatScale(options, idx, scale);
     }
     setPageExportFormatScale(page: Page, idx: number, scale: number) {
         if (!page.exportOptions) return;
-        this.addOp(basicapi.setPageExportFormatScale(page.exportOptions, idx, scale));
+        this._cutoutop.setPageExportFormatScale(page.exportOptions, idx, scale);
     }
     setExportFormatName(page: Page, shape: Shape | Variable, idx: number, name: string) {
         checkShapeAtPage(page, shape);
         const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
         if (!options) return;
-        this.addOp(basicapi.setExportFormatName(options, idx, name));
+        this._cutoutop.setExportFormatName(options, idx, name);
     }
     setPageExportFormatName(page: Page, idx: number, name: string) {
         if (!page.exportOptions) return;
-        this.addOp(basicapi.setPageExportFormatName(page.exportOptions, idx, name));
+        this._cutoutop.setPageExportFormatName(page.exportOptions, idx, name);
     }
     setExportFormatFileFormat(page: Page, shape: Shape | Variable, idx: number, fileFormat: ExportFileFormat) {
         checkShapeAtPage(page, shape);
         const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
         if (!options) return;
-        this.addOp(basicapi.setExportFormatFileFormat(options, idx, fileFormat));
+        this._cutoutop.setExportFormatFileFormat(options, idx, fileFormat);
     }
     setPageExportFormatFileFormat(page: Page, idx: number, fileFormat: ExportFileFormat) {
         if (!page.exportOptions) return;
-        this.addOp(basicapi.setPageExportFormatFileFormat(page.exportOptions, idx, fileFormat));
+        this._cutoutop.setPageExportFormatFileFormat(page.exportOptions, idx, fileFormat);
     }
     setExportFormatPerfix(page: Page, shape: Shape | Variable, idx: number, perfix: ExportFormatNameingScheme) {
         checkShapeAtPage(page, shape);
         const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
         if (!options) return;
-        this.addOp(basicapi.setExportFormatPerfix(options, idx, perfix));
+        this._cutoutop.setExportFormatPerfix(options, idx, perfix);
     }
     setPageExportFormatPerfix(page: Page, idx: number, perfix: ExportFormatNameingScheme) {
         if (!page.exportOptions) return;
-        this.addOp(basicapi.setPageExportFormatPerfix(page.exportOptions, idx, perfix));
+        this._cutoutop.setPageExportFormatPerfix(page.exportOptions, idx, perfix);
     }
     setExportTrimTransparent(page: Page, shape: Shape | Variable, trim: boolean) {
         checkShapeAtPage(page, shape);
         const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
         if (!options) return;
-        this.addOp(basicapi.setExportTrimTransparent(options, trim));
+        this._cutoutop.setExportTrimTransparent(options, trim);
     }
     setExportCanvasBackground(page: Page, shape: Shape | Variable, background: boolean) {
         checkShapeAtPage(page, shape);
         const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
         if (!options) return;
-        this.addOp(basicapi.setExportCanvasBackground(options, background));
+        this._cutoutop.setExportCanvasBackground(options, background);
     }
     setExportPreviewUnfold(page: Page, shape: Shape | Variable, unfold: boolean) {
         checkShapeAtPage(page, shape);
         const options = shape instanceof Shape ? shape.exportOptions : shape.value as ExportOptions;
         if (!options) return;
-        this.addOp(basicapi.setExportPreviewUnfold(options, unfold));
+        this._cutoutop.setExportPreviewUnfold(options, unfold);
     }
     setPageExportPreviewUnfold(document: Document, pageId: string, unfold: boolean) {
         const item = document.pagesMgr.getSync(pageId);
         if (!item) return;
         if (!item.exportOptions) return;
-        this.addOp(basicapi.setPageExportPreviewUnfold(item.exportOptions, unfold));
+        this._cutoutop.setPageExportPreviewUnfold(item.exportOptions, unfold);
     }
 
     shapeModifyStackPosition(page: Page, shape: Shape, position: StackPositioning) {
         checkShapeAtPage(page, shape);
-        this.addOp(crdtSetAttr(shape, "stackPositioning", position));
+        this._basicop.crdtSetAttr(shape, "stackPositioning", position);
     }
 
     modifyShapeScale(page: Page, shape: Shape, value: number) {
         checkShapeAtPage(page, shape);
-        this.addOp(crdtSetAttr(shape, 'uniformScale', value));
+        this._basicop.crdtSetAttr(shape, 'uniformScale', value);
     }
 
     modifyThumbnailViewId(document: Document, thumbnailViewId: string) {
-        this.addOp(crdtSetAttr(document, 'thumbnailViewId', thumbnailViewId));
+        this._basicop.crdtSetAttr(document, 'thumbnailViewId', thumbnailViewId);
     }
     // text
     insertSimpleText(page: Page, shape: TextShapeLike | Variable, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.insertSimpleText(shape, _text, text, idx, { attr }));
+        this._textop.insertSimpleText(shape, _text, text, idx, { attr });
     }
     insertComplexText(page: Page, shape: TextShapeLike | Variable, idx: number, text: Text) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.insertComplexText(shape, _text, text, idx));
+        this._textop.insertComplexText(shape, _text, text, idx);
     }
     insertSimpleText2(page: Page, shape: TextShape, idx: number, text: string, attr?: SpanAttr) {
         checkShapeAtPage(page, shape);
         const _text = shape.text;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.insertSimpleText(shape, _text, text, idx, { attr }));
+        this._textop.insertSimpleText(shape, _text, text, idx, { attr });
     }
     insertComplexText2(page: Page, shape: TextShape, idx: number, text: Text) {
         checkShapeAtPage(page, shape);
         const _text = shape.text;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.insertComplexText(shape, _text, text, idx));
+        this._textop.insertComplexText(shape, _text, text, idx);
     }
     deleteText(page: Page, shape: TextShapeLike | Variable, idx: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.deleteText(shape, _text, idx, len));
+        this._textop.deleteText(shape, _text, idx, len);
     }
     deleteText2(page: Page, shape: TextShape, idx: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape.text;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.deleteText(shape, _text, idx, len));
+        this._textop.deleteText(shape, _text, idx, len);
     }
     textModifyColor(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, color: Color | undefined) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyColor(shape, _text, idx, len, color));
+        this._textop.textModifyColor(shape, _text, idx, len, color);
     }
     textModifyFontName(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, fontname: string) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyFontName(shape, _text, idx, len, fontname));
+        this._textop.textModifyFontName(shape, _text, idx, len, fontname);
     }
     textModifyFontSize(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, fontsize: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyFontSize(shape, _text, idx, len, fontsize));
+        this._textop.textModifyFontSize(shape, _text, idx, len, fontsize);
     }
 
     textModifyTextMask(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, maskid: string | undefined) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyTextMask(shape, _text, idx, len, maskid));
+        this._textop.textModifyTextMask(shape, _text, idx, len, maskid);
     }
 
     shapeModifyTextBehaviour(page: Page, _text: Text, textBehaviour: TextBehaviour) {
         checkShapeAtPage(page, _text.parent as Shape);
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.shapeModifyTextBehaviour(page, _text, textBehaviour));
+        this._textop.shapeModifyTextBehaviour(page, _text, textBehaviour);
     }
     shapeModifyTextVerAlign(page: Page, shape: TextShapeLike | Variable, verAlign: TextVerAlign) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.shapeModifyTextVerAlign(_text, verAlign));
+        this._textop.shapeModifyTextVerAlign(_text, verAlign);
     }
 
     textModifyHighlightColor(page: Page, shape: TextShapeLike | Variable, idx: number, len: number, color: Color | undefined) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyHighlightColor(shape, _text, idx, len, color));
+        this._textop.textModifyHighlightColor(shape, _text, idx, len, color);
     }
     textModifyUnderline(page: Page, shape: TextShapeLike | Variable, underline: UnderlineType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyUnderline(shape, _text, underline, index, len));
+        this._textop.textModifyUnderline(shape, _text, underline, index, len);
     }
     textModifyStrikethrough(page: Page, shape: TextShapeLike | Variable, strikethrough: StrikethroughType | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyStrikethrough(shape, _text, strikethrough, index, len));
+        this._textop.textModifyStrikethrough(shape, _text, strikethrough, index, len);
     }
     textModifyWeight(page: Page, shape: TextShapeLike | Variable, weight: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyWeight(shape, _text, weight, index, len));
+        this._textop.textModifyWeight(shape, _text, weight, index, len);
     }
     textModifyItalic(page: Page, shape: TextShapeLike | Variable, italic: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyItalic(shape, _text, italic, index, len));
+        this._textop.textModifyItalic(shape, _text, italic, index, len);
     }
     textModifyFillType(page: Page, shape: TextShapeLike | Variable, fillType: FillType, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyFillType(shape, _text, index, len, fillType));
+        this._textop.textModifyFillType(shape, _text, index, len, fillType);
     }
 
     private _textModifyRemoveBulletNumbers(page: Page, shape: TextShapeLike | Variable, index: number, len: number) {
@@ -1617,7 +1670,7 @@ export class Operator {
         })
 
         for (let i = 0, len = removeIndexs.length; i < len; i++) {
-            this.addOp(basicapi.deleteText(shape, _text, removeIndexs[i] - i, 1));
+            this._textop.deleteText(shape, _text, removeIndexs[i] - i, 1);
         }
         if (removeIndexs.length > 0) _text.reLayout(); // todo
     }
@@ -1626,7 +1679,7 @@ export class Operator {
 
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyBulletNumbersType(shape, _text, type, index, len))
+        this._textop.textModifyBulletNumbersType(shape, _text, type, index, len);
 
         const insertIndexs: number[] = [];
         _travelTextPara(_text.paras, index, len, (paraArray, paraIndex, para, _index, length) => {
@@ -1645,7 +1698,7 @@ export class Operator {
             const attr = new SpanAttr();
             attr.placeholder = true;
             attr.bulletNumbers = new BulletNumbers(type);
-            this.addOp(basicapi.insertSimpleText(shape, _text, '*', insertIndexs[i] + i, { attr }))
+            this._textop.insertSimpleText(shape, _text, '*', insertIndexs[i] + i, { attr });
         }
         if (insertIndexs.length > 0) _text.reLayout();
     }
@@ -1670,14 +1723,14 @@ export class Operator {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyBulletNumbersStart(shape, _text, start, index, len))
+        this._textop.textModifyBulletNumbersStart(shape, _text, start, index, len);
     }
     textModifyBulletNumbersInherit(page: Page, shape: TextShapeLike | Variable, inherit: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
         const behavior = inherit ? BulletNumbersBehavior.Inherit : BulletNumbersBehavior.Renew;
-        this.addOp(basicapi.textModifyBulletNumbersBehavior(shape, _text, behavior, index, len))
+        this._textop.textModifyBulletNumbersBehavior(shape, _text, behavior, index, len);
     }
 
     textModifyHorAlign(page: Page, shape: TextShapeLike | Variable, horAlign: TextHorAlign, index: number, len: number) {
@@ -1688,14 +1741,14 @@ export class Operator {
         const alignRange = _text.alignParaRange(index, len);
         index = alignRange.index;
         len = alignRange.len;
-        this.addOp(basicapi.textModifyHorAlign(shape, _text, horAlign, index, len));
+        this._textop.textModifyHorAlign(shape, _text, horAlign, index, len);
     }
 
     textModifyParaIndent(page: Page, shape: TextShapeLike | Variable, indent: number | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyParaIndent(shape, _text, indent, index, len));
+        this._textop.textModifyParaIndent(shape, _text, indent, index, len);
     }
     textModifyAutoLineHeight(page: Page, shape: TextShapeLike | Variable, auto: boolean, index: number, len: number) {
         checkShapeAtPage(page, shape);
@@ -1704,7 +1757,7 @@ export class Operator {
         const alignRange = _text.alignParaRange(index, len);
         index = alignRange.index;
         len = alignRange.len;
-        this.addOp(basicapi.textModifyAutoLineHeight(shape, _text, auto, index, len));
+        this._textop.textModifyAutoLineHeight(shape, _text, auto, index, len);
     }
     textModifyMinLineHeight(page: Page, shape: TextShapeLike | Variable, minLineheight: number | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
@@ -1713,7 +1766,7 @@ export class Operator {
         const alignRange = _text.alignParaRange(index, len);
         index = alignRange.index;
         len = alignRange.len;
-        this.addOp(basicapi.textModifyMinLineHeight(shape, _text, minLineheight, index, len));
+        this._textop.textModifyMinLineHeight(shape, _text, minLineheight, index, len);
     }
     textModifyMaxLineHeight(page: Page, shape: TextShapeLike | Variable, maxLineheight: number | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
@@ -1722,13 +1775,13 @@ export class Operator {
         const alignRange = _text.alignParaRange(index, len);
         index = alignRange.index;
         len = alignRange.len;
-        this.addOp(basicapi.textModifyMaxLineHeight(shape, _text, maxLineheight, index, len));
+        this._textop.textModifyMaxLineHeight(shape, _text, maxLineheight, index, len);
     }
     textModifyKerning(page: Page, shape: TextShapeLike | Variable, kerning: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifySpanKerning(shape, _text, kerning, index, len));
+        this._textop.textModifySpanKerning(shape, _text, kerning, index, len);
     }
     textModifyParaSpacing(page: Page, shape: TextShapeLike | Variable, paraSpacing: number, index: number, len: number) {
         checkShapeAtPage(page, shape);
@@ -1738,7 +1791,7 @@ export class Operator {
         const alignRange = _text.alignParaRange(index, len);
         index = alignRange.index;
         len = alignRange.len;
-        this.addOp(basicapi.textModifyParaSpacing(shape, _text, paraSpacing, index, len));
+        this._textop.textModifyParaSpacing(shape, _text, paraSpacing, index, len);
     }
     textModifyPaddingHor(page: Page, shape: TextShapeLike | Variable, padding: { left: number, right: number }, index: number, len: number) {
         checkShapeAtPage(page, shape);
@@ -1748,7 +1801,7 @@ export class Operator {
         const alignRange = _text.alignParaRange(index, len);
         index = alignRange.index;
         len = alignRange.len;
-        this.addOp(basicapi.textModifyPaddingHor(shape, _text, padding, index, len));
+        this._textop.textModifyPaddingHor(shape, _text, padding, index, len);
     }
 
     textModifParaTextMask(page: Page, shape: TextShapeLike | Variable, index: number, len: number, maskid: string | undefined) {
@@ -1758,7 +1811,7 @@ export class Operator {
         const alignRange = _text.alignParaRange(index, len);
         index = alignRange.index;
         len = alignRange.len;
-        this.addOp(basicapi.textModifyParaTextMask(shape, _text, index, len, maskid));
+        this._textop.textModifyParaTextMask(shape, _text, index, len, maskid);
     }
 
     textModifyTransform(page: Page, shape: TextShapeLike | Variable, transform: TextTransformType | undefined, index: number, len: number) {
@@ -1771,163 +1824,165 @@ export class Operator {
             index = alignRange.index;
             len = alignRange.len;
         }
-        this.addOp(basicapi.textModifySpanTransfrom(shape, _text, transform, index, len));
+        this._textop.textModifySpanTransfrom(shape, _text, transform, index, len);
     }
     setTextGradient(page: Page, shape: TextShapeLike | Variable, gradient: Gradient | undefined, index: number, len: number) {
         checkShapeAtPage(page, shape);
         const _text = shape instanceof ShapeView ? shape.text : shape.value;
         if (!_text || !(_text instanceof Text)) throw Error();
-        this.addOp(basicapi.textModifyGradient(shape, _text, index, len, gradient));
+        this._textop.textModifyGradient(shape, _text, index, len, gradient);
     }
 
     // table
     tableInitCell(page: Page, table: TableShape, rowIdx: number, colIdx: number) {
         checkShapeAtPage(page, table);
-        return this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        return this._tableop.tableInitCell(table, rowIdx, colIdx);
     }
 
     tableSetCellContentType(page: Page, table: TableShape, cell: TableCellView, contentType: TableCellType | undefined) {
         checkShapeAtPage(page, table);
-        // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        // (this.basicapi.tableInitCell(table, rowIdx, colIdx));
         // const cell = table.getCellAt(rowIdx, colIdx);
-        this.addOp(basicapi.tableSetCellContentType(cell.data, contentType));
+        this._tableop.tableSetCellContentType(cell.data, contentType);
         if (contentType !== TableCellType.Text && cell.data.text) {
             const len = cell.data.text.length;
-            if (len > 1) this.addOp(basicapi.deleteText(cell, cell.data.text, 0, len - 1));
+            if (len > 1) this._textop.deleteText(cell, cell.data.text, 0, len - 1);
         }
     }
 
     // tableSetCellContentText(page: Page, table: TableShape, cell: TableCell, text: Text | undefined) {
     //     checkShapeAtPage(page, table);
-    //     // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+    //     // (this.basicapi.tableInitCell(table, rowIdx, colIdx));
     //     // const cell = table.getCellAt(rowIdx, colIdx);
-    //     this.addOp(basicapi.tableSetCellContentText(cell, text));
+    //     (this.basicapi.tableSetCellContentText(cell, text));
     // }
 
     tableSetCellContentImage(page: Page, table: TableShape, cell: TableCellView, ref: string | undefined) {
         checkShapeAtPage(page, table);
-        // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        // (this.basicapi.tableInitCell(table, rowIdx, colIdx));
         // const cell = table.getCellAt(rowIdx, colIdx)!;
         const origin = cell.imageRef;
         if (origin !== ref) {
-            this.addOp(basicapi.tableSetCellContentImage(cell.data, ref));
+            this._tableop.tableSetCellContentImage(cell.data, ref);
         }
     }
 
     tableModifyColWidth(page: Page, table: TableShape, idx: number, width: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyColWidth(page, table, idx, width));
+        this._tableop.tableModifyColWidth(page, table, idx, width);
     }
 
     tableModifyRowHeight(page: Page, table: TableShape, idx: number, height: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyRowHeight(page, table, idx, height));
+        this._tableop.tableModifyRowHeight(page, table, idx, height);
     }
 
     tableInsertRow(page: Page, table: TableShape, idx: number, height: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableInsertRow(table, idx, height));
+        this._tableop.tableInsertRow(table, idx, height);
     }
 
     tableRemoveRow(page: Page, table: TableShape, idx: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableRemoveRow(table, idx));
+        this._tableop.tableRemoveRow(table, idx);
         // todo 删除对应的单元格
     }
 
     tableInsertCol(page: Page, table: TableShape, idx: number, width: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableInsertCol(table, idx, width));
+        this._tableop.tableInsertCol(table, idx, width);
     }
 
     tableRemoveCol(page: Page, table: TableShape, idx: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableRemoveCol(table, idx));
+        this._tableop.tableRemoveCol(table, idx);
         // todo 删除对应的单元格
     }
 
     tableModifyCellSpan(page: Page, table: TableShape, cell: TableCellView, rowSpan: number, colSpan: number) {
         checkShapeAtPage(page, table);
-        // this.addOp(basicapi.tableInitCell(table, rowIdx, colIdx));
+        // (this.basicapi.tableInitCell(table, rowIdx, colIdx));
         // const cell = table.getCellAt(rowIdx, colIdx)!;
         const origin = { rowSpan: cell.rowSpan, colSpan: cell.colSpan };
         if ((origin.rowSpan ?? 1) !== rowSpan || (origin.colSpan ?? 1) !== colSpan) {
-            this.addOp(basicapi.tableModifyCellSpan(cell.data, rowSpan, colSpan));
+            this._tableop.tableModifyCellSpan(cell.data, rowSpan, colSpan);
         }
     }
 
     // table text
     tableModifyTextColor(page: Page, table: TableShape, color: Color | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextColor(table, color));
+        this._tableop.tableModifyTextColor(table, color);
     }
     tableModifyTextHighlightColor(page: Page, table: TableShape, color: Color | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextHighlightColor(table, color));
+        this._tableop.tableModifyTextHighlightColor(table, color);
     }
     tableModifyTextFontName(page: Page, table: TableShape, fontName: string) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextFontName(table, fontName));
+        this._tableop.tableModifyTextFontName(table, fontName);
     }
     tableModifyTextFontSize(page: Page, table: TableShape, fontSize: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextFontSize(table, fontSize));
+        this._tableop.tableModifyTextFontSize(table, fontSize);
     }
     tableModifyTextVerAlign(page: Page, table: TableShape, verAlign: TextVerAlign) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextVerAlign(table, verAlign));
+        this._tableop.tableModifyTextVerAlign(table, verAlign);
     }
     tableModifyTextHorAlign(page: Page, table: TableShape, horAlign: TextHorAlign) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextHorAlign(table, horAlign));
+        this._tableop.tableModifyTextHorAlign(table, horAlign);
     }
 
     tableModifyTextAutoLineHeight(page: Page, table: TableShape, autoLineHeight: boolean) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextAutoLineHeight(table, autoLineHeight));
+        this._tableop.tableModifyTextAutoLineHeight(table, autoLineHeight);
     }
     tableModifyTextMinLineHeight(page: Page, table: TableShape, lineHeight: number | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextMinLineHeight(table, lineHeight));
+        this._tableop.tableModifyTextMinLineHeight(table, lineHeight);
     }
     tableModifyTextMaxLineHeight(page: Page, table: TableShape, lineHeight: number | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextMaxLineHeight(table, lineHeight));
+        this._tableop.tableModifyTextMaxLineHeight(table, lineHeight);
     }
     tableModifyTextKerning(page: Page, table: TableShape, kerning: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextKerning(table, kerning));
+        this._tableop.tableModifyTextKerning(table, kerning);
     }
     tableModifyTextParaSpacing(page: Page, table: TableShape, paraSpacing: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextParaSpacing(table, paraSpacing));
+        this._tableop.tableModifyTextParaSpacing(table, paraSpacing);
     }
     tableModifyTextUnderline(page: Page, table: TableShape, underline: UnderlineType | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextUnderline(table, underline));
+        this._tableop.tableModifyTextUnderline(table, underline);
     }
     tableModifyTextStrikethrough(page: Page, table: TableShape, strikethrough: StrikethroughType | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextStrikethrough(table, strikethrough));
+        this._tableop.tableModifyTextStrikethrough(table, strikethrough);
     }
     tableModifyTextWeight(page: Page, table: TableShape, weight: number) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextWeight(table, weight));
+        this._tableop.tableModifyTextWeight(table, weight);
     }
     tableModifyTextItalic(page: Page, table: TableShape, italic: boolean) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextItalic(table, italic));
+        this._tableop.tableModifyTextItalic(table, italic);
     }
     tableModifyTextTransform(page: Page, table: TableShape, transform: TextTransformType | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextTransform(table, transform));
+        this._tableop.tableModifyTextTransform(table, transform);
     }
     tableModifyTextFillType(page: Page, table: TableShape, fillType: FillType | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextFillType(table, fillType));
+        this._tableop.tableModifyTextFillType(table, fillType);
     }
     tableModifyTextGradient(page: Page, table: TableShape, gradient: Gradient | undefined) {
         checkShapeAtPage(page, table);
-        this.addOp(basicapi.tableModifyTextGradient(table, gradient));
+        this._tableop.tableModifyTextGradient(table, gradient);
     }
 }
+
+export type Operator = OperatorT<BasicOpImpl>;

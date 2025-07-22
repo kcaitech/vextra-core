@@ -10,5 +10,5 @@
 
 export * from "./types"
 export { Repo } from "./repo"
-export { ArrayOpSelection } from "../operator"
-export { isDiffStringArr, defaultSU, MockNet, cloneSelectionState, importShape, isDiffSelectionState } from "./utils"
+
+export { isDiffStringArr, defaultSU, cloneSelectionState, importShape, isDiffSelectionState } from "./utils"

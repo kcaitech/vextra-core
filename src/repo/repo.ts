@@ -1,7 +1,6 @@
 import { TransactDataGuard, Text, Document } from "../data";
 import { CmdMergeType, IRepository, ISave4Restore, LocalCmd } from "./types";
-import { Operator } from "../operator";
-import { FMT_VER_latest } from "../data/fmtver";
+import { Operator, OperatorT } from "../operator";
 import { defaultSU } from "./utils";
 import { uuid } from "../basic/uuid";
 
@@ -16,7 +15,7 @@ export class Repo implements IRepository {
     private __initing: boolean = false
     constructor(data: Document, repo: TransactDataGuard) {
         this.__repo = repo;
-        this.__operator = Operator.create(this.__repo);
+        this.__operator = OperatorT.create(this.__repo);
     }
     startInitData(): void {
         this.__initing = true
@@ -64,24 +63,12 @@ export class Repo implements IRepository {
     }
     start(description: string, selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void = defaultSU): Operator {
         this.__repo.start(description);
-        this.__operator.reset();
+
         this.__curCmd = {
-            id: "",
-            // mergeable: true,
+            id: uuid(),
             mergetype: CmdMergeType.None,
-            delay: 500,
-            version: Number.MAX_SAFE_INTEGER,
-            // preVersion: "",
-            baseVer: 0,
-            batchId: "",
-            ops: [],
-            isRecovery: false,
-            description,
-            time: 0,
-            posttime: 0,
             saveselection: this.__selection?.save(),
             selectionupdater,
-            dataFmtVer: FMT_VER_latest,
         };
 
         return this.__operator;
@@ -98,30 +85,25 @@ export class Repo implements IRepository {
         }
     }
     isNeedCommit(): boolean {
-        return this.__operator.ops.length > 0;
+        return (this.__repo.transactCtx.transact?.length ?? 0) > 0;
     }
     commit(mergetype: CmdMergeType = CmdMergeType.None) {
         if (!this.__curCmd) throw new Error("commit failed");
         this.__repo.commit(!this.__initing);
         if (this.__initing) {
-            this.__operator.reset();
             this.__curCmd = undefined;
             return
         }
         const cmd = this.__curCmd;
-        cmd.ops = this.__operator.ops;
-        cmd.id = uuid();
-        cmd.time = Date.now();
+
         cmd.mergetype = mergetype;
         this.__cmds.push(cmd);
-        this.__operator.reset();
         this.__curCmd = undefined;
         if (this.__onChange) this.__onChange(cmd.id)
     }
     rollback(from?: string): void {
         if (!this.__curCmd) throw new Error("rollback failed");
         this.__repo.rollback(from);
-        this.__operator.reset();
         this.__curCmd = undefined;
     }
     fireNotify(): void {

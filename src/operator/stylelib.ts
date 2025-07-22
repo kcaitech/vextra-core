@@ -8,9 +8,13 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { StyleMangerMember, StyleSheet } from "../../data";
-import { crdtArrayInsert } from "./basic";
+import { StyleMangerMember, StyleSheet } from "../data";
+import { BasicOp } from "./basicop";
 
-export function addStyle(libs: StyleSheet, style: StyleMangerMember) {
-    return crdtArrayInsert(libs.variables, libs.variables.length, style);
+export class StyleLibOp {
+    constructor(private _basicop: BasicOp) { }
+
+    addStyle(libs: StyleSheet, style: StyleMangerMember) {
+        return this._basicop.crdtArrayInsert(libs.variables, libs.variables.length, style);
+    }
 }

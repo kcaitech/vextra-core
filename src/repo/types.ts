@@ -8,31 +8,32 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
+import { BasicOpImpl } from "../operator/basicop";
 import { Text } from "../data";
-import { ArrayOpSelection, Op, Operator } from "../operator";
+import { BasicOp, OperatorT } from "../operator";
 
-export interface Cmd { // 用户的一次操作
-    id: string; // cmd id
-    version: number;
-    // preVersion: string; // 服务端对cmd进行排序后，当前cmd的前一个cmd的version
-    baseVer: number;
-    batchId: string; // 服务端收到的cmd的批次序号 // 此批次的第一个cmd的id
-    // userId: string;
-    ops: Op[];
-    // isUndo: boolean; // Undo cmd，需要对delete shape特别处理
-    isRecovery: boolean; // undo、redo。当恢复已同步的数据时，需要在post时对齐版本并在应用后更新到最新版本。
-    // 其它cmd信息
-    description: string; // 此cmd是干嘛的
-    time: number; // 时间戳 // 编辑时间
-    posttime: number; // 上传时间
-    dataFmtVer: string; // 数据格式版本
+
+export interface ITextSelection {
+    id: string,
+    path: string[],
+    order: number,
+    start: number,
+    length: number,
+    clone(): ITextSelection
 }
 
-export interface OpItem {
-    op: Op;
-    cmd: Cmd;
+export class TextSelection {
+    constructor(
+        public id: string,
+        public path: string[],
+        public order: number,
+        public start: number,
+        public length: number,
+    ) { }
+    clone(): TextSelection {
+        return new TextSelection(this.id, this.path, this.order, this.start, this.length);
+    }
 }
-
 
 export interface SelectionState {
     shapes: string[],
@@ -41,74 +42,28 @@ export interface SelectionState {
         rows: string[],
         cols: string[],
     },
-    text?: ArrayOpSelection // 在组件变量override时，可能存在由一个var切换到另外一个var的情况，这时就存在2个selectionOp
+    text?: ITextSelection // 在组件变量override时，可能存在由一个var切换到另外一个var的情况，这时就存在2个selectionOp
 }
 export interface ISave4Restore {
     save(): SelectionState;
     restore(saved: SelectionState): void;
-    saveText(path: string[]): ArrayOpSelection | undefined;
-    restoreText(op: ArrayOpSelection): void;
+    saveText(path: string[]): ITextSelection | undefined;
+    restoreText(op: ITextSelection): void;
 }
 export enum CmdMergeType {
     None,
     TextInsert,
     TextDelete,
 }
-export interface LocalCmd extends Cmd {
-    ops: Op[];
-    delay: number; // 是否延迟同步
+export interface LocalCmd {
+    id: string;
     mergetype: CmdMergeType; // 用于cmd合并
     saveselection: SelectionState | undefined; // undo时还原到旧选区。 redo及正常操作时，selectionupdater更新选区
-    // cmd执行完后如何更新选区。大部分操作应该是选区不变，即应用saveselection（不是不操作）
-    // 需要特别处理的：对象操作（编组、组件、）、表格行列操作、文本
+
     selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void;
 }
 
-
-export interface INet {
-
-    /**
-     * 
-     * @returns 是否已经连接
-     */
-    hasConnected(): boolean;
-
-    /**
-     * 
-     * @param from 起始id
-     * @param to 结束id（包含）
-     */
-    pullCmds(from: number, to?: number): Promise<Cmd[]>;
-
-    /**
-     * 
-     * @param cmds 要推送的命令
-     */
-    postCmds(cmds: Cmd[], serial: (cmds: Cmd[]) => string): Promise<boolean>;
-
-    /**
-     * 监听远程cmd
-     * @param watcher 
-     */
-    watchCmds(watcher: (cmds: Cmd[]) => void): () => void;
-
-    /**
-     * 监听错误信息
-     * errorInfo的几种类型：
-     * {
-     *   type: "duplicate",
-     *   duplicateCmd: Cmd,
-     * }
-     */
-    watchError(watcher: (errorInfo: {
-        type: "duplicate",
-        duplicateCmd: Cmd,
-    }) => void): void;
-
-
-}
-
-export interface IRepository {
+export interface IRepositoryT<T extends BasicOp> {
     startInitData(): void;
     endInitData(): void;
 
@@ -124,9 +79,11 @@ export interface IRepository {
     redo(): void;
     canUndo(): boolean;
     canRedo(): boolean;
-    start(description: string, selectionupdater?: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void): Operator;
+    start(description: string, selectionupdater?: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void): OperatorT<T>;
     isNeedCommit(): boolean;
     commit(mergetype?: CmdMergeType): void;
     rollback(from?: string): void;
     fireNotify(): void;
 }
+
+export type IRepository = IRepositoryT<BasicOpImpl>;
