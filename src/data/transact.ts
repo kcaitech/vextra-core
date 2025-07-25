@@ -345,12 +345,19 @@ class ArrayRec extends Rec {
 class Transact extends Array<Rec> {
     private __name: string;
     private __cache: Map<number, ArrayRec> = new Map();
+    private __saved_data?: any;
     constructor(name: string) {
         super();
         this.__name = name;
     }
     get name () {
         return this.__name;
+    }
+    get saved_data() {
+        return this.__saved_data;
+    }
+    set saved_data(data: any) {
+        this.__saved_data = data;
     }
     exec(ctx: TContext): void {
         for (let i = 0, len = this.length; i < len; i++) {
@@ -412,26 +419,28 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
 
     undo() {
         if (!this.canUndo()) {
-            return false;
+            return;
         }
         this.__index--;
         this.__context.optiNotify = true;
-        this.__trans[this.__index].unexec(this.__context);
+        const t = this.__trans[this.__index];
+        t.unexec(this.__context);
         this.__context.fireNotify();
         this.notify();
-        return true;
+        return t.saved_data;
     }
 
     redo() {
         if (!this.canRedo()) {
-            return false;
+            return;
         }
         this.__context.optiNotify = true;
-        this.__trans[this.__index].exec(this.__context);
+        const t = this.__trans[this.__index];
+        t.exec(this.__context);
         this.__index++;
         this.__context.fireNotify();
         this.notify();
-        return true;
+        return t.saved_data;
     }
 
     canUndo() {
@@ -462,14 +471,16 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
      *
      * @param cmd 最后打包成一个cmd，用于op，也可另外存
      */
-    _commit(stack: boolean) {
+    _commit(stack: boolean, saved_data?: any) {
         if (this.__context.transact === undefined) {
             throw new Error("No transace neet commit");
         }
         this.__context.cache.clear();
         this.__trans.length = this.__index;
         if (stack) {
-            this.__trans.push(this.__context.transact);
+            const t = this.__context.transact;  
+            t.saved_data = saved_data;
+            this.__trans.push(t);
             this.__index++;
         }
         this.__saveStartStack = undefined;
@@ -478,18 +489,49 @@ export class TransactDataGuard extends WatchableObject implements IDataGuard {
         this.notify();
     }
 
-    commit(stack: boolean = false) {
-        this._commit(stack)
+    lastTransact() {
+        return this.__trans[this.__index - 1]; // 不能用this.__trans.length - 1，因为可能被undo
+    }
+
+    mergeCommit(stack: boolean = false, saved_data?: any) {
+        if (this.__context.transact === undefined) {
+            throw new Error("No transace neet commit");
+        }
+        const last = this.lastTransact();
+        if (!last) {
+            // throw new Error("No last transact");
+            return false;
+        }
+        this.__context.cache.clear();
+        this.__trans.length = this.__index;
+        const t = this.__context.transact;
+        if (stack) {
+            last.push(...t);
+            if (saved_data) {
+                last.saved_data = saved_data;
+            }
+        }
+        this.__saveStartStack = undefined;
+        this.__context.transact = undefined;
+        this.__context.fireNotify();
+        this.notify();
+        return true;
+    }
+
+    commit(stack: boolean = false, saved_data?: any) {
+        this._commit(stack, saved_data)
     }
 
     rollback(from: string = "") {
         if (this.__context.transact === undefined) {
             throw new Error();
         }
+        const t = this.__context.transact;
         this.__context.cache.clear();
-        this.__context.transact.rollback(this.__context, from);
+        t.rollback(this.__context, from);
         this.__context.transact = undefined;
         this.__context.fireNotify();
+        return t.saved_data;
     }
 
     isInTransact() {
