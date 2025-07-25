@@ -3,7 +3,7 @@
     "version": "1.0.3",
     "private": false,
     "type": "module",
-    "description": "vextra core module",
+    "description": "kcaitech vextra core module",
     "author": "kcaitech.com",
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
@@ -74,7 +74,7 @@
         "not dead",
         "not ie 11"
     ],
-    "productName": "kcdesign-core",
+    "productName": "vextra-core",
     "jest": {
         "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
         "moduleNameMapper": {
