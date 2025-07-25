@@ -44,22 +44,25 @@ export interface SelectionState {
     },
     text?: ITextSelection // 在组件变量override时，可能存在由一个var切换到另外一个var的情况，这时就存在2个selectionOp
 }
+
 export interface ISave4Restore {
     save(): SelectionState;
     restore(saved: SelectionState): void;
     saveText(path: string[]): ITextSelection | undefined;
     restoreText(op: ITextSelection): void;
 }
+
 export enum CmdMergeType {
     None,
     TextInsert,
     TextDelete,
 }
+
 export interface LocalCmd {
     id: string;
     mergetype: CmdMergeType; // 用于cmd合并
+    time: number; // 时间戳 // 编辑时间
     saveselection: SelectionState | undefined; // undo时还原到旧选区。 redo及正常操作时，selectionupdater更新选区
-
     selectionupdater: (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => void;
 }
 

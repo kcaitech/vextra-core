@@ -56,11 +56,6 @@ export function isDiffSelectionState(lhs: SelectionState, rhs: SelectionState): 
         return true;
     }
     if (lhs.text && rhs.text) {
-        // id: string, // 可不要
-        // path: string[], // 要有
-        // order: number, // MAX
-        // start: number, // 
-        // length: number,
         if (lhs.text.start !== rhs.text.start || lhs.text.length !== rhs.text.length) return true;
     }
     else if (lhs.text !== rhs.text) {

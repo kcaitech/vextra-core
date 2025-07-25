@@ -65,6 +65,7 @@ export class Repo implements IRepository {
         this.__curCmd = {
             id: uuid(),
             mergetype: CmdMergeType.None,
+            time: Date.now(),
             saveselection: this.__selection?.save(),
             selectionupdater,
         };
@@ -87,16 +88,31 @@ export class Repo implements IRepository {
     }
     commit(mergetype: CmdMergeType = CmdMergeType.None) {
         if (!this.__curCmd) throw new Error("commit failed");
-        this.__repo.commit(!this.__initing, this.__curCmd);
-        if (this.__initing) {
-            this.__curCmd = undefined;
-            return
+        if (!this.isNeedCommit()) {
+            this.rollback("commit");
+            return;
         }
-        const cmd = this.__curCmd;
 
+        const cmd = this.__curCmd;
         cmd.mergetype = mergetype;
+        // check merge
+        let commited = false;
+        if (mergetype !== CmdMergeType.None) {
+            const last = this.__repo.lastTransact()?.saved_data as LocalCmd;
+            if (!last || last.mergetype !== mergetype || last.time + 1000 < cmd.time) {
+                // 不合并
+            } else if (last.mergetype === CmdMergeType.TextDelete && this.__repo.mergeCommit(!this.__initing)) {
+                commited = true;
+            }
+            else if (last.mergetype === CmdMergeType.TextInsert && this.__repo.mergeCommit(!this.__initing)) {
+                commited = true;
+            }
+        }
+        if (!commited) {
+            this.__repo.commit(!this.__initing, this.__curCmd);
+        }
         this.__curCmd = undefined;
-        if (this.__onChange) this.__onChange(cmd.id)
+        if (!this.__initing && this.__onChange) this.__onChange(cmd.id)
     }
     rollback(from?: string): void {
         if (!this.__curCmd) throw new Error("rollback failed");
