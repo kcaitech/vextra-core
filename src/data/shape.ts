@@ -8,7 +8,7 @@
  * https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Basic, BasicArray, BasicMap, ResourceMgr } from "./basic";
+import { Basic, BasicArray, BasicMap } from "./basic";
 import { ContactForm, Style } from "./style";
 import { Text } from "./text/text";
 import * as classes from "./baseclasses"

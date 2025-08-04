@@ -43,7 +43,7 @@ async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicA
             const p = await lzData.loadJson(`pages/${id}.json`);
             name = p['name'];
         }
-        pageList.push(new PageListItem([i] as BasicArray<number>, id, name || 'Unknow'))
+        pageList.push(new PageListItem([i], id, name || 'Unknow'))
     }
 
     return pageList;

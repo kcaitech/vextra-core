@@ -61,7 +61,7 @@ export class Transporter extends AsyncApiCaller {
 
     start() {
         return this.__repo.start('sync-translate', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (!isUndo) state.shapes = this.shapes.map(i => i.id);
             else state.shapes = cmd.saveselection?.shapes || [];
             selection.restore(state);

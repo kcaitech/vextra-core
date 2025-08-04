@@ -929,7 +929,7 @@ export class ShapeEditor {
             if (index >= 0) {
                 try {
                     const op = _op ?? this.__repo.start("deleteShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                        const state = {} as SelectionState;
+                        const state = { page: this._page.id } as SelectionState;
                         if (isUndo) state.shapes = [this.shape.id];
                         else state.shapes = cmd.saveselection?.shapes || [];
                         selection.restore(state);
@@ -1340,7 +1340,7 @@ export class ShapeEditor {
         if (parent.type === ShapeType.Group) {
             artboard = newArtboard(parent.name, new ShapeFrame(0, 0, 100, 100), this.__document.stylesMgr);
             op = this.__repo.start("addAutoLayout", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this._page.id } as SelectionState;
                 if (!isUndo) state.shapes = [id];
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -1418,8 +1418,8 @@ export class ShapeEditor {
                 for (let i = 0; i < slices.length; i++) {
                     const slice = new BasicArray(...slices[i].map(p => importCurvePoint(exportCurvePoint((p)))));
                     if (last === originSegmentIndex) op.deleteSegmentAt(page, shape, originSegmentIndex);
-                    slice.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
-                    op.addSegmentAt(page, shape, last++, new PathSegment([0] as BasicArray<number>, uuid(), slice, closed));
+                    slice.forEach((i, index) => i.crdtidx = [index]);
+                    op.addSegmentAt(page, shape, last++, new PathSegment([0], uuid(), slice, closed));
                 }
                 if (last === originSegmentIndex) op.deleteSegmentAt(page, shape, originSegmentIndex);
             }

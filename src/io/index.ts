@@ -11,9 +11,8 @@
 export {importDocumentZip as importSketch} from "./import/sketch/documentio";
 export {importDocument as importFigma} from "./import/figma/documentio";
 export {importDocumentZip as importVext} from "./import/vext";
-export {importDocument as importMoss} from "./import/vext";
 export {importDocument as importSvg} from "./import/svg";
-export {importDocument as importRemote, importLocalDocument as importLocal} from "./import";
+export {importDocument as importRemote} from "./import";
 export * from "./storage";
 export {exportExForm, exportDocumentZip as exportVext, ExFromJson} from "./export";
 // export * as Import from "./import"
@@ -23,3 +22,5 @@ export * as SvgParser from "./import/svg"
 
 export { exportSvg } from "./export/svg"
 export { exportImg } from "./export/img"
+
+export * as SimpleVext from "./export/simple-vext"

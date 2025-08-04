@@ -680,7 +680,7 @@ export class BaseCreator extends BaseTreeNode {
 
             const stops = gradient.stops.map((item, i) => {
                 item.color.a *= item.opacity
-                return new Stop([i] as BasicArray<number>, uuid(), item.offset, myColorToColor(item.color))
+                return new Stop([i], uuid(), item.offset, myColorToColor(item.color))
             }
             ) as BasicArray<Stop>
 
@@ -724,7 +724,7 @@ export class BaseCreator extends BaseTreeNode {
             }
             const borderStyle = new BorderStyle(stroke.dashArray[0], stroke.dashArray[1])
             const side = new BorderSideSetting(SideType.Normal, strokeWidth, strokeWidth, strokeWidth, strokeWidth);
-            const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, myColorToColor(stroke.color))
+            const strokePaint = new Fill([0], uuid(), true, FillType.SolidColor, myColorToColor(stroke.color))
             border.position = position;
             border.borderStyle = borderStyle;
             border.cornerType = cornerType;

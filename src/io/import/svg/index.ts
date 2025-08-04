@@ -44,12 +44,12 @@ export async function importDocument(file: File | string, repo: IDataGuard) {
     const pageList = new BasicArray<PageListItem>();
     let page: Page;
     if (shape instanceof Page) {
-        pageList.push(new PageListItem([0] as BasicArray<number>, shape.id, shape.name));
+        pageList.push(new PageListItem([0], shape.id, shape.name));
         page = shape;
     } else {
         page = newPage("Page1");
         page.addChild(shape);
-        pageList.push(new PageListItem([0] as BasicArray<number>, page.id, page.name));
+        pageList.push(new PageListItem([0], page.id, page.name));
     }
     const document = new Document(uuid(), name, repo, {
         pageList,

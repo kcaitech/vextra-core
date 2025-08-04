@@ -61,7 +61,7 @@ export class ContactLineModifier {
             const points: CurvePoint[] = [visiblePoints[0], visiblePoints[visiblePoints.length - 1]];
             for (let i = 0, len = points.length; i < len; i++) {
                 const p = importCurvePoint((points[i]));
-                p.crdtidx = [i] as BasicArray<number>;
+                p.crdtidx = [i];
                 p.id = v4();
                 points[i] = p;
             }
@@ -255,14 +255,14 @@ function getPointForSolid(pageView: PageView, view: ContactLineView, index: numb
         const from = pageView.getView(view.fromShape?.id ?? '');
         if (!from) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint([1], v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const xy_result = get_box_pagexy(from);
         if (!xy_result) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint([1], v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
@@ -270,14 +270,14 @@ function getPointForSolid(pageView: PageView, view: ContactLineView, index: numb
         let p = get_nearest_border_point(from, view.contactFrom!.contactType, from.matrix2Root(), xy1, xy2);
         if (!p) {
             const p = result[0];
-            result.splice(1, 0, new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(1, 0, new CurvePoint([1], v4(), p.x, p.y, CurveMode.Straight));
             return result
         }
 
         const m1 = view.matrix2Root().inverse;
         p = m1.computeCoord3(p);
-        const cp = new CurvePoint([1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
-        const cp2 = new CurvePoint([2] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
+        const cp = new CurvePoint([1], v4(), p.x, p.y, CurveMode.Straight);
+        const cp2 = new CurvePoint([2], v4(), p.x, p.y, CurveMode.Straight);
         result.splice(1, 0, cp, cp2);
     }
     if (index === len - 2) { // 编辑的线为最后一根线；
@@ -285,14 +285,14 @@ function getPointForSolid(pageView: PageView, view: ContactLineView, index: numb
         const to = pageView.getView(view.toShape?.id ?? '');
         if (!to) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint([len - 1], v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const xy_result = get_box_pagexy(to);
         if (!xy_result) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint([len - 1], v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
@@ -300,15 +300,15 @@ function getPointForSolid(pageView: PageView, view: ContactLineView, index: numb
         let p = get_nearest_border_point(to, view.contactTo!.contactType, to.matrix2Root(), xy1, xy2);
         if (!p) {
             const p = points[points.length - 1];
-            result.splice(len - 1, 0, new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight));
+            result.splice(len - 1, 0, new CurvePoint([len - 1], v4(), p.x, p.y, CurveMode.Straight));
             return result;
         }
 
         const inverse = view.matrix2Root().inverse;
 
         p = inverse.computeCoord3(p);
-        const cp = new CurvePoint([len - 1] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
-        const cp2 = new CurvePoint([len] as BasicArray<number>, v4(), p.x, p.y, CurveMode.Straight);
+        const cp = new CurvePoint([len - 1], v4(), p.x, p.y, CurveMode.Straight);
+        const cp2 = new CurvePoint([len], v4(), p.x, p.y, CurveMode.Straight);
         result.splice(len - 1, 0, cp, cp2)
     }
     return result;

@@ -52,7 +52,7 @@ function importExportFormats(data: IJSON): BasicArray<ExportFormat> {
                 default: return ExportVisibleScaleType.Scale;
             }
         })(d['visibleScaleType']);
-        return new ExportFormat([i] as BasicArray<number>, uuid(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
+        return new ExportFormat([i], uuid(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
     })
 }
 function importExportOptions(data: IJSON): ExportOptions {
@@ -111,7 +111,7 @@ function importPoints(data: IJSON): CurvePoint[] {
         const hasCurveFrom: boolean = d['hasCurveFrom'];
         const hasCurveTo: boolean = d['hasCurveTo'];
         const point: Point2D = importXY(d['point']);
-        const p = new CurvePoint([i] as BasicArray<number>, uuid(), point.x, point.y, curveMode);
+        const p = new CurvePoint([i], uuid(), point.x, point.y, curveMode);
         if (hasCurveFrom) {
             if (Math.abs(curveFrom.x - p.x) > float_accuracy || Math.abs(curveFrom.y - p.y) > float_accuracy) {
                 p.hasFrom = true;
@@ -237,14 +237,14 @@ export function importArtboard(ctx: LoadContext, data: IJSON, f: ImportFun, i: n
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
 
     if (data['_class'] === ShapeType.Artboard && hasBackgroundColor && backgroundColor) {
-        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
+        const fill = new Fill([0], uuid(), true, FillType.SolidColor, backgroundColor);
         style.fills.length = 0;
         style.fills.push(fill);
     }
 
     const childs = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
     // const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
-    const shape = new Artboard([i] as BasicArray<number>, id, name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
+    const shape = new Artboard([i], id, name, ShapeType.Artboard, frame.trans, style, new BasicArray<Shape>(...childs), frame.size);
     shape['frameMaskDisabled'] = false;
     childs.length && determineAsContainerRadiusShape(shape, childs);
 
@@ -278,7 +278,7 @@ export function importGroupShape(ctx: LoadContext, data: IJSON, f: ImportFun, i:
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
     const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
-    const shape = new GroupShape([i] as BasicArray<number>, id, name, ShapeType.Group, frame.trans, style, shapes);
+    const shape = new GroupShape([i], id, name, ShapeType.Group, frame.trans, style, shapes);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -302,7 +302,7 @@ export function importShapeGroupShape(ctx: LoadContext, data: IJSON, f: ImportFu
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON, i: number) => f(ctx, d, i));
     const shapes = new BasicArray<Shape>(...addMaskRect(childs, ctx, data['layers'] || []));
-    const shape = new BoolShape([i] as BasicArray<number>, id, name, ShapeType.BoolShape, frame.trans, style, shapes);
+    const shape = new BoolShape([i], id, name, ShapeType.BoolShape, frame.trans, style, shapes);
     // shape.isBoolOpShape = true;
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -329,16 +329,16 @@ export function importImage(ctx: LoadContext, data: IJSON, f: ImportFun, i: numb
     // const isClosed = data['isClosed'];
     // env.mediaMgr.addRef(imageRef);
     const curvePoint = new BasicArray<CurvePoint>();
-    const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight); // lt
-    const p2 = new CurvePoint([1] as BasicArray<number>, uuid(), 1, 0, CurveMode.Straight); // rt
-    const p3 = new CurvePoint([2] as BasicArray<number>, uuid(), 1, 1, CurveMode.Straight); // rb
-    const p4 = new CurvePoint([3] as BasicArray<number>, uuid(), 0, 1, CurveMode.Straight); // lb
+    const p1 = new CurvePoint([0], uuid(), 0, 0, CurveMode.Straight); // lt
+    const p2 = new CurvePoint([1], uuid(), 1, 0, CurveMode.Straight); // rt
+    const p3 = new CurvePoint([2], uuid(), 1, 1, CurveMode.Straight); // rb
+    const p4 = new CurvePoint([3], uuid(), 0, 1, CurveMode.Straight); // lb
     curvePoint.push(p1, p2, p3, p4);
 
-    const segment = new PathSegment([0] as BasicArray<number>, uuid(), curvePoint, true);
+    const segment = new PathSegment([0], uuid(), curvePoint, true);
     // shape.setImageMgr(env.mediaMgr);
-    // const shape = new ImageShape([i] as BasicArray<number>, id, name, ShapeType.Image, frame, style, new BasicArray<PathSegment>(segment), imageRef);
-    const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
+    // const shape = new ImageShape([i], id, name, ShapeType.Image, frame, style, new BasicArray<PathSegment>(segment), imageRef);
+    const shape = new PathShape([i], id, name, ShapeType.Path, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
     const fillColor = new Color(1, 216, 216, 216);
     const fill = new Fill(new BasicArray(), uuid(), true, FillType.Pattern, fillColor);
     fill.imageRef = imageRef;
@@ -399,8 +399,8 @@ export function importPathShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     }
     // const text = data['attributedString'] && importText(data['attributedString']);
 
-    const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed'])
-    const shape = new PathShape([i] as BasicArray<number>, id, name, ShapeType.Path, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
+    const segment = new PathSegment([0], uuid(), new BasicArray<CurvePoint>(...points), data['isClosed'])
+    const shape = new PathShape([i], id, name, ShapeType.Path, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -426,8 +426,8 @@ export function importRectShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const isClosed = data['isClosed'];
     // const r = data['fixedRadius'] || 0;
     // const radius = new RectRadius(r, r, r, r);
-    const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), data['isClosed']);
-    const shape = new RectShape([i] as BasicArray<number>, id, name, ShapeType.Rectangle, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
+    const segment: PathSegment = new PathSegment([0], uuid(), new BasicArray<CurvePoint>(...points), data['isClosed']);
+    const shape = new RectShape([i], id, name, ShapeType.Rectangle, frame.trans, style, frame.size, new BasicArray<PathSegment>(segment));
 
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
@@ -456,7 +456,7 @@ export function importTextShape(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     // const isClosed = data['isClosed'];
     // 导入填充是文字颜色
     style.fills = new BasicArray();
-    const shape = new TextShape([i] as BasicArray<number>, id, name, ShapeType.Text, frame.trans, style, frame.size, text);
+    const shape = new TextShape([i], id, name, ShapeType.Text, frame.trans, style, frame.size, text);
     importShapePropertys(shape, data);
     importBoolOp(shape, data);
     shape.exportOptions = exportOptions;
@@ -486,11 +486,11 @@ export function importSymbol(ctx: LoadContext, data: IJSON, f: ImportFun, i: num
     const hasBackgroundColor: boolean = data['hasBackgroundColor'];
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
     if (hasBackgroundColor && backgroundColor) {
-        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
+        const fill = new Fill([0], uuid(), true, FillType.SolidColor, backgroundColor);
         style.fills.push(fill);
     }
-    // const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, style, shapes, frame.size, new BasicMap());
-    const shape = new SymbolShape([i] as BasicArray<number>, id, name, ShapeType.Symbol, frame.trans, style, new BasicArray<Shape>(...childs), frame.size, new BasicMap());
+    // const shape = new SymbolShape([i], id, name, ShapeType.Symbol, frame.trans, style, shapes, frame.size, new BasicMap());
+    const shape = new SymbolShape([i], id, name, ShapeType.Symbol, frame.trans, style, new BasicArray<Shape>(...childs), frame.size, new BasicMap());
 
     childs.length && determineAsContainerRadiusShape(shape, childs);
 
@@ -522,10 +522,10 @@ export function importSymbolRef(ctx: LoadContext, data: IJSON, f: ImportFun, i: 
     const hasBackgroundColor: boolean = data['hasBackgroundColor'];
     const backgroundColor: Color | undefined = data['backgroundColor'] && importColor(data['backgroundColor']);
     if (hasBackgroundColor && backgroundColor) {
-        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, backgroundColor);
+        const fill = new Fill([0], uuid(), true, FillType.SolidColor, backgroundColor);
         style.fills.push(fill);
     }
-    const shape = new SymbolRefShape([i] as BasicArray<number>, id, name, ShapeType.SymbolRef, frame.trans, style, frame.size, data['symbolID'], new BasicMap());
+    const shape = new SymbolRefShape([i], id, name, ShapeType.SymbolRef, frame.trans, style, frame.size, data['symbolID'], new BasicMap());
     // shape['frameMaskDisabled'] = !data['hasClippingMask'];
     shape['isCustomSize'] = true; // 因为无法判定是否修改了尺寸，默认都给已经修改了尺寸
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
@@ -543,12 +543,12 @@ function addMaskRect(childs: Shape[], ctx: LoadContext, data: IJSON[]) {
         if (d['hasClippingMask'] && d['clippingMaskMode'] === 0) {
             const style = importStyle(ctx, d['style']);
             if (!hasFill(shape.style.fills)) {
-                const fill = new Fill([shape.style.fills.length] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
+                const fill = new Fill([shape.style.fills.length], uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
                 shape.style.fills.push(fill);
                 if (hasBorder(shape.style.borders.strokePaints)) {
                     const points: CurvePoint[] = importPoints(d);
-                    const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), d['isClosed']);
-                    const s = new RectShape([i] as BasicArray<number>, uuid(), shape.name, ShapeType.Rectangle, shape.transform, style, shape.size, new BasicArray<PathSegment>(segment));
+                    const segment: PathSegment = new PathSegment([0], uuid(), new BasicArray<CurvePoint>(...points), d['isClosed']);
+                    const s = new RectShape([i], uuid(), shape.name, ShapeType.Rectangle, shape.transform, style, shape.size, new BasicArray<PathSegment>(segment));
                     importShapePropertys(s, d);
                     importBoolOp(s, d);
                     shapes.push(s, shape);
@@ -557,8 +557,8 @@ function addMaskRect(childs: Shape[], ctx: LoadContext, data: IJSON[]) {
                 }
             } else {
                 const points: CurvePoint[] = importPoints(d);
-                const segment: PathSegment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), d['isClosed']);
-                const s = new RectShape([i] as BasicArray<number>, uuid(), shape.name, ShapeType.Rectangle, shape.transform, style, shape.size, new BasicArray<PathSegment>(segment));
+                const segment: PathSegment = new PathSegment([0], uuid(), new BasicArray<CurvePoint>(...points), d['isClosed']);
+                const s = new RectShape([i], uuid(), shape.name, ShapeType.Rectangle, shape.transform, style, shape.size, new BasicArray<PathSegment>(segment));
                 importShapePropertys(s, d);
                 importBoolOp(s, d);
                 shapes.push(s, shape);

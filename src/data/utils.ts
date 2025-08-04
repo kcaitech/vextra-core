@@ -522,7 +522,7 @@ export function gen_path(shape1: Shape, type1: ContactType, shape2: Shape, type2
     const points: CurvePoint[] = [];
     for (let i = 0, len = path.length; i < len; i++) {
         const p = m3.computeCoord3(path[i]);
-        points.push(new CurvePoint([i] as BasicArray<number>, uuid(), p.x, p.y, CurveMode.Straight));
+        points.push(new CurvePoint([i], uuid(), p.x, p.y, CurveMode.Straight));
     }
 
     return points;
@@ -614,26 +614,26 @@ const __handle: { [key: string]: (points: CurvePoint[], start: CurvePoint, end: 
 __handle['horizontal'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint, width: number, height: number) {
     points.length = 0;
     if (Math.abs(start.x - end.x) * width < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), uuid(), start.x, end.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2]), uuid(), start.x, end.y, CurveMode.Straight));
     } else if (Math.abs(start.y - end.y) * height < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), uuid(), end.x, start.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2]), uuid(), end.x, start.y, CurveMode.Straight));
     } else {
         const mid = (end.x + start.x) / 2;
-        const _p1 = new CurvePoint([1] as BasicArray<number>, uuid(), mid, start.y, CurveMode.Straight);
-        const _p2 = new CurvePoint(([2] as BasicArray<number>), uuid(), mid, end.y, CurveMode.Straight);
+        const _p1 = new CurvePoint([1], uuid(), mid, start.y, CurveMode.Straight);
+        const _p2 = new CurvePoint(([2]), uuid(), mid, end.y, CurveMode.Straight);
         points.push(start, _p1, _p2, end);
     }
 }
 __handle['vertical'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint, width: number, height: number) {
     points.length = 0;
     if (Math.abs(start.x - end.x) * width < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), uuid(), start.x, end.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2]), uuid(), start.x, end.y, CurveMode.Straight));
     } else if (Math.abs(start.y - end.y) * height < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), uuid(), end.x, start.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2]), uuid(), end.x, start.y, CurveMode.Straight));
     } else {
         const mid = (end.y + start.y) / 2;
-        const _p1 = new CurvePoint([1] as BasicArray<number>, uuid(), start.x, mid, CurveMode.Straight);
-        const _p2 = new CurvePoint(([2] as BasicArray<number>), uuid(), end.x, mid, CurveMode.Straight);
+        const _p1 = new CurvePoint([1], uuid(), start.x, mid, CurveMode.Straight);
+        const _p2 = new CurvePoint(([2]), uuid(), end.x, mid, CurveMode.Straight);
         points.push(start, _p1, _p2, end);
     }
 }
@@ -659,11 +659,11 @@ export function path_for_free_end_contact(shape: ContactShape, points: CurvePoin
     const end = points.pop()!;
 
     if (Math.abs(start.y - end.y) * shape.size.height < 5) {
-        points.push(new CurvePoint(([points.length] as BasicArray<number>), uuid(), end.x, start.y, CurveMode.Straight));
+        points.push(new CurvePoint(([points.length]), uuid(), end.x, start.y, CurveMode.Straight));
     } else if (Math.abs(start.x - end.x) * shape.size.width < 5) {
-        points.push(new CurvePoint(([points.length] as BasicArray<number>), uuid(), start.x, end.y, CurveMode.Straight));
+        points.push(new CurvePoint(([points.length]), uuid(), start.x, end.y, CurveMode.Straight));
     } else {
-        points.push(new CurvePoint(([points.length] as BasicArray<number>), uuid(), end.x, start.y, CurveMode.Straight), end);
+        points.push(new CurvePoint(([points.length]), uuid(), end.x, start.y, CurveMode.Straight), end);
     }
 }
 export function path_for_free_start_contact(points: CurvePoint[], end: XY | undefined, width: number, height: number) {
@@ -671,7 +671,7 @@ export function path_for_free_start_contact(points: CurvePoint[], end: XY | unde
         return path_for_free_contact(points, width, height);
     }
     const start = points[0];
-    const _end = new CurvePoint(([points.length - 1] as BasicArray<number>), uuid(), end.x, end.y, CurveMode.Straight);
+    const _end = new CurvePoint(([points.length - 1]), uuid(), end.x, end.y, CurveMode.Straight);
 
     const _start = {x: start.x * width, y: start.y * height};
     const __end = {x: end.x * width, y: end.y * height};
@@ -789,7 +789,7 @@ export function getPolygonPoints(counts: { x: number, y: number }[], radius?: nu
     const curvePoint = new BasicArray<CurvePoint>();
     for (let i = 0; i < counts.length; i++) {
         const count = counts[i];
-        const point = new CurvePoint([i] as BasicArray<number>, uuid(), count.x, count.y, CurveMode.Straight);
+        const point = new CurvePoint([i], uuid(), count.x, count.y, CurveMode.Straight);
         if (radius) point.radius = radius;
         curvePoint.push(point);
     }

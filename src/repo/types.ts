@@ -36,6 +36,7 @@ export class TextSelection {
 }
 
 export interface SelectionState {
+    page: string,
     shapes: string[],
     table?: {
         isRowOrCol: boolean, // 是否选中整行整列

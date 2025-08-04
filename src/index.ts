@@ -22,6 +22,7 @@ export * from "./dataview"
 
 // IO模块导出
 export * as IO from "./io"
+export { SimpleVext } from "./io"
 
 // 操作模块导出
 export * as Opt from "./operator"

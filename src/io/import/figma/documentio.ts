@@ -136,7 +136,7 @@ export async function importDocument(file: File | string, gurad: IDataGuard /*in
     for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
         page.id = uuid();
-        pageList.push(new PageListItem([i] as BasicArray<number>, page.id, page.name));
+        pageList.push(new PageListItem([i], page.id, page.name));
     }
 
     const freesymbols = new BasicMap();

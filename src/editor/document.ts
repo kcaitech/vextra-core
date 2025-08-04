@@ -288,26 +288,26 @@ export class DocEditor {
                 let m: StyleMangerMember;
                 if (mask.typeId === 'fill-mask') {
                     const fills = new BasicArray<Fill>(...(mask as FillMask).fills.map(i => importFill(i)));
-                    m = new FillMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, fills, mask.disabled);
+                    m = new FillMask([0], sheetId, mask.id, mask.name, mask.description, fills, mask.disabled);
                 } else if (mask.typeId === 'shadow-mask') {
                     const shadows = new BasicArray<Shadow>(...(mask as ShadowMask).shadows.map(i => importShadow(i)));
-                    m = new ShadowMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, shadows, mask.disabled)
+                    m = new ShadowMask([0], sheetId, mask.id, mask.name, mask.description, shadows, mask.disabled)
                 } else if (mask.typeId === 'blur-mask') {
                     const __mask = mask as BlurMask;
                     const frank = new Blur(true, new Point2D(0, 0), 10, BlurType.Gaussian);
                     const blur = __mask.blur ? importBlur(__mask.blur) : frank;
-                    m = new BlurMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, blur, mask.disabled);
+                    m = new BlurMask([0], sheetId, mask.id, mask.name, mask.description, blur, mask.disabled);
                 } else if (mask.typeId === 'border-mask') {
                     const __mask = mask as BorderMask;
                     const border = importBorderMaskType(__mask.border);
-                    m = new BorderMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, border, mask.disabled);
+                    m = new BorderMask([0], sheetId, mask.id, mask.name, mask.description, border, mask.disabled);
                 } else if (mask.typeId === 'radius-mask') {
                     const __mask = mask as RadiusMask;
-                    m = new RadiusMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, new BasicArray<number>(...__mask.radius), mask.disabled)
+                    m = new RadiusMask([0], sheetId, mask.id, mask.name, mask.description, new BasicArray<number>(...__mask.radius), mask.disabled)
                 } else {
                     const __mask = mask as TextMask;
                     const text = importTextAttr(__mask.text)
-                    m = new TextMask([0] as BasicArray<number>, sheetId, mask.id, mask.name, mask.description, text, mask.disabled)
+                    m = new TextMask([0], sheetId, mask.id, mask.name, mask.description, text, mask.disabled)
                 }
                 styles.push(m);
             }

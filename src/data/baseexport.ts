@@ -294,18 +294,11 @@ export function exportGroupShape_childs(source: types.GroupShape_childs, ctx?: I
 export function exportGuideAxis(source: types.GuideAxis, ctx?: IExportContext): types.GuideAxis {
     return source
 }
-export function exportGuide_crdtidx(source: types.Guide_crdtidx, ctx?: IExportContext): types.Guide_crdtidx {
-    const ret: types.Guide_crdtidx = []
-    source.forEach((source) => {
-        ret.push(source)
-    })
-    return ret
-}
 /* guide */
 export function exportGuide(source: types.Guide, ctx?: IExportContext): types.Guide {
     const ret: types.Guide = {} as types.Guide
     ret.typeId = "guide"
-    ret.crdtidx = exportGuide_crdtidx(source.crdtidx, ctx)
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
     ret.typeId = source.typeId
     ret.id = source.id
     ret.axis = exportGuideAxis(source.axis, ctx)
@@ -480,13 +473,6 @@ export function exportPrototypeEasingType(source: types.PrototypeEasingType, ctx
 /* interactionType */
 export function exportPrototypeEvents(source: types.PrototypeEvents, ctx?: IExportContext): types.PrototypeEvents {
     return source
-}
-export function exportPrototypeInteraction_crdtidx(source: types.PrototypeInteraction_crdtidx, ctx?: IExportContext): types.PrototypeInteraction_crdtidx {
-    const ret: types.PrototypeInteraction_crdtidx = []
-    source.forEach((source) => {
-        ret.push(source)
-    })
-    return ret
 }
 /* navigationType */
 export function exportPrototypeNavigationType(source: types.PrototypeNavigationType, ctx?: IExportContext): types.PrototypeNavigationType {
@@ -961,7 +947,7 @@ export function exportPrototypeEvent(source: types.PrototypeEvent, ctx?: IExport
 /* prototypeInteraction */
 export function exportPrototypeInteraction(source: types.PrototypeInteraction, ctx?: IExportContext): types.PrototypeInteraction {
     const ret: types.PrototypeInteraction = {} as types.PrototypeInteraction
-    ret.crdtidx = exportPrototypeInteraction_crdtidx(source.crdtidx, ctx)
+    ret.crdtidx = exportCrdtidx(source.crdtidx, ctx)
     ret.id = source.id
     ret.event = exportPrototypeEvent(source.event, ctx)
     ret.actions = exportPrototypeActions(source.actions, ctx)

@@ -136,7 +136,7 @@ export async function importDocument(storage: storage.IStorage, documentPath: st
     if (meta.stylelib) {
         for (let i = 0; i < meta.stylelib.length; i++) {
             const sheet = meta.stylelib[i];
-            libs.push(new StyleSheet([i] as BasicArray<number>, sheet.id, sheet.name, sheet.variables));
+            libs.push(new StyleSheet([i], sheet.id, sheet.name, sheet.variables));
         }
     }
 
@@ -201,50 +201,50 @@ export class LocalDataLoader extends DataLoader {
     }
 }
 
-export async function importLocalDocument(storage: storage.IStorage, documentPath: string, fid: string, versionId: string, gurad: IDataGuard) {
-    const loader = new LocalDataLoader(storage, documentPath);
+// export async function importLocalDocument(storage: storage.IStorage, documentPath: string, fid: string, versionId: string, gurad: IDataGuard) {
+//     const loader = new LocalDataLoader(storage, documentPath);
 
-    const meta = await loader.loadDocumentMeta(versionId);
-    const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
-    const fmtVer = meta.fmtVer ?? 0;
-    const libs = new BasicArray<StyleSheet>()
-    if (meta.stylelib) {
-        for (let i = 0; i < meta.stylelib.length; i++) {
-            const sheet = meta.stylelib[i];
-            libs.push(new StyleSheet([i] as BasicArray<number>, sheet.id, sheet.name, sheet.variables));
-        }
-    }
+//     const meta = await loader.loadDocumentMeta(versionId);
+//     const idToVersionId: Map<string, string | undefined> = new Map(meta.pagesList.map(p => [p.id, p.versionId]));
+//     const fmtVer = meta.fmtVer ?? 0;
+//     const libs = new BasicArray<StyleSheet>()
+//     if (meta.stylelib) {
+//         for (let i = 0; i < meta.stylelib.length; i++) {
+//             const sheet = meta.stylelib[i];
+//             libs.push(new StyleSheet([i], sheet.id, sheet.name, sheet.variables));
+//         }
+//     }
 
-    const { id, name, lastCmdVer, pagesList, symbolregist, freesymbols } = meta;
+//     const { id, name, lastCmdVer, pagesList, symbolregist, freesymbols } = meta;
 
-    const document = new Document(id, name, gurad, {
-        versionId,
-        symbolRegister: symbolregist,
-        lastCmdVer,
-        pageList: pagesList,
-        freeSymbols: freesymbols as BasicMap<string, SymbolShape>,
-        stylelib: libs
-    });
+//     const document = new Document(id, name, gurad, {
+//         versionId,
+//         symbolRegister: symbolregist,
+//         lastCmdVer,
+//         pageList: pagesList,
+//         freeSymbols: freesymbols as BasicMap<string, SymbolShape>,
+//         stylelib: libs
+//     });
 
-    document.pagesMgr.setLoader((id: string) => {
-        const ctx: IImportContext = new class implements IImportContext {
-            document: Document = document;
-            curPage: string = id;
-            fmtVer: string = fmtVer
-        };
-        return loader.loadPage(ctx, id, idToVersionId.get(id))
-    });
-    document.mediasMgr.setLoader((id: string) => {
-        const ctx: IImportContext = new class implements IImportContext {
-            document: Document = document;
-            curPage: string = "";
-            fmtVer: string = fmtVer
-        };
-        return loader.loadMedia(ctx, id)
-    });
+//     document.pagesMgr.setLoader((id: string) => {
+//         const ctx: IImportContext = new class implements IImportContext {
+//             document: Document = document;
+//             curPage: string = id;
+//             fmtVer: string = fmtVer
+//         };
+//         return loader.loadPage(ctx, id, idToVersionId.get(id))
+//     });
+//     document.mediasMgr.setLoader((id: string) => {
+//         const ctx: IImportContext = new class implements IImportContext {
+//             document: Document = document;
+//             curPage: string = "";
+//             fmtVer: string = fmtVer
+//         };
+//         return loader.loadMedia(ctx, id)
+//     });
 
-    return {
-        document: document,
-        loader: loader,
-    };
-}
+//     return {
+//         document: document,
+//         loader: loader,
+//     };
+// }

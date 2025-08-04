@@ -162,7 +162,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             // gradientId = genGradientId(gradient);
             // gradients.set(gradientId, gradient);
         }
-        const strokePaint = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
+        const strokePaint = new Fill([i], uuid(), isEnabled, fillType, color);
         strokePaint.gradient = gradient;
         return strokePaint;
     });
@@ -256,7 +256,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
             imageRef = ref.substring(ref.indexOf('/') + 1);
         }
 
-        const fill = new Fill([i] as BasicArray<number>, uuid(), isEnabled, fillType, color);
+        const fill = new Fill([i], uuid(), isEnabled, fillType, color);
         fill.imageScaleMode = patternFillType(d);
         fill.gradient = gradient;
         fill.imageRef = imageRef;
@@ -270,7 +270,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         const isEnabled: boolean = d['isEnabled'];
         const color: Color = importColor(d['color']);
         const blurRadius = d["blurRadius"], offsetX = d["offsetX"], offsetY = d["offsetY"], spread = d["spread"]
-        const shadow = new Shadow([i] as BasicArray<number>, uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread, ShadowPosition.Outer);
+        const shadow = new Shadow([i], uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread, ShadowPosition.Outer);
         return shadow;
     });
 
@@ -278,7 +278,7 @@ export function importStyle(ctx: LoadContext, data: IJSON): Style {
         const isEnabled: boolean = d['isEnabled'];
         const color: Color = importColor(d['color']);
         const blurRadius = d["blurRadius"], offsetX = d["offsetX"], offsetY = d["offsetY"], spread = d["spread"]
-        const shadow = new Shadow([shadows.length + i] as BasicArray<number>, uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread, ShadowPosition.Inner);
+        const shadow = new Shadow([shadows.length + i], uuid(), isEnabled, blurRadius, color, offsetX, offsetY, spread, ShadowPosition.Inner);
         shadows.push(shadow);
     })
 

@@ -37,11 +37,11 @@ type CurvCtx = {
 
 function curveHandleLine(seg: CurvSeg, x: number, y: number) {
     if (!seg.points.length) {
-        const point = new CurvePoint([0] as BasicArray<number>, uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Straight);
+        const point = new CurvePoint([0], uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Straight);
         seg.points.push(point);
     }
 
-    const point = new CurvePoint([seg.points.length] as BasicArray<number>, uuid(), x, y, CurveMode.Straight);
+    const point = new CurvePoint([seg.points.length], uuid(), x, y, CurveMode.Straight);
     seg.points.push(point);
 
     seg.prepoint.x = x;
@@ -56,14 +56,14 @@ function curveHandleBezier(seg: CurvSeg, x1: number, y1: number, x2: number, y2:
         prePoint.fromX = x1;
         prePoint.fromY = y1;
     } else {
-        const point = new CurvePoint([0] as BasicArray<number>, uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
+        const point = new CurvePoint([0], uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
         point.hasFrom = true;
         point.fromX = x1;
         point.fromY = y1;
         seg.points.push(point);
     }
 
-    const point = new CurvePoint([len] as BasicArray<number>, uuid(), x, y, CurveMode.Asymmetric);
+    const point = new CurvePoint([len], uuid(), x, y, CurveMode.Asymmetric);
     point.hasTo = true;
     point.toX = x2;
     point.toY = y2;
@@ -80,7 +80,7 @@ function curveHandleQuaBezier(seg: CurvSeg, cx: number, cy: number, x: number, y
     if (len) {
         pre = seg.points[seg.points.length - 1];
     } else {
-        pre = new CurvePoint([0] as BasicArray<number>, uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
+        pre = new CurvePoint([0], uuid(), seg.beginpoint.x, seg.beginpoint.y, CurveMode.Asymmetric);
         seg.points.push(pre);
     }
     const hdl1 = {x: pre.x / 3 + 2 * cx / 3, y: pre.y / 3 + 2 * cy / 3};
@@ -90,7 +90,7 @@ function curveHandleQuaBezier(seg: CurvSeg, cx: number, cy: number, x: number, y
     pre.fromY = hdl1.y;
     seg.preHandle = {x: hdl2.x, y: hdl2.y};
     seg.prepoint = {x, y};
-    const point = new CurvePoint([len] as BasicArray<number>, uuid(), x, y, CurveMode.Asymmetric);
+    const point = new CurvePoint([len], uuid(), x, y, CurveMode.Asymmetric);
     point.hasTo = true;
     point.toX = hdl2.x;
     point.toY = hdl2.y;

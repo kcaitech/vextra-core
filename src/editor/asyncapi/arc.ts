@@ -84,8 +84,8 @@ export function modifyPathByArc(op: Operator, page: Page, shape: Shape) {
         while (segments.length) {
             const { points, isClosed } = segments.pop()!;
             if (cornerRadius) points.forEach(i => i.radius = cornerRadius);
-            points.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
-            op.addSegmentAt(page, shape, 0, new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(...points), isClosed));
+            points.forEach((i, index) => i.crdtidx = [index]);
+            op.addSegmentAt(page, shape, 0, new PathSegment([0], uuid(), new BasicArray<CurvePoint>(...points), isClosed));
         }
     }
 }
@@ -162,19 +162,19 @@ export class OvalPathParser {
 
     private __p(arc: number, length: number) {
         if (!length) {
-            return new CurvePoint([0] as BasicArray<number>, v4(), 0.5, 0.5, CurveMode.Straight);
+            return new CurvePoint([0], v4(), 0.5, 0.5, CurveMode.Straight);
         } else {
             const matrix = new Matrix();
             matrix.rotate(arc, 0.5, 0.5);
             const xy = matrix.computeCoord2(length, 0.5);
-            return new CurvePoint([0] as BasicArray<number>, v4(), xy.x, xy.y, CurveMode.Straight);
+            return new CurvePoint([0], v4(), xy.x, xy.y, CurveMode.Straight);
         }
     }
 
     private getQuarters(radius: number = 1) {
         const kappa = 4 * (Math.sqrt(2) - 1) / 3 * (radius / 2);
         const padding = (1 - radius) / 2;
-        const top = new CurvePoint([0] as BasicArray<number>, v4(), 0.5, padding, CurveMode.Mirrored);
+        const top = new CurvePoint([0], v4(), 0.5, padding, CurveMode.Mirrored);
         top.toX = 0.5 - kappa;
         top.toY = padding;
         top.fromX = 0.5 + kappa;
@@ -182,7 +182,7 @@ export class OvalPathParser {
         top.hasTo = true;
         top.hasFrom = true;
 
-        const right = new CurvePoint([0] as BasicArray<number>, v4(), 1 - padding, 0.5, CurveMode.Mirrored);
+        const right = new CurvePoint([0], v4(), 1 - padding, 0.5, CurveMode.Mirrored);
         right.toX = 1 - padding;
         right.toY = 0.5 - kappa;
         right.fromX = 1 - padding;
@@ -190,7 +190,7 @@ export class OvalPathParser {
         right.hasTo = true;
         right.hasFrom = true;
 
-        const bottom = new CurvePoint([0] as BasicArray<number>, v4(), 0.5, 1 - padding, CurveMode.Mirrored);
+        const bottom = new CurvePoint([0], v4(), 0.5, 1 - padding, CurveMode.Mirrored);
         bottom.toX = 0.5 + kappa;
         bottom.toY = 1 - padding;
         bottom.fromX = 0.5 - kappa;
@@ -198,7 +198,7 @@ export class OvalPathParser {
         bottom.hasTo = true;
         bottom.hasFrom = true;
 
-        const left = new CurvePoint([0] as BasicArray<number>, v4(), padding, 0.5, CurveMode.Mirrored);
+        const left = new CurvePoint([0], v4(), padding, 0.5, CurveMode.Mirrored);
         left.toX = padding;
         left.toY = 0.5 + kappa;
         left.fromX = padding;
@@ -210,7 +210,7 @@ export class OvalPathParser {
     }
     
     private getArcPoints(start: number, end: number, radius: number) {
-        if (!radius) return [new CurvePoint([0] as BasicArray<number>, v4(), 0.5, 0.5, CurveMode.Straight)];
+        if (!radius) return [new CurvePoint([0], v4(), 0.5, 0.5, CurveMode.Straight)];
         const points = this.getQuarters(radius);
         
 
@@ -355,7 +355,7 @@ export class OvalPathParser {
         start.fromY = y1;
         start.mode = CurveMode.Disconnected;
 
-        const __end = new CurvePoint([0] as BasicArray<number>, v4(), x6, y6, CurveMode.Disconnected);
+        const __end = new CurvePoint([0], v4(), x6, y6, CurveMode.Disconnected);
         __end.toX = x4;
         __end.toY = y4;
         __end.hasTo = true;

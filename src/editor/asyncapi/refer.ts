@@ -37,7 +37,7 @@ export class ReferHandleApiCaller extends AsyncApiCaller {
                 index = page.guides.length;
             }
 
-            this.operator.insertGuideToPage(this.page, new Guide([index] as BasicArray<number>, uuid(), axis, offset));
+            this.operator.insertGuideToPage(this.page, new Guide([index], uuid(), axis, offset));
 
             this.updateView();
             this.__recovery = false;

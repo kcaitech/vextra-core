@@ -60,7 +60,7 @@ export class PathModifier extends AsyncApiCaller {
         if (needStoreSelection) {
             this.__repo.rollback();
             this.operator = this.__repo.start('create-path', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = this.shape ? [this.shape.id] : [];
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -92,7 +92,7 @@ export class PathModifier extends AsyncApiCaller {
             if (!_style) {
                 const side = new BorderSideSetting(SideType.Normal, 1, 1, 1, 1);
                 const strokePaints = new BasicArray<Fill>();
-                const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
+                const strokePaint = new Fill([0], uuid(), true, FillType.SolidColor, new Color(1, 0, 0, 0));
                 strokePaints.push(strokePaint);
                 style.borders = new Border(types.BorderPosition.Center, new BorderStyle(0, 0), types.CornerType.Miter, side, strokePaints);
             } else {
@@ -102,8 +102,8 @@ export class PathModifier extends AsyncApiCaller {
 
             style.setStylesMgr(this.__document.stylesMgr);
 
-            const p1 = new CurvePoint([0] as BasicArray<number>, uuid(), 0, 0, CurveMode.Straight);
-            const segment = new PathSegment([0] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(p1), false);
+            const p1 = new CurvePoint([0], uuid(), 0, 0, CurveMode.Straight);
+            const segment = new PathSegment([0], uuid(), new BasicArray<CurvePoint>(p1), false);
 
             const size = new ShapeSize(frame.width, frame.height);
             const trans = new Transform();
@@ -181,8 +181,8 @@ export class PathModifier extends AsyncApiCaller {
             const shape = adapt2Shape(view) as PathShape;
             this.shape = shape;
             const index = (this.shape as PathShape).pathsegs.length;
-            const point = new CurvePoint([0] as BasicArray<number>, uuid(), xy.x, xy.y, CurveMode.Straight);
-            const segment = new PathSegment([index] as BasicArray<number>, uuid(), new BasicArray<CurvePoint>(point), false);
+            const point = new CurvePoint([0], uuid(), xy.x, xy.y, CurveMode.Straight);
+            const segment = new PathSegment([index], uuid(), new BasicArray<CurvePoint>(point), false);
             this.operator.addSegmentAt(this.page, shape, index, segment);
             this.operator.shapeEditPoints(this.page, shape, true);
             this.updateView();
@@ -491,7 +491,7 @@ export class PathModifier extends AsyncApiCaller {
 
             for (let i = 0; i < __points.length; i++) {
                 const p = __points[i];
-                const point = new CurvePoint([i] as BasicArray<number>, uuid(), p.x, p.y, p.mode);
+                const point = new CurvePoint([i], uuid(), p.x, p.y, p.mode);
                 point.radius = p.radius;
                 point.hasFrom = p.hasFrom;
                 point.hasTo = p.hasTo;
@@ -510,10 +510,10 @@ export class PathModifier extends AsyncApiCaller {
             op.deleteSegmentAt(page, shape, toSegmentIndex);
 
             // crdtidx重排
-            pointsContainer.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
+            pointsContainer.forEach((i, index) => i.crdtidx = [index]);
 
             // 生成合并过后的线条
-            const newSegment = new PathSegment([shape.pathsegs.length] as BasicArray<number>, uuid(), pointsContainer, false);
+            const newSegment = new PathSegment([shape.pathsegs.length], uuid(), pointsContainer, false);
             op.addSegmentAt(page, shape, shape.pathsegs.length, newSegment);
 
             this.updateView();
@@ -656,7 +656,7 @@ export class PathModifier extends AsyncApiCaller {
             // 反置点的顺序时，需要把from和to的相关值也一并反置
             for (let i = points.length - 1; i > -1; i--) {
                 const op = points[i];
-                const np = new CurvePoint([i] as BasicArray<number>, uuid(), op.x, op.y, op.mode);
+                const np = new CurvePoint([i], uuid(), op.x, op.y, op.mode);
                 np.radius = op.radius;
                 np.hasTo = op.hasFrom;
                 np.hasFrom = op.hasTo;
@@ -674,8 +674,8 @@ export class PathModifier extends AsyncApiCaller {
 
             op.deleteSegmentAt(page, shape, segmentIndex);
             const l = shape.pathsegs.length;
-            container.forEach((i, index) => i.crdtidx = [index] as BasicArray<number>);
-            const newSegment = new PathSegment([l] as BasicArray<number>, uuid(), container, segment.isClosed);
+            container.forEach((i, index) => i.crdtidx = [index]);
+            const newSegment = new PathSegment([l], uuid(), container, segment.isClosed);
 
             op.addSegmentAt(page, shape, l, newSegment);
 

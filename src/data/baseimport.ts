@@ -13,6 +13,7 @@ import * as impl from "./classes"
 import * as types from "./typesdefine"
 import { BasicArray, BasicMap } from "./basic"
 export interface IImportContext {
+    isLocalFile?: boolean
     document: impl.Document
     fmtVer: string
 }
@@ -27,13 +28,11 @@ type ExportOptions_exportFormats = BasicArray<impl.ExportFormat>
 type FillMask_fills = BasicArray<impl.Fill>
 type Gradient_stops = BasicArray<impl.Stop>
 type GroupShape_childs = BasicArray<impl.GroupShape | impl.PathShape | impl.RectShape | impl.SymbolRefShape | impl.SymbolShape | impl.SymbolUnionShape | impl.TextShape | impl.Artboard | impl.LineShape | impl.OvalShape | impl.TableShape | impl.ContactShape | impl.Shape | impl.CutoutShape | impl.BoolShape | impl.PolygonShape | impl.StarShape>
-type Guide_crdtidx = BasicArray<number>
 type Page_guides = BasicArray<impl.Guide>
 type Page_connections = BasicArray<impl.Connection>
 type Para_spans = BasicArray<impl.Span>
 type PathSegment_points = BasicArray<impl.CurvePoint>
 type PathShape_pathsegs = BasicArray<impl.PathSegment>
-type PrototypeInteraction_crdtidx = BasicArray<number>
 type ShadowMask_shadows = BasicArray<impl.Shadow>
 type Shape_prototypeInteractions = BasicArray<impl.PrototypeInteraction>
 type StyleSheet_variables = BasicArray<impl.FillMask | impl.ShadowMask | impl.BlurMask | impl.BorderMask | impl.RadiusMask | impl.TextMask>
@@ -49,7 +48,10 @@ type Variable_0 = BasicArray<impl.Fill | impl.Shadow | impl.PrototypeInteraction
 export function importArtboard_guides(source: types.Artboard_guides, ctx?: IImportContext): Artboard_guides {
     const ret: Artboard_guides = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importGuide(source, ctx))
+        const element = importGuide(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -79,7 +81,10 @@ export function importBorderStyle(source: types.BorderStyle, ctx?: IImportContex
 export function importBorder_strokePaints(source: types.Border_strokePaints, ctx?: IImportContext): Border_strokePaints {
     const ret: Border_strokePaints = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importFill(source, ctx))
+        const element = importFill(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -185,14 +190,20 @@ export function importCurvePoint(source: types.CurvePoint, ctx?: IImportContext)
 export function importDocumentMeta_pagesList(source: types.DocumentMeta_pagesList, ctx?: IImportContext): DocumentMeta_pagesList {
     const ret: DocumentMeta_pagesList = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importPageListItem(source, ctx))
+        const element = importPageListItem(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
 export function importDocumentMeta_stylelib(source: types.DocumentMeta_stylelib, ctx?: IImportContext): DocumentMeta_stylelib {
     const ret: DocumentMeta_stylelib = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importStyleSheet(source, ctx))
+        const element = importStyleSheet(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -216,7 +227,10 @@ export function importExportFormatNameingScheme(source: types.ExportFormatNamein
 export function importExportOptions_exportFormats(source: types.ExportOptions_exportFormats, ctx?: IImportContext): ExportOptions_exportFormats {
     const ret: ExportOptions_exportFormats = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importExportFormat(source, ctx))
+        const element = importExportFormat(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -227,7 +241,10 @@ export function importExportVisibleScaleType(source: types.ExportVisibleScaleTyp
 export function importFillMask_fills(source: types.FillMask_fills, ctx?: IImportContext): FillMask_fills {
     const ret: FillMask_fills = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importFill(source, ctx))
+        const element = importFill(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -246,7 +263,10 @@ export function importGradientType(source: types.GradientType, ctx?: IImportCont
 export function importGradient_stops(source: types.Gradient_stops, ctx?: IImportContext): Gradient_stops {
     const ret: Gradient_stops = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importStop(source, ctx))
+        const element = importStop(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -324,17 +344,10 @@ export function importGroupShape_childs(source: types.GroupShape_childs, ctx?: I
 export function importGuideAxis(source: types.GuideAxis, ctx?: IImportContext): impl.GuideAxis {
     return source
 }
-export function importGuide_crdtidx(source: types.Guide_crdtidx, ctx?: IImportContext): Guide_crdtidx {
-    const ret: Guide_crdtidx = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(source)
-    })
-    return ret
-}
 /* guide */
 export function importGuide(source: types.Guide, ctx?: IImportContext): impl.Guide {
     const ret: impl.Guide = new impl.Guide (
-        importGuide_crdtidx(source.crdtidx, ctx),
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         importGuideAxis(source.axis, ctx),
         source.offset)
@@ -415,7 +428,10 @@ export function importPageListItem(source: types.PageListItem, ctx?: IImportCont
 export function importPage_guides(source: types.Page_guides, ctx?: IImportContext): Page_guides {
     const ret: Page_guides = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importGuide(source, ctx))
+        const element = importGuide(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -452,7 +468,10 @@ export function importPara_spans(source: types.Para_spans, ctx?: IImportContext)
 export function importPathSegment_points(source: types.PathSegment_points, ctx?: IImportContext): PathSegment_points {
     const ret: PathSegment_points = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importCurvePoint(source, ctx))
+        const element = importCurvePoint(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -468,7 +487,10 @@ export function importPathSegment(source: types.PathSegment, ctx?: IImportContex
 export function importPathShape_pathsegs(source: types.PathShape_pathsegs, ctx?: IImportContext): PathShape_pathsegs {
     const ret: PathShape_pathsegs = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importPathSegment(source, ctx))
+        const element = importPathSegment(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -511,13 +533,6 @@ export function importPrototypeEasingType(source: types.PrototypeEasingType, ctx
 export function importPrototypeEvents(source: types.PrototypeEvents, ctx?: IImportContext): impl.PrototypeEvents {
     return source
 }
-export function importPrototypeInteraction_crdtidx(source: types.PrototypeInteraction_crdtidx, ctx?: IImportContext): PrototypeInteraction_crdtidx {
-    const ret: PrototypeInteraction_crdtidx = new BasicArray()
-    source.forEach((source, i) => {
-        ret.push(source)
-    })
-    return ret
-}
 /* navigationType */
 export function importPrototypeNavigationType(source: types.PrototypeNavigationType, ctx?: IImportContext): impl.PrototypeNavigationType {
     return source
@@ -556,7 +571,10 @@ export function importScrollDirection(source: types.ScrollDirection, ctx?: IImpo
 export function importShadowMask_shadows(source: types.ShadowMask_shadows, ctx?: IImportContext): ShadowMask_shadows {
     const ret: ShadowMask_shadows = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importShadow(source, ctx))
+        const element = importShadow(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -608,7 +626,10 @@ export function importShapeType(source: types.ShapeType, ctx?: IImportContext): 
 export function importShape_prototypeInteractions(source: types.Shape_prototypeInteractions, ctx?: IImportContext): Shape_prototypeInteractions {
     const ret: Shape_prototypeInteractions = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importPrototypeInteraction(source, ctx))
+        const element = importPrototypeInteraction(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -697,35 +718,50 @@ export function importStyleVarType(source: types.StyleVarType, ctx?: IImportCont
 export function importStyle_fills(source: types.Style_fills, ctx?: IImportContext): Style_fills {
     const ret: Style_fills = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importFill(source, ctx))
+        const element = importFill(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
 export function importStyle_shadows(source: types.Style_shadows, ctx?: IImportContext): Style_shadows {
     const ret: Style_shadows = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importShadow(source, ctx))
+        const element = importShadow(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
 export function importStyle_innerShadows(source: types.Style_innerShadows, ctx?: IImportContext): Style_innerShadows {
     const ret: Style_innerShadows = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importShadow(source, ctx))
+        const element = importShadow(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
 export function importStyle_contacts(source: types.Style_contacts, ctx?: IImportContext): Style_contacts {
     const ret: Style_contacts = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importContactRole(source, ctx))
+        const element = importContactRole(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
 export function importSymbolShape_guides(source: types.SymbolShape_guides, ctx?: IImportContext): SymbolShape_guides {
     const ret: SymbolShape_guides = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importGuide(source, ctx))
+        const element = importGuide(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -746,14 +782,20 @@ export function importTableCellType(source: types.TableCellType, ctx?: IImportCo
 export function importTableShape_rowHeights(source: types.TableShape_rowHeights, ctx?: IImportContext): TableShape_rowHeights {
     const ret: TableShape_rowHeights = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importCrdtNumber(source, ctx))
+        const element = importCrdtNumber(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
 export function importTableShape_colWidths(source: types.TableShape_colWidths, ctx?: IImportContext): TableShape_colWidths {
     const ret: TableShape_colWidths = new BasicArray()
     source.forEach((source, i) => {
-        ret.push(importCrdtNumber(source, ctx))
+        const element = importCrdtNumber(source, ctx)
+        // 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确
+        if (ctx?.isLocalFile) element.crdtidx = [i]
+        ret.push(element)
     })
     return ret
 }
@@ -998,7 +1040,7 @@ function importPrototypeInteractionOptional(tar: impl.PrototypeInteraction, sour
 }
 export function importPrototypeInteraction(source: types.PrototypeInteraction, ctx?: IImportContext): impl.PrototypeInteraction {
     const ret: impl.PrototypeInteraction = new impl.PrototypeInteraction (
-        importPrototypeInteraction_crdtidx(source.crdtidx, ctx),
+        importCrdtidx(source.crdtidx, ctx),
         source.id,
         importPrototypeEvent(source.event, ctx),
         importPrototypeActions(source.actions, ctx))

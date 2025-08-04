@@ -255,7 +255,7 @@ export function make_union(op: Operator, document: Document, page: Page, symbol:
     const border_style = new BorderStyle(5, 5);
 
     const strokePaints = new BasicArray<Fill>();
-    const strokePaint = new Fill([0] as BasicArray<number>, uuid(), true, types.FillType.SolidColor, new Color(1, 127, 88, 249))
+    const strokePaint = new Fill([0], uuid(), true, types.FillType.SolidColor, new Color(1, 127, 88, 249))
     strokePaints.push(strokePaint);
     const border = new Border(BorderPosition.Inner, border_style, types.CornerType.Miter, side, strokePaints);
     union.style.borders = border;

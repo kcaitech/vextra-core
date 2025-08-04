@@ -59,6 +59,7 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
             document: Document = document;
             curPage: string = id;
             fmtVer: string = document.fmtVer;
+            isLocalFile: boolean = true;
         };
         if (!pack[id]) {
             throw new Error(`Page ${id} not found`);
@@ -75,7 +76,7 @@ function setLoader(pack: { [p: string]: string | Uint8Array; }, document: Docume
     }
 }
 
-export function importDocument(name: string, mdd: { [p: string]: string | Uint8Array }, guard: IDataGuard) {
+function importDocument(name: string, mdd: { [p: string]: string | Uint8Array }, guard: IDataGuard) {
     const meta = importDocumentMeta(JSON.parse(mdd['document-meta.json'] as string));
     const document = new Document(uuid(), name, guard, {
         pageList: meta.pagesList,

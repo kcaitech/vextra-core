@@ -85,7 +85,7 @@ export class Document extends DocumentMeta {
         } else if (path1 === 'stylelib') {
             if (!this.stylelib?.length) {
                 this.stylelib = new BasicArray<StyleSheet>();
-                this.stylelib.push(new StyleSheet([0] as BasicArray<number>, this.id, this.__name, []));
+                this.stylelib.push(new StyleSheet([0], this.id, this.__name, []));
             }
             target = this.stylelib;
         } else {

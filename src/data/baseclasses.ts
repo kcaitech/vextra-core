@@ -264,15 +264,14 @@ export class GraphicsContextSettings extends Basic {
     }
 }
 type GroupShape_childs = BasicArray<GroupShape | PathShape | RectShape | SymbolRefShape | SymbolShape | SymbolUnionShape | TextShape | Artboard | LineShape | OvalShape | TableShape | ContactShape | Shape | CutoutShape | BoolShape | PolygonShape | StarShape>
-type Guide_crdtidx = BasicArray<number>
 /* guide */
 export class Guide extends Basic {
     typeId = "guide"
-    crdtidx: Guide_crdtidx
+    crdtidx: Crdtidx
     id: string
     axis: GuideAxis
     offset: number
-    constructor(crdtidx: Guide_crdtidx, id: string, axis: GuideAxis, offset: number = 0) {
+    constructor(crdtidx: Crdtidx, id: string, axis: GuideAxis, offset: number = 0) {
         super()
         this.crdtidx = crdtidx
         this.id = id
@@ -414,7 +413,6 @@ export class PrototypeEasingBezier extends Basic {
         this.y2 = y2
     }
 }
-type PrototypeInteraction_crdtidx = BasicArray<number>
 /* prototypeStartingPoint */
 export class PrototypeStartingPoint extends Basic {
     typeId = "prototype-starting-point"
@@ -779,12 +777,12 @@ export class PrototypeEvent extends Basic {
 /* prototypeInteraction */
 export class PrototypeInteraction extends Basic {
     typeId = "prototype-interaction"
-    crdtidx: PrototypeInteraction_crdtidx
+    crdtidx: Crdtidx
     id: string
     event: PrototypeEvent
     actions: PrototypeActions
     isDeleted?: boolean
-    constructor(crdtidx: PrototypeInteraction_crdtidx, id: string, event: PrototypeEvent, actions: PrototypeActions) {
+    constructor(crdtidx: Crdtidx, id: string, event: PrototypeEvent, actions: PrototypeActions) {
         super()
         this.crdtidx = crdtidx
         this.id = id

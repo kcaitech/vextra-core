@@ -179,7 +179,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
     start() {
         return this.__repo.start('create-shape', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (!isUndo) state.shapes = this.shape ? [this.shape.id] : [];
             else state.shapes = cmd.saveselection?.shapes || [];
             selection.restore(state);
@@ -244,7 +244,7 @@ export class CreatorApiCaller extends AsyncApiCaller {
 
             if (this.__params?.parent.type === ShapeType.Page) {
                 const color = new Color(1, 255, 255, 255);
-                const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.SolidColor, color);
+                const fill = new Fill([0], uuid(), true, FillType.SolidColor, color);
                 this.operator.addFillAt(shape.style.fills, fill, 0);
             }
 

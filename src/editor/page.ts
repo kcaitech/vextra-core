@@ -311,7 +311,7 @@ export class PageEditor {
         let gshape = newGroupShape(groupname);
 
         const op = this.__repo.start("group", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (!isUndo) state.shapes = [gshape.id];
             else state.shapes = cmd.saveselection?.shapes || [];
             selection.restore(state);
@@ -333,7 +333,7 @@ export class PageEditor {
     ungroup(shapes: GroupShapeView[]): false | Shape[] {
         const childrens: Shape[] = [];
         const op = this.__repo.start("ungroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (!isUndo) state.shapes = childrens.map(s => s.id);
             else state.shapes = cmd.saveselection?.shapes || [];
             selection.restore(state);
@@ -364,7 +364,7 @@ export class PageEditor {
     createArtboard(shapes: ShapeView[], artboardname: string): Artboard {
         try {
             const op = this.__repo.start("createArtboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = [artboard.id];
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -386,7 +386,7 @@ export class PageEditor {
         try {
             const children: Shape[] = [];
             const op = this.__repo.start("dissolution_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = children.map(c => c.id);
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -427,7 +427,7 @@ export class PageEditor {
         let artboard = newAutoLayoutArtboard(artboardname, new ShapeFrame(0, 0, 100, 100), layoutInfo);
 
         const op = this.__repo.start("create_autolayout_artboard", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (!isUndo) state.shapes = [artboard.id];
             else state.shapes = cmd.saveselection?.shapes || [];
             selection.restore(state);
@@ -523,7 +523,7 @@ export class PageEditor {
         let gshape = newBoolShape(groupname, style);
         try {
             const operator = this.__repo.start("boolgroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = [gshape.id];
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -556,7 +556,7 @@ export class PageEditor {
             gshape.transform = ((savep.matrix2Root()));
 
             const operator = this.__repo.start("boolgroup2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = [gshape.id];
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -619,7 +619,7 @@ export class PageEditor {
 
             const page = this.page;
             const op = this.__repo.start("makeSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = [symbolShape.id];
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -883,7 +883,7 @@ export class PageEditor {
         }
         if (!actions.length) return shapes;
         const op = this.__repo.start("extractSymbol", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (!isUndo) state.shapes = actions.map(a => a.self.id);
             else state.shapes = cmd.saveselection?.shapes || [];
             selection.restore(state);
@@ -1054,7 +1054,7 @@ export class PageEditor {
 
         try {
             const op = this.__repo.start("flattenShapes", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = [pathShape.id];
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -1127,7 +1127,7 @@ export class PageEditor {
 
             const index = parent.indexOfChild(adapt2Shape(shape));
             const op = this.__repo.start("flattenBoolShape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = [pathShape.id];
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -1194,7 +1194,7 @@ export class PageEditor {
 
         try {
             const op = this.__repo.start("flattenGroup", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = [shape.id];
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -1310,7 +1310,7 @@ export class PageEditor {
         const savep = shape.parent as ShapeView;
         if (!savep) return false;
         const op = this.__repo.start("delete", (selection: ISave4Restore, isUndo: boolean) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (isUndo) state.shapes = [shape.id];
             else state.shapes = [];
             selection.restore(state);
@@ -1345,7 +1345,7 @@ export class PageEditor {
     // 批量删除
     delete_batch(shapes: ShapeView[]) {
         const op = this.__repo.start("deleteBatch", (selection: ISave4Restore, isUndo: boolean) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (isUndo) state.shapes = shapes.map(s => s.id);
             else state.shapes = [];
             selection.restore(state);
@@ -1392,7 +1392,7 @@ export class PageEditor {
         }
         shape.id = uuid(); // 凡插入对象，不管是复制剪切的，都需要新id。要保持同一id，使用move!
         const op = this.__repo.start("insertshape", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (!isUndo) state.shapes = [shape.id];
             else state.shapes = cmd.saveselection?.shapes || [];
             selection.restore(state);
@@ -1432,7 +1432,7 @@ export class PageEditor {
         try {
             const ids: string[] = [];
             const op = this.__repo.start("insertShapes", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = ids;
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -1487,7 +1487,7 @@ export class PageEditor {
         shapes: Shape[]
     } | false {
         const op = this.__repo.start("insertShapes1", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (!isUndo) state.shapes = shapes.map(s => s.id);
             else state.shapes = cmd.saveselection?.shapes || [];
             selection.restore(state);
@@ -1540,7 +1540,7 @@ export class PageEditor {
         index: number
     }[]): Shape[] | false {
         const op = this.__repo.start("insertShapes2", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-            const state = {} as SelectionState;
+            const state = { page: this.page.id } as SelectionState;
             if (!isUndo) state.shapes = shapes.map(s => s.id);
             else state.shapes = cmd.saveselection?.shapes || [];
             selection.restore(state);
@@ -1597,7 +1597,7 @@ export class PageEditor {
     }[]): Shape[] | false {
         try {
             const op = this.__repo.start("pasteShapes3", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = actions.reduce((p, c) => {
                     return [...p, ...c.shapes.map(s => s.id)]
                 }, [] as string[]);
@@ -1893,7 +1893,7 @@ export class PageEditor {
             const src_replacement: Shape[] = [];
 
             const op = this.__repo.start("replace", (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = src_replacement.map(s => s.id);
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -2138,7 +2138,7 @@ export class PageEditor {
             const doc = this.__document;
             let resultShapes: string[] = [];
             const op = this.__repo.start('modify-mask-status', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = resultShapes;
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -2291,7 +2291,7 @@ export class PageEditor {
                 } else {
                     const index = fills.length - 1;
                     if (index < 0) {
-                        const fill = new Fill([0] as BasicArray<number>, uuid(), true, FillType.Pattern, new Color(1, 217, 217, 217));
+                        const fill = new Fill([0], uuid(), true, FillType.Pattern, new Color(1, 217, 217, 217));
                         fill.imageRef = ref;
                         fill.setImageMgr(document.mediasMgr);
                         fill.imageScaleMode = types.ImageScaleMode.Fill;
@@ -3524,7 +3524,7 @@ export class PageEditor {
             const page = this.page;
             const ids: string[] = [];
             const op = this.__repo.start('outlineShapes', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = ids;
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);
@@ -3554,7 +3554,7 @@ export class PageEditor {
                     const mainColor = shape.text.paras[0]?.spans[0]?.color;
                     if (mainColor) {
                         const len = style.fills.length;
-                        style.fills.push(new Fill([len] as BasicArray<number>, uuid(), true, FillType.SolidColor, mainColor));
+                        style.fills.push(new Fill([len], uuid(), true, FillType.SolidColor, mainColor));
                     }
                     let pathShape = newPathShape(view.name, view.frame, path, this.__document.stylesMgr, style);
                     pathShape.transform = shape.transform.clone();
@@ -3586,7 +3586,7 @@ export class PageEditor {
                         const style: Style = this.cloneStyle(copyStyle);
                         for (let i = 0; i < border.strokePaints.length; i++) {
                             const strokePaint = border.strokePaints[i];
-                            const fill = new Fill([0] as BasicArray<number>, uuid(), true, strokePaint.fillType, strokePaint.color);
+                            const fill = new Fill([0], uuid(), true, strokePaint.fillType, strokePaint.color);
                             fill.gradient = strokePaint.gradient;
                             if (fill.fillType === FillType.Pattern) fill.fillType = FillType.SolidColor;
                             style.fills = new BasicArray<Fill>(fill);
@@ -3628,7 +3628,7 @@ export class PageEditor {
             const ids: string[] = [];
             const imageShapes: { shape: Shape, upload: UploadAssets[] }[] = [];
             const op = this.__repo.start('insertImagesToPage', (selection: ISave4Restore, isUndo: boolean, cmd: LocalCmd) => {
-                const state = {} as SelectionState;
+                const state = { page: this.page.id } as SelectionState;
                 if (!isUndo) state.shapes = ids;
                 else state.shapes = cmd.saveselection?.shapes || [];
                 selection.restore(state);

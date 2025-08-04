@@ -286,9 +286,9 @@ export class ContactLineView extends PathShapeView {
             fromContactType = this.contactFrom!.contactType;
             from_matrix = fromShape.matrix2Root();
             const point = self_matrix!.computeCoord3(fromInfo.point);
-            points[0] = new CurvePoint([0] as BasicArray<number>, '', point.x, point.y, CurveMode.Straight);
+            points[0] = new CurvePoint([0], '', point.x, point.y, CurveMode.Straight);
             const borderPoint = self_matrix!.computeCoord3(fromInfo.borderPoint);
-            points.splice(1, 0, new CurvePoint([1] as BasicArray<number>, '', borderPoint.x, borderPoint.y, CurveMode.Straight));
+            points.splice(1, 0, new CurvePoint([1], '', borderPoint.x, borderPoint.y, CurveMode.Straight));
             start = point;
             fromBorderPoint = borderPoint;
         }
@@ -299,9 +299,9 @@ export class ContactLineView extends PathShapeView {
             toContactType = this.contactTo!.contactType;
             to_matrix = toShape.matrix2Root();
             const point = self_matrix!.computeCoord3(toInfo.point);
-            points[points.length - 1] = new CurvePoint(([points.length - 1] as BasicArray<number>), v4(), point.x, point.y, CurveMode.Straight);
+            points[points.length - 1] = new CurvePoint(([points.length - 1]), v4(), point.x, point.y, CurveMode.Straight);
             const borderPoint = self_matrix!.computeCoord3(toInfo.borderPoint);
-            points.push(new CurvePoint(([points.length] as BasicArray<number>), v4(), borderPoint.x, borderPoint.y, CurveMode.Straight));
+            points.push(new CurvePoint(([points.length]), v4(), borderPoint.x, borderPoint.y, CurveMode.Straight));
             end = point;
             toBorderPoint = borderPoint;
         }
@@ -866,7 +866,7 @@ function gen_path(apexFrom: ShapeView, type1: ContactType, apexTo: ShapeView, ty
     const points: CurvePoint[] = [];
     for (let i = 0, len = path.length; i < len; i++) {
         const p = m3.computeCoord3(path[i]);
-        points.push(new CurvePoint([i] as BasicArray<number>, '--', p.x, p.y, CurveMode.Straight));
+        points.push(new CurvePoint([i], '--', p.x, p.y, CurveMode.Straight));
     }
 
     return points;
@@ -913,26 +913,26 @@ const __handle: {
 __handle['horizontal'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint, width: number, height: number) {
     points.length = 0;
     if (Math.abs(start.x - end.x) * width < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), start.x, end.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2]), v4(), start.x, end.y, CurveMode.Straight));
     } else if (Math.abs(start.y - end.y) * height < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2]), v4(), end.x, start.y, CurveMode.Straight));
     } else {
         const mid = (end.x + start.x) / 2;
-        const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), mid, start.y, CurveMode.Straight);
-        const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), mid, end.y, CurveMode.Straight);
+        const _p1 = new CurvePoint([1], v4(), mid, start.y, CurveMode.Straight);
+        const _p2 = new CurvePoint(([2]), v4(), mid, end.y, CurveMode.Straight);
         points.push(start, _p1, _p2, end);
     }
 }
 __handle['vertical'] = function (points: CurvePoint[], start: CurvePoint, end: CurvePoint, width: number, height: number) {
     points.length = 0;
     if (Math.abs(start.x - end.x) * width < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), start.x, end.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2]), v4(), start.x, end.y, CurveMode.Straight));
     } else if (Math.abs(start.y - end.y) * height < 5) {
-        points.push(start, new CurvePoint(([2] as BasicArray<number>), v4(), end.x, start.y, CurveMode.Straight));
+        points.push(start, new CurvePoint(([2]), v4(), end.x, start.y, CurveMode.Straight));
     } else {
         const mid = (end.y + start.y) / 2;
-        const _p1 = new CurvePoint([1] as BasicArray<number>, v4(), start.x, mid, CurveMode.Straight);
-        const _p2 = new CurvePoint(([2] as BasicArray<number>), v4(), end.x, mid, CurveMode.Straight);
+        const _p1 = new CurvePoint([1], v4(), start.x, mid, CurveMode.Straight);
+        const _p2 = new CurvePoint(([2]), v4(), end.x, mid, CurveMode.Straight);
         points.push(start, _p1, _p2, end);
     }
 }
@@ -958,11 +958,11 @@ function path_for_free_end_contact(shape: ContactLineView, points: CurvePoint[],
     const end = points.pop()!;
 
     if (Math.abs(start.y - end.y) * shape.size.height < 5) {
-        points.push(new CurvePoint(([0] as BasicArray<number>), '', end.x, start.y, CurveMode.Straight));
+        points.push(new CurvePoint(([0]), '', end.x, start.y, CurveMode.Straight));
     } else if (Math.abs(start.x - end.x) * shape.size.width < 5) {
-        points.push(new CurvePoint(([0] as BasicArray<number>), '', start.x, end.y, CurveMode.Straight));
+        points.push(new CurvePoint(([0]), '', start.x, end.y, CurveMode.Straight));
     } else {
-        points.push(new CurvePoint(([0] as BasicArray<number>), '', end.x, start.y, CurveMode.Straight), end);
+        points.push(new CurvePoint(([0]), '', end.x, start.y, CurveMode.Straight), end);
     }
 }
 
@@ -971,7 +971,7 @@ function path_for_free_start_contact(points: CurvePoint[], end: Point2D | undefi
         return path_for_free_contact(points, width, height);
     }
     const start = points[0];
-    const _end = new CurvePoint(([points.length - 1] as BasicArray<number>), v4(), end.x, end.y, CurveMode.Straight);
+    const _end = new CurvePoint(([points.length - 1]), v4(), end.x, end.y, CurveMode.Straight);
 
     const _start = { x: start.x * width, y: start.y * height };
     const __end = { x: end.x * width, y: end.y * height };

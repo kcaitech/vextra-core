@@ -3,10 +3,7 @@
   "type": "object",
   "properties": {
     "crdtidx": {
-      "type": "array",
-      "items": {
-        "type": "number"
-      }
+        "$ref": "./crdtidx.json"
     },
     "typeId": {
       "type": "string"

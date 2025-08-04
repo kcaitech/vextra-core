@@ -440,6 +440,15 @@ function generateArrayImport(node: Node, writer: Writer, implPrefix: string, con
     const item = node.value.item;
     const arrayType = node.value.type === 'native_array' ? 'Array' : (config.baseTypes?.array || 'Array');
     
+    // 检查数组元素是否有 crdtidx 属性
+    let elementHasCrdtidx = false;
+    if (item.type === 'node') {
+        const itemNode = node.root.get(item.val);
+        if (itemNode && itemNode.value.type === 'object') {
+            elementHasCrdtidx = itemNode.value.props.some(prop => prop.name === 'crdtidx');
+        }
+    }
+    
     const typesPrefix = config.namespaces?.types || '';
     writer.nl(`export function import${node.name}(source: ${typesPrefix}${node.name}, ctx?: IImportContext): ${implPrefix}${node.name} `).sub(() => {
         // 创建新的Array实例
@@ -447,10 +456,24 @@ function generateArrayImport(node: Node, writer: Writer, implPrefix: string, con
         
         // 遍历源数组
         writer.nl('source.forEach((source, i) => ').sub(() => {
-            // 导入数组元素
-            writer.nl('ret.push(');
-            generateBasePropImport(item, 'source', writer, true, node.root, config);
-            writer.append(')');
+            if (elementHasCrdtidx) {
+                // 导入数组元素
+                writer.nl('const element = ');
+                generateBasePropImport(item, 'source', writer, true, node.root, config);
+                
+                // 只有当元素有 crdtidx 属性且是外部文档导入时才重新生成索引
+                if (elementHasCrdtidx) {
+                    writer.nl('// 重新设置 crdtidx 为当前数组索引，确保外部文档导入时索引正确');
+                    writer.nl('if (ctx?.isLocalFile) element.crdtidx = [i]');
+                }
+                
+                writer.nl('ret.push(element)');
+            } else {
+                // 导入数组元素
+                writer.nl('ret.push(');
+                generateBasePropImport(item, 'source', writer, true, node.root, config);
+                writer.append(')');
+            }
         }).append(')');
         
         writer.nl('return ret');
@@ -495,6 +518,7 @@ export function gen(allNodes: Map<string, Node>, outputPath: string, config: Imp
 function generateInterfaceDefinitions(writer: Writer, config: ImportGenerationConfig): void {
     const implPrefix = config.namespaces?.impl || '';
     writer.nl('export interface IImportContext ').sub(() => {
+        writer.nl('isLocalFile?: boolean');
         if (config.contextContent) {
             config.contextContent(writer);
         }

@@ -66,6 +66,7 @@ export function isDiffSelectionState(lhs: SelectionState, rhs: SelectionState): 
 
 export function cloneSelectionState(selection: SelectionState): SelectionState {
     return {
+        page: selection.page,
         shapes: selection.shapes,
         table: selection.table,
         text: selection.text ? selection.text.clone() : undefined

@@ -240,7 +240,7 @@ export class OperatorT<T extends BasicOp> {
         let libs = document.stylelib as BasicArray<StyleSheet>;
         if (!libs?.length) {
             libs = new BasicArray<StyleSheet>();
-            const lib = new StyleSheet([0] as BasicArray<number>, document.id, document.name, []);
+            const lib = new StyleSheet([0], document.id, document.name, []);
             libs.push(lib);
             document.stylelib = libs;
         }
